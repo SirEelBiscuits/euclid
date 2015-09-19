@@ -19,7 +19,9 @@
     <ClCompile Include="src\system\LuaX.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
-    <ClCompile Include="src\modes\game\Game.cpp" />
+    <ClCompile Include="src\modes\game\Game.cpp">
+      <Filter>src\modes\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
