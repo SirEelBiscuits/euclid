@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\modes\game\Game.cpp" />
     <ClCompile Include="src\platform\SDL\EntryPoint.cpp" />
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp" />
     <ClCompile Include="src\rendering\RenderingSystem.cpp" />
@@ -151,10 +152,13 @@
   <ItemGroup>
     <ClInclude Include="src\CommandLine.h" />
     <ClInclude Include="src\lib\gargamel.h" />
+    <ClInclude Include="src\lib\PortabilityHelper.h" />
+    <ClInclude Include="src\modes\game\Game.h" />
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h" />
     <ClInclude Include="src\rendering\RenderingSystem.h" />
     <ClInclude Include="src\system\Config.h" />
     <ClInclude Include="src\system\LuaX.h" />
+    <ClInclude Include="src\system\RunnableMode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

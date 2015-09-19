@@ -28,7 +28,7 @@ public:
 	bool IsValueSet(char const *name) const;
 
 private:
-	lua_State *s {nullptr};
+	luaX_State s;
 };
 
 }

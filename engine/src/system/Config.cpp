@@ -2,19 +2,14 @@
 
 namespace System {
 
-	Config::Config()
-		: s(luaL_newstate())
-	{
+	Config::Config() {
 	}
 
-	Config::Config(char const* filename)
-		: s(luaL_newstate())
-	{
+	Config::Config(char const* filename) {
 		luaX_dofile(s, filename);
 	}
 
 	Config::~Config() {
-		lua_close(s);
 	}
 
 	bool Config::IsValueSet(char const * name) const

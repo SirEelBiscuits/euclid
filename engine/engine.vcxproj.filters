@@ -19,6 +19,7 @@
     <ClCompile Include="src\system\LuaX.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
+    <ClCompile Include="src\modes\game\Game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
@@ -39,6 +40,15 @@
     <ClInclude Include="src\system\LuaX.h">
       <Filter>src\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\system\RunnableMode.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\PortabilityHelper.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modes\game\Game.h">
+      <Filter>src\modes\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -58,6 +68,15 @@
     </Filter>
     <Filter Include="src\system">
       <UniqueIdentifier>{1b777b4e-85a7-4a88-8a1a-eb8f6c202a15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\modes">
+      <UniqueIdentifier>{2a2cdf62-aaff-4e70-9023-26c3ace05f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\modes\game">
+      <UniqueIdentifier>{d1a4b51c-c1e7-4d21-83fc-ea321425738f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\modes\editor">
+      <UniqueIdentifier>{ae21019a-750c-44cf-959b-e5b6a5a73b88}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

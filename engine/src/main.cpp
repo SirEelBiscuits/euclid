@@ -11,9 +11,12 @@ POST_STD_LIB
 #include "lib/gargamel.h"
 #include "rendering/RenderingSystem.h"
 #include "system/Config.h"
+#include "system/RunnableMode.h"
+#include "modes/game/Game.h"
 
 std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg);
 void OverrideConfigWithCommandLineArguments(System::Config &cfg);
+std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg);
 
 int Main(int argc, char* argv[]) {
 	Gargamel::SetArguments(Arguments, 0);
@@ -22,9 +25,14 @@ int Main(int argc, char* argv[]) {
 	System::Config cfg("config.cfg");
 	OverrideConfigWithCommandLineArguments(cfg);
 
-	//Initialise Graphics Context
 	auto ctx = Initialise(cfg);
-	//Run Mode
+
+	auto mode = GetMode(*ctx, cfg);
+
+	mode->Run();
+
+	while(mode->Update());
+
 	return EXIT_SUCCESS;
 }
 
@@ -56,8 +64,15 @@ void OverrideConfigWithCommandLineArguments(System::Config &cfg) {
 	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::RenderScale)) || Gargamel::ArgumentValues[(int)CLArgs::RenderScale].isArgumentPresent)
 		cfg.SetValue(stringFromCLArgs(CLArgs::RenderScale), Gargamel::ArgumentValues[(int)CLArgs::RenderScale].intValue());
 
+	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::StartScript)) || Gargamel::ArgumentValues[(int)CLArgs::StartScript].isArgumentPresent)
+		cfg.SetValue(stringFromCLArgs(CLArgs::StartScript), Gargamel::ArgumentValues[(int)CLArgs::StartScript].argumentValue);
+
 	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::Fullscreen)))
 		cfg.SetValue(stringFromCLArgs(CLArgs::Fullscreen), false);
 	else if(Gargamel::ArgumentValues[(int)CLArgs::Fullscreen].isArgumentPresent)
 		cfg.SetValue(stringFromCLArgs(CLArgs::Fullscreen), true);
+}
+
+std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg) {
+	return std::make_unique<Modes::Game>(ctx, cfg);
 }

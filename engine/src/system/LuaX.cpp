@@ -3,7 +3,7 @@
 template<>
 int luaX_getglobal<int>(lua_State *s, char const *name) {
 	lua_getglobal(s, name);
-	auto ret = lua_tointeger(s, -1);
+	auto ret = static_cast<int>(lua_tointeger(s, -1));
 	lua_pop(s, 1);
 	return ret;
 }
@@ -34,8 +34,10 @@ bool luaX_getglobal<bool>(lua_State *s, char const *name) {
 
 template<>
 std::string luaX_getglobal<std::string>(lua_State *s, char const *name) {
-	lua_getglobal(s, name);
-	auto ret = std::string(lua_tostring(s, -1));
+	if(LUA_TNIL == lua_getglobal(s, name))
+		return "";
+	auto ccp = lua_tostring(s, -1);
+	auto ret = std::string(ccp);
 	lua_pop(s, 1);
 	return ret;
 }
@@ -70,7 +72,7 @@ void luaX_push<std::string>(lua_State *s, std::string value) {
 	lua_pushstring(s, value.c_str());
 }
 
-static void luaX_showErrors(lua_State* s, char const *name, int errCode) {
+void luaX_showErrors(lua_State* s, char const *name, int errCode) {
 	switch(errCode) {
 	case LUA_OK:
 		return;
