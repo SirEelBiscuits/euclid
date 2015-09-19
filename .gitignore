@@ -1,5 +1,12 @@
-intermediate/*
-bin/*
+engine/intermediate/*
+engine/bin/*
+
+extern/*/bin/*
+extern/*/intermediate/*
+
+extern/SDL2/VisualC/SDL/Win32/*
+extern/SDL2/VisualC/SDLmain/Win32/*
+
 *.suo
 *.user
 *.sln.docstates

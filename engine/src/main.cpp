@@ -1,7 +1,12 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <lua.hpp>
+
 int main(int argc, char* argv[]) {
-	std::cout << "hello world" << std::endl;
+
+	auto test = luaL_newstate();
+
+	std::cout << "hello world" << test << std::endl;
 	return EXIT_SUCCESS;
 }
