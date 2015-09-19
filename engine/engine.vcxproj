@@ -82,7 +82,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -145,12 +145,16 @@
     <ClCompile Include="src\platform\SDL\EntryPoint.cpp" />
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp" />
     <ClCompile Include="src\rendering\RenderingSystem.cpp" />
+    <ClCompile Include="src\system\Config.cpp" />
+    <ClCompile Include="src\system\LuaX.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CommandLine.h" />
     <ClInclude Include="src\lib\gargamel.h" />
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h" />
     <ClInclude Include="src\rendering\RenderingSystem.h" />
+    <ClInclude Include="src\system\Config.h" />
+    <ClInclude Include="src\system\LuaX.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

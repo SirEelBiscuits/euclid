@@ -13,6 +13,21 @@ enum class CLArgs {
 	RenderScale,
 };
 
+char const* stringFromCLArgs(CLArgs in) {
+	switch(in) {
+	case CLArgs::Fullscreen:
+		return "fullscreen";
+	case CLArgs::Width:
+		return "width";
+	case CLArgs::Height:
+		return "height";
+	case CLArgs::RenderScale:
+		return "renderscale";
+	default:;
+	}
+	return nullptr;
+}
+
 Gargamel::ArgumentList Arguments {
 	GGM_DESCRIBE_ARG        (CLArgs::Help,       'h', "help",         NoArgument,               "Display this help test"),
 	GGM_DESCRIBE_ARG        (CLArgs::Fullscreen, 'f', "fullscreen",   NoArgument,               "Render in fullscreen mode"),

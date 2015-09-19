@@ -13,6 +13,12 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\system\Config.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\system\LuaX.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
@@ -26,6 +32,12 @@
     </ClInclude>
     <ClInclude Include="src\CommandLine.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\Config.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\LuaX.h">
+      <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +55,9 @@
     </Filter>
     <Filter Include="src\rendering">
       <UniqueIdentifier>{79c7acd1-451e-416d-a91f-87ba5f0e7dee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{1b777b4e-85a7-4a88-8a1a-eb8f6c202a15}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
