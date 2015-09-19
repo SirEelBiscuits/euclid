@@ -1,6 +1,48 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\rendering\RenderingSystem.cpp">
+      <Filter>src\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp">
+      <Filter>src\platform\SDL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\SDL\EntryPoint.cpp">
+      <Filter>src\platform\SDL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\lib\gargamel.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\RenderingSystem.h">
+      <Filter>src\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
+      <Filter>src\platform\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommandLine.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{db0cd641-ad8e-4afb-8284-da80405784b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\lib">
+      <UniqueIdentifier>{fb41a300-209d-4188-aa3e-24dce65be348}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\platform">
+      <UniqueIdentifier>{35850f0a-dbfc-46e4-8f1a-d712968e21fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\platform\SDL">
+      <UniqueIdentifier>{f6e254e9-6571-4374-8cc2-75990a57e764}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\rendering">
+      <UniqueIdentifier>{79c7acd1-451e-416d-a91f-87ba5f0e7dee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
