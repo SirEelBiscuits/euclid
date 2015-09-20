@@ -4,6 +4,7 @@ PREAMBLE
 
 PRE_STD_LIB
 #include <vector>
+#include <functional>
 POST_STD_LIB
 
 namespace System {
@@ -29,5 +30,13 @@ namespace System {
 
 		//implemented in platform code
 		std::vector<Event> GetEvents();
+	}
+
+	namespace Events {
+		enum class Types {
+			Quit,
+			Unknown,
+		};
+		void SetHandlers(std::function<void(Types, void*, void*)> callback);
 	}
 }

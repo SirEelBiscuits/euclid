@@ -4,6 +4,7 @@ function Game.Initialise()
 	print("Initialised")
 end
 
+Game.quit = false
 
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
@@ -17,5 +18,9 @@ function Game.Update(dt)
 	end
 
 	-- keep running forever!
-	return true
+	return not Game.quit
+end
+
+function Game.Quit()
+	Game.quit = true;
 end

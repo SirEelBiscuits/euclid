@@ -19,10 +19,10 @@
     <ClCompile Include="src\modes\game\Game.cpp">
       <Filter>src\modes\game</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\SDL\SDLInput.cpp">
+    <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp">
+    <ClCompile Include="src\platform\SDL\SDLEvents.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
   </ItemGroup>
@@ -54,7 +54,7 @@
     <ClInclude Include="src\modes\game\Game.h">
       <Filter>src\modes\game</Filter>
     </ClInclude>
-    <ClInclude Include="src\system\Input.h">
+    <ClInclude Include="src\system\Events.h">
       <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>
