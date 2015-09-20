@@ -68,7 +68,14 @@ namespace System {
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 			case SDL_MULTIGESTURE:
-
+				;
+				//these four appear all the damn time and I don't know why
+			case SDL_CONTROLLERDEVICEADDED:
+			case SDL_CONTROLLERDEVICEREMAPPED:
+			case SDL_CONTROLLERDEVICEREMOVED:
+			case SDL_JOYDEVICEADDED:
+			case SDL_JOYDEVICEREMOVED:
+				;
 				//input we'll want later
 			case SDL_MOUSEMOTION:
 			case SDL_MOUSEWHEEL:
