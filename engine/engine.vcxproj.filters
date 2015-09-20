@@ -7,9 +7,6 @@
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\SDL\EntryPoint.cpp">
-      <Filter>src\platform\SDL</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -21,6 +18,12 @@
     </ClCompile>
     <ClCompile Include="src\modes\game\Game.cpp">
       <Filter>src\modes\game</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\SDL\SDLInput.cpp">
+      <Filter>src\platform\SDL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp">
+      <Filter>src\platform\SDL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="src\modes\game\Game.h">
       <Filter>src\modes\game</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\Input.h">
+      <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

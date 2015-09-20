@@ -143,7 +143,8 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\modes\game\Game.cpp" />
-    <ClCompile Include="src\platform\SDL\EntryPoint.cpp" />
+    <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp" />
+    <ClCompile Include="src\platform\SDL\SDLInput.cpp" />
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp" />
     <ClCompile Include="src\rendering\RenderingSystem.cpp" />
     <ClCompile Include="src\system\Config.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h" />
     <ClInclude Include="src\rendering\RenderingSystem.h" />
     <ClInclude Include="src\system\Config.h" />
+    <ClInclude Include="src\system\Input.h" />
     <ClInclude Include="src\system\LuaX.h" />
     <ClInclude Include="src\system\RunnableMode.h" />
   </ItemGroup>

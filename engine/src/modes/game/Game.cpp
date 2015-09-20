@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "system/Config.h"
+#include "system/Input.h"
 
 namespace Modes {
 
@@ -35,7 +36,18 @@ bool Game::Update() {
 	auto dt = std::chrono::duration_cast<std::chrono::microseconds>(timePoint - oldTimePoint).count() / 1000000.0;
 	oldTimePoint = timePoint;
 	
+	auto input = System::Input::GetEvents();
 	lua_getglobal(lua, "Game");
+	if(lua_istable(lua, -1)) {
+		lua_createtable(lua, input.size(), 0);
+
+		for(auto i = 0u; i < input.size(); ++i) {
+			//fill out the array somehow?
+		}
+
+		lua_setfield(lua, -2, "Input");
+	}
+
 	if(lua_istable(lua, -1)) {
 		lua_getfield(lua, -1, "Update");
 		if(lua_isfunction(lua, -1)) {
