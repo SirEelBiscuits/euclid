@@ -154,7 +154,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CommandLine.h" />
+    <ClInclude Include="src\lib\BasicTypes.h" />
     <ClInclude Include="src\lib\gargamel.h" />
+    <ClInclude Include="src\lib\Maths.h" />
+    <ClInclude Include="src\lib\Matrix.h" />
+    <ClInclude Include="src\lib\Mesitype.h" />
     <ClInclude Include="src\lib\PortabilityHelper.h" />
     <ClInclude Include="src\modes\game\Game.h" />
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h" />
@@ -163,6 +167,7 @@
     <ClInclude Include="src\system\Events.h" />
     <ClInclude Include="src\system\LuaX.h" />
     <ClInclude Include="src\system\RunnableMode.h" />
+    <ClInclude Include="src\world\Map.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

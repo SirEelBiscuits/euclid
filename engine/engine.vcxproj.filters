@@ -57,6 +57,21 @@
     <ClInclude Include="src\system\Events.h">
       <Filter>src\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\world\Map.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\BasicTypes.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\Mesitype.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\Matrix.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\Maths.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -85,6 +100,9 @@
     </Filter>
     <Filter Include="src\modes\editor">
       <UniqueIdentifier>{ae21019a-750c-44cf-959b-e5b6a5a73b88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\world">
+      <UniqueIdentifier>{21632622-b121-43b7-85df-02b275e08b32}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

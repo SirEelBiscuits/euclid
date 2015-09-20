@@ -2,6 +2,7 @@ Game = Game or {}
 
 function Game.Initialise()
 	print("Initialised")
+	local map = dofile("testmap.lua")
 end
 
 Game.quit = false
