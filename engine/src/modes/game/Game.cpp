@@ -9,6 +9,7 @@ namespace Modes {
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
+		luaX_dofile(lua, "luaclid.lua");
 		luaX_dofile(lua, cfg.GetValue<std::string>("startscript").c_str());
 	}
 
