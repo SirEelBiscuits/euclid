@@ -14,12 +14,14 @@ namespace World {
 	using Vert = PositionVec2;
 
 	struct Wall {
+	public:
 		Vert          *start {nullptr};
 		struct Sector *portal{nullptr};
 		Mesi::Meters   length{0};
 	};
 
 	struct Sector {
+	public:
 		Sector() = default;
 		Sector(std::vector<Wall> const &walls)
 			: walls(walls)
@@ -33,10 +35,9 @@ namespace World {
 	};
 
 	class Map {
-	
+	public:
 		std::list<Sector> sectors{};
 		std::list<Vert> verts{};
-
 		std::string filename;
 	};
 }
