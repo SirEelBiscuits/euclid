@@ -42,7 +42,16 @@ bool Game::Update() {
 		lua_createtable(lua, input.size(), 0);
 
 		for(auto i = 0u; i < input.size(); ++i) {
-			//fill out the array somehow?
+			lua_createtable(lua, 0, 3);
+
+			luaX_push(lua, input[i].key);
+			lua_setfield(lua, -2, "key");
+			luaX_push(lua, input[i].repeat);
+			lua_setfield(lua, -2, "keyRepeat");
+			luaX_push(lua, (int)input[i].type);
+			lua_setfield(lua, -2, "eventType");
+
+			lua_seti(lua, -2, i + 1);
 		}
 
 		lua_setfield(lua, -2, "Input");

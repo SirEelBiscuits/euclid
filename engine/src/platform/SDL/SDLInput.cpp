@@ -28,7 +28,9 @@ namespace System {
 
 	std::vector<Event> GetEvents() {
 		SDL_Event marker;
+		marker.type = SDL_USEREVENT;
 		marker.user.code = 0xfeedcafe;
+		SDL_PushEvent(&marker);
 
 		std::vector<Event> events;
 		auto done = false;

@@ -10,7 +10,6 @@ function Game.Update(dt)
 	Game.timesecs = (Game.timesecs or 0) + dt
 	Game.calls = (Game.calls or 0) + 1
 
-
 	if(Game.timesecs > 1) then
 		print(Game.calls .. " calls per second")
 		Game.calls = 0
