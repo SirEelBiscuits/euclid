@@ -17,17 +17,13 @@ namespace Modes {
 	}
 
 	void Game::Run() {
-		lua_getglobal(lua, "Game");
-		if(lua_istable(lua, -1)) {
-			lua_getfield(lua, -1, "Initialise");
-			if(lua_isfunction(lua, -1)) {
-				auto err = lua_pcall(lua, 0, 0, 0);
-				luaX_showErrors(lua, "Game.Initialise()", err);
-			} else {
-				lua_pop(lua, 1);
-			}
+		auto pushed = luaX_getglobal(lua, "Game", "Initialise");
+		if(2 == pushed && lua_isfunction(lua, -1)) {
+			auto err = lua_pcall(lua, 0, 0, 0);
+			luaX_showErrors(lua, "Game.Initialise()", err);
+			--pushed;
 		}
-		lua_pop(lua, 1); //remove Game from the stack
+		lua_pop(lua, pushed);
 
 		System::Events::SetHandlers(
 			[this](System::Events::Types type, void *p1, void *p2) {
@@ -49,22 +45,17 @@ namespace Modes {
 			lua_createtable(lua, input.size(), 0);
 
 			for(auto i = 0u; i < input.size(); ++i) {
-				lua_createtable(lua, 0, 3);
-
-				luaX_push(lua, input[i].key);
-				lua_setfield(lua, -2, "key");
-				luaX_push(lua, input[i].repeat);
-				lua_setfield(lua, -2, "keyRepeat");
-				luaX_push(lua, (int)input[i].type);
-				lua_setfield(lua, -2, "eventType");
+				luaX_createtable(lua, 0, 3,
+					"key",       input[i].key, 
+					"keyRepeat", input[i].repeat,
+					"eventType", (int)input[i].type
+				);
 
 				lua_seti(lua, -2, i + 1);
 			}
 
 			lua_setfield(lua, -2, "Input");
-		}
 
-		if(lua_istable(lua, -1)) {
 			lua_getfield(lua, -1, "Update");
 			if(lua_isfunction(lua, -1)) {
 				luaX_push(lua, dt);

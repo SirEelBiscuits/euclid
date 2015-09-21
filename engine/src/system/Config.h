@@ -17,7 +17,7 @@ public:
 
 	template<typename T>
 	T GetValue(char const* name) const {
-		return luaX_getglobal<T>(s, name);
+		return luaX_returnglobal<T>(s, name);
 	};
 	
 	template<typename T>
