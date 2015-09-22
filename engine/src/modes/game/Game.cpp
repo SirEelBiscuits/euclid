@@ -3,6 +3,8 @@
 #include "system/Config.h"
 #include "system/Events.h"
 
+#include "world/Map.h"
+
 namespace Modes {
 
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
@@ -11,6 +13,8 @@ namespace Modes {
 	{
 		luaX_dofile(lua, "luaclid.lua");
 		luaX_dofile(lua, cfg.GetValue<std::string>("startscript").c_str());
+
+		luaX_registerClass<World::Wall>(lua, "test", &World::Wall::length);
 	}
 
 	Game::~Game() {

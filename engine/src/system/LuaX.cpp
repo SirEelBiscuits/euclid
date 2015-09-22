@@ -1,42 +1,49 @@
 #include "LuaX.h"
 
+
+luaX_ref::luaX_ref(lua_State *s)
+	: s(s)
+{
+	luaL_ref(s, LUA_REGISTRYINDEX);
+}
+
+void luaX_ref::push() {
+	lua_rawgeti(s, LUA_REGISTRYINDEX, ref);
+}
+
 template<>
-int luaX_returnglobal<int>(lua_State *s, char const *name) {
-	lua_getglobal(s, name);
+int luaX_return<int>(lua_State *s) {
 	auto ret = static_cast<int>(lua_tointeger(s, -1));
 	lua_pop(s, 1);
 	return ret;
 }
 
 template<>
-float luaX_returnglobal<float>(lua_State *s, char const *name) {
-	lua_getglobal(s, name);
+float luaX_return<float>(lua_State *s) {
 	auto ret = static_cast<float>(lua_tonumber(s, -1));
 	lua_pop(s, 1);
 	return ret;
 }
 
 template<>
-double luaX_returnglobal<double>(lua_State *s, char const *name) {
-	lua_getglobal(s, name);
+double luaX_return<double>(lua_State *s) {
 	auto ret = static_cast<double>(lua_tonumber(s, -1));
 	lua_pop(s, 1);
 	return ret;
 }
 
 template<>
-bool luaX_returnglobal<bool>(lua_State *s, char const *name) {
-	lua_getglobal(s, name);
+bool luaX_return<bool>(lua_State *s) {
 	auto ret = !!lua_toboolean(s, -1);
 	lua_pop(s, 1);
 	return ret;
 }
 
 template<>
-std::string luaX_returnglobal<std::string>(lua_State *s, char const *name) {
-	if(LUA_TNIL == lua_getglobal(s, name))
-		return "";
+std::string luaX_return<std::string>(lua_State *s) {
 	auto ccp = lua_tostring(s, -1);
+	if(nullptr == ccp)
+		return "";
 	auto ret = std::string(ccp);
 	lua_pop(s, 1);
 	return ret;

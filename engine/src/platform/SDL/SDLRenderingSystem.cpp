@@ -14,7 +14,7 @@ namespace Rendering {
 		bool FullScreen,
 		char const *Title
 	) {
-		return std::unique_ptr<Context>(new SDLContext(Width, Height, Scale, FullScreen, Title));
+		return std::make_unique<SDLContext>(Width, Height, Scale, FullScreen, Title);
 	}
 
 	template<>
