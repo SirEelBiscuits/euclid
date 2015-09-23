@@ -31,6 +31,14 @@ function CreateNewClass(baseClass)
 	return Class
 end
 
+function CreateNativeClass()
+	local Class = CreateNewClass()
+	Class.fromData = function(self, data)
+		return self:new({_data = data})
+	end
+	return Class
+end
+
 -- This MUST match the enum in Events.h
 InputEventType = MakeEnum({
 	None = 0,

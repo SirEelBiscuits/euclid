@@ -7,6 +7,14 @@
 
 namespace Modes {
 
+	struct testStruct { 
+		int x{0}; 
+		int const y{0}; 
+		int testFun() {
+			return x+y;
+		}
+	} testS;
+
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
@@ -14,7 +22,23 @@ namespace Modes {
 		luaX_dofile(lua, "luaclid.lua");
 		luaX_dofile(lua, cfg.GetValue<std::string>("startscript").c_str());
 
-		luaX_registerClass<World::Wall>(lua, "test", &World::Wall::length);
+		auto lr = luaX_registerClass<testStruct>(lua 
+			,"x", &testStruct::x
+			,"y", &testStruct::y
+			,"method", &testStruct::testFun
+		);
+
+		luaX_getglobal(lua, "Game");
+		lr.push();
+		lua_setfield(lua, -2, "TestClass");
+		lua_pop(lua, 1);
+
+		luaX_getglobal(lua, "Game", "TestClass", "fromData");
+		lua_insert(lua, -2); //swap TestClass and fromData, so TestClass is fromData's first argument
+		luaX_push(lua, &testS);
+		lua_pcall(lua, 2, 1, 0);
+		lua_setfield(lua, -2, "testS");
+		lua_pop(lua, 1);
 	}
 
 	Game::~Game() {
@@ -64,7 +88,7 @@ namespace Modes {
 			if(lua_isfunction(lua, -1)) {
 				luaX_push(lua, dt);
 				auto err = lua_pcall(lua, 1, 1, 0);
-				luaX_showErrors(lua, "Game.Initialise()", err);
+				luaX_showErrors(lua, "Game.Update()", err);
 				if(LUA_OK == err) {
 					ret = !!lua_toboolean(lua, -1);
 					lua_pop(lua, 1);
@@ -74,6 +98,11 @@ namespace Modes {
 			}
 		}
 		lua_pop(lua, 1); //remove "Game"
+
+		if(testS.x != 0) {
+			printf("x = %d\n", testS.x);
+			testS.x = 0;
+		}
 
 		return ret;
 	}

@@ -3,9 +3,8 @@
 
 luaX_ref::luaX_ref(lua_State *s)
 	: s(s)
-{
-	luaL_ref(s, LUA_REGISTRYINDEX);
-}
+	, ref(luaL_ref(s, LUA_REGISTRYINDEX))
+{}
 
 void luaX_ref::push() {
 	lua_rawgeti(s, LUA_REGISTRYINDEX, ref);
