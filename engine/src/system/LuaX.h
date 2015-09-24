@@ -11,6 +11,8 @@ POST_STD_LIB
 
 #include <lua.hpp>
 
+#include "lib/TypeMagic.h"
+
 #define LUAX_NEED_LIBS true
 
 /* custom smart pointer for incredibly stupid reasons */
@@ -47,21 +49,16 @@ T luaX_returnglobal(lua_State *s, char const *name) {
 }
 
 /* returns the value from the top of the stack. the item is popped from the stack */
-template<
-	typename T,
-	typename = std::enable_if_t<!std::is_pointer<T>::value, T>
->
-T luaX_return(lua_State *s);
+template<typename T>
+std::enable_if_t<!std::is_pointer<T>::value, T> luaX_return(lua_State *s);
 
 /* returns the value from the top of the stack. the item is popped from the stack */
-template<
-	typename T,
-	typename = std::enable_if_t<std::is_pointer<T>::value, T>
->
-T* luaX_return(lua_State *s) {
-	auto ud = lua_touserdata(s, 01);
-	lua_pop(lua, 1);
-	return static_cast<T*>(ud);
+template<typename T>
+std::enable_if_t<std::is_pointer<T>::value, T> luaX_return(lua_State *s) {
+	static_assert(std::is_pointer<T>::value, "T must be a pointer");
+	auto ud = lua_touserdata(s, -1);
+	lua_pop(s, 1);
+	return static_cast<T>(ud);
 }
 
 /* typed push onto the stack */
@@ -251,20 +248,57 @@ void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
 }
 
 
-template<typename C, typename T, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T (C::* member)(Args... args)) {
-	//not happening right now
+template<typename... Args>
+std::tuple<Args...> luaX_returntuplefromstack(lua_State *lua) {
+	std::tuple<Args...> ret;
+	luaX_returntuplefromstackInner<std::tuple<Args...>, sizeof...(Args) - 1>::Fn(lua, ret);
+	return ret;
+}
 
-	//auto caller = [] (lua_State *l) {
-	//	luaX_getlocal(l, "_data");
-	//	auto callerF =*static_cast<std::function<T(C*, Args...)>*>(
-	//		lua_touserdata(l, lua_upvalueindex(1))
-	//	);
-	//	auto ret = callerF(static_cast<C*>(lua_touserdata(l, -1)), something, smart, here);
-	//	lua_pop(l, 1);
-	//	luaX_push(ret);
-	//	return 1;
-	//	//specialised for void and return 0, and for std::tie and return _arity<std::tie>
-	//}
-	//auto memF = [member](C* data, Args... args) { return data->*member(args...); }
+template<typename Tuple, int I>
+class luaX_returntuplefromstackInner {
+public:
+	static void Fn(lua_State *lua, Tuple& ret) {
+	std::get<I>(ret) = luaX_return<std::tuple_element<I, Tuple>::type>(lua);
+	luaX_returntuplefromstackInner<Tuple, I-1>::Fn(lua, ret);
+	}
+};
+
+template<typename Tuple>
+class luaX_returntuplefromstackInner<Tuple, 0> {
+public:
+	static void Fn(lua_State *lua, Tuple& ret) {
+	std::get<0>(ret) = luaX_return<std::tuple_element<0, Tuple>::type>(lua);
+	}
+};
+
+template<typename C, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* member)(Args...)) {
+	auto caller = [] (lua_State *l) {
+		if(lua_gettop(l) != 1 + sizeof...(Args)) {
+			return luaL_error(l, 
+					"Bad call to function, %d arguments provided, %d expected (including self)",
+					lua_gettop(l),
+					1+sizeof...(Args)
+				);
+		}
+		//Arg list contains self, and the arguments for the function
+		//we need to replace self with self._data
+		lua_getfield(l, 1, "_data");
+		lua_insert(l, 2);
+		auto args = luaX_returntuplefromstack<C*, Args...>(l);
+		auto callerF = *static_cast<std::function<void(C*, Args...)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		);
+		TypeMagic::apply(callerF, args);
+		//TODO specialise for T and return 1, and for std::tie and return _arity<std::tie>
+		return 0;
+	};
+	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
+		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
+	);
+	new(callInner) std::function<void(C*, Args...)>;
+	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
+	lua_pushcclosure(lua, caller, 1);
+	lua_setfield(lua, -2, name);
 }

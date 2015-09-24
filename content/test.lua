@@ -5,6 +5,11 @@ function Game.Initialise()
 	local map = dofile("testmap.lua")
 
 	local k,v
+	for k,v in pairs(Game) do
+		print(k, "=", v)
+	end
+	print("----")
+	local k,v
 	for k,v in pairs(Game.TestClass) do
 		print(k, "=", v)
 	end

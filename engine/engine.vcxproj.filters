@@ -72,6 +72,9 @@
     <ClInclude Include="src\lib\Maths.h">
       <Filter>src\lib</Filter>
     </ClInclude>
+    <ClInclude Include="src\lib\TypeMagic.h">
+      <Filter>src\lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

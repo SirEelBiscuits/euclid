@@ -168,6 +168,7 @@
     <ClInclude Include="src\system\LuaX.h" />
     <ClInclude Include="src\system\RunnableMode.h" />
     <ClInclude Include="src\world\Map.h" />
+    <ClInclude Include="src\lib\TypeMagic.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
