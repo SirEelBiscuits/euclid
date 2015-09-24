@@ -3,6 +3,14 @@ Game = Game or {}
 function Game.Initialise()
 	print("Initialised")
 	local map = dofile("testmap.lua")
+
+	local k,v
+	for k,v in pairs(Game.TestClass) do
+		print(k, "=", v)
+	end
+
+	Game.testS:set_x(3)
+	Game.testS:method()
 end
 
 Game.quit = false
