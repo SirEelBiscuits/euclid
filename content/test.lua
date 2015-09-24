@@ -16,6 +16,7 @@ function Game.Initialise()
 
 	Game.testS:set_x(3)
 	Game.testS:method()
+	print("method2 call", Game.testS:method2())
 end
 
 Game.quit = false

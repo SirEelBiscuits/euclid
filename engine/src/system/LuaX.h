@@ -272,6 +272,8 @@ public:
 	}
 };
 
+//TODO specialise for std::tuple and factor out some duplication?
+
 template<typename C, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* member)(Args...)) {
 	auto caller = [] (lua_State *l) {
@@ -291,7 +293,6 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* membe
 			lua_touserdata(l, lua_upvalueindex(1))
 		);
 		TypeMagic::apply(callerF, args);
-		//TODO specialise for T and return 1, and for std::tie and return _arity<std::tie>
 		return 0;
 	};
 	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
@@ -299,6 +300,36 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* membe
 	);
 	new(callInner) std::function<void(C*, Args...)>;
 	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
+	lua_pushcclosure(lua, caller, 1);
+	lua_setfield(lua, -2, name);
+}
+
+template<typename C, typename T, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T (C::* member)(Args...)) {
+	auto caller = [] (lua_State *l) {
+		if(lua_gettop(l) != 1 + sizeof...(Args)) {
+			return luaL_error(l, 
+					"Bad call to function, %d arguments provided, %d expected (including self)",
+					lua_gettop(l),
+					1+sizeof...(Args)
+				);
+		}
+		//Arg list contains self, and the arguments for the function
+		//we need to replace self with self._data
+		lua_getfield(l, 1, "_data");
+		lua_insert(l, 2);
+		auto args = luaX_returntuplefromstack<C*, Args...>(l);
+		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		);
+		luaX_push<T>(l, TypeMagic::apply(callerF, args));
+		return 1;
+	};
+	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
+		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
+	);
+	new(callInner) std::function<T(C*, Args...)>;
+	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }

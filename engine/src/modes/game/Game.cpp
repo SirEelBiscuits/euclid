@@ -13,6 +13,9 @@ namespace Modes {
 		void testFun() {
 			printf("%d\n", x+y);
 		}
+		int testFun2() {
+			return x + y;
+		}
 	} testS;
 
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
@@ -26,6 +29,7 @@ namespace Modes {
 			,"x", &testStruct::x
 			,"y", &testStruct::y
 			,"method", &testStruct::testFun
+			,"method2", &testStruct::testFun2
 		);
 
 		luaX_getglobal(lua, "Game");
