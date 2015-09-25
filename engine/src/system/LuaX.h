@@ -75,6 +75,23 @@ void luaX_push(lua_State *s, T *value) {
 	*/
 }
 
+template<typename T, typename... Args>
+void luaX_push(lua_State *s, T value, Args... args) {
+	luaX_push(s, value);
+	luaX_push(s, args...);
+}
+
+template<typename... Args>
+void luaX_push(lua_State *s, std::tuple<Args...> value) {
+	using Indices = std::make_index_sequence<std::tuple_size<std::decay_t<std::tuple<Args...>>>::value>;
+	luaX_push(s, value, Indices{});
+}
+
+template<typename Tuple, size_t... I>
+void luaX_push(lua_State *s, Tuple tuple, std::index_sequence<I...>) {
+	luaX_push(s, std::get<I>(tuple)...);
+}
+
 /* if errCode is not LUA_ERROK, this will print the error at the top of the stack and pop it */
 void luaX_showErrors(lua_State* s, char const *name, int errCode);
 
@@ -304,8 +321,20 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* membe
 	lua_setfield(lua, -2, name);
 }
 
+
 template<typename C, typename T, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, T (C::* member)(Args...)) {
+	luaX_registerClassMethodInner<C, T, 1, Args...>(lua, name, member);
+}
+template<typename C, typename... RetArgs, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, std::tuple<RetArgs...> (C::* member)(Args...)) {
+	luaX_registerClassMethodInner<C, std::tuple<RetArgs...>, sizeof...(RetArgs), Args...>(lua, name, member);
+}
+
+//weirdly the 'Inner' can be stripped from the name and overloading doesn't break, but that feels like
+// it's a bug, or non-conformant, and is non-obvious regardless
+template<typename C, typename T, int arity, typename... Args>
+void luaX_registerClassMethodInner(lua_State *lua, char const *name, T (C::* member)(Args...)) {
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
 			return luaL_error(l, 
@@ -322,8 +351,8 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, T (C::* member)(
 		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
 			lua_touserdata(l, lua_upvalueindex(1))
 		);
-		luaX_push<T>(l, TypeMagic::apply(callerF, args));
-		return 1;
+		luaX_push(l, TypeMagic::apply(callerF, args));
+		return arity;
 	};
 	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
 		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))

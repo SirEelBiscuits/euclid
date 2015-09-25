@@ -16,6 +16,10 @@ namespace Modes {
 		int testFun2() {
 			return x + y;
 		}
+
+		std::tuple<int, int, int> testFun3() {
+			return std::tuple<int, int, int>{x, y, 5};
+		}
 	} testS;
 
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
@@ -30,6 +34,7 @@ namespace Modes {
 			,"y", &testStruct::y
 			,"method", &testStruct::testFun
 			,"method2", &testStruct::testFun2
+			,"method3", &testStruct::testFun3
 		);
 
 		luaX_getglobal(lua, "Game");
