@@ -7,6 +7,26 @@ POST_STD_LIB
 
 #include <lua.hpp>
 
+/*
+	Used to register a class. Arguements are:
+	lua_State*, 
+	"name", &Class::Member,...
+
+	If the member is a data member, it will register set_name(x) and get_name()
+	otherwise it will register a function to the class which takes exactly the right number of arguments.
+	If there are const and non-const overloads of a method, do not list them here.
+	Instead use:
+		- luaX_registerClassMethodVoid
+		- luaX_registerClassMethodVoidConst
+		- luaX_registerClassMethodNonVoid
+		- luaX_registerClassMethodNonVoidConst
+	As appropriate.
+
+	TODO register class const/non-const overloads
+
+	This method returns a luaX_ref which refers to the Class object. see Luaclid.lua for the format of the class.
+	Additionally after registration, calling luaX_push(T) with the registered type will push the lua wrapper.	
+	*/
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 	auto flxr = luaX_typeTable.find(typeid(T));
