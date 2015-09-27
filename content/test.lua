@@ -16,10 +16,8 @@ function Game.Initialise()
 
 	Game.testS:set_x(3)
 	Game.testS:method()
-	print("method2 call", Game.testS:method2())
-
-	local q, w, e = Game.testS:method3()
-	print(q, w, e)
+	print("method2 call:", Game.testS:method2())
+	print("method3 call:", Game.testS:method3())
 end
 
 Game.quit = false

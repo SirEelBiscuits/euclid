@@ -13,12 +13,15 @@ namespace Modes {
 		void testFun() const {
 			printf("constcall %d\n", x+y);
 		}
+		void testFun() {
+			printf("NON constcall %d\n", x+y);
+		}
 
-		int testFun2() {
+		int testFun2() const {
 			return x + y;
 		}
 
-		std::tuple<int, int, int> testFun3() {
+		std::tuple<int, int, int> testFun3() const {
 			return std::tuple<int, int, int>{x, y, 5};
 		}
 	} testS, test2;
@@ -33,10 +36,12 @@ namespace Modes {
 		auto lr = luaX_registerClass<testStruct>(lua 
 			,"x", &testStruct::x
 			,"y", &testStruct::y
-			,"method", &testStruct::testFun
+			//,"method", &testStruct::testFun
 			,"method2", &testStruct::testFun2
 			,"method3", &testStruct::testFun3
 		);
+		luaX_push(lua, lr);
+		luaX_registerClassMethodVoid(lua, "method", &testStruct::testFun);
 
 		lua, luaX_setglobal(lua, "Game", "TestClass", lr);
 		luaX_setlocal(lua, "testS", &testS); // Game is already on the stack
