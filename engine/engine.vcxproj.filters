@@ -13,9 +13,6 @@
     <ClCompile Include="src\system\Config.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
-    <ClCompile Include="src\system\LuaX.cpp">
-      <Filter>src\system</Filter>
-    </ClCompile>
     <ClCompile Include="src\modes\game\Game.cpp">
       <Filter>src\modes\game</Filter>
     </ClCompile>
@@ -24,6 +21,9 @@
     </ClCompile>
     <ClCompile Include="src\platform\SDL\SDLEvents.cpp">
       <Filter>src\platform\SDL</Filter>
+    </ClCompile>
+    <ClCompile Include="src\system\luaX\LuaX.cpp">
+      <Filter>src\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +75,15 @@
     <ClInclude Include="src\lib\TypeMagic.h">
       <Filter>src\lib</Filter>
     </ClInclude>
+    <ClInclude Include="src\system\luaX\luaXClasses.h">
+      <Filter>src\system\luaX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\luaX\luaXStack.h">
+      <Filter>src\system\luaX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\luaX\LuaXClass.h">
+      <Filter>src\system\luaX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -106,6 +115,9 @@
     </Filter>
     <Filter Include="src\world">
       <UniqueIdentifier>{21632622-b121-43b7-85df-02b275e08b32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\luaX">
+      <UniqueIdentifier>{10fb4fae-28a4-4e48-8521-4e4449f3b8e5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

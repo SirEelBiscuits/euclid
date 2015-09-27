@@ -74,7 +74,8 @@ namespace Modes {
 			lua_createtable(lua, input.size(), 0);
 
 			for(auto i = 0u; i < input.size(); ++i) {
-				luaX_createtable(lua, 0, 3,
+				luaX_push(lua, luaX_emptytable{0, 3});
+				luaX_settable(lua,
 					"key",       input[i].key, 
 					"keyRepeat", input[i].repeat,
 					"eventType", (int)input[i].type

@@ -150,9 +150,11 @@
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp" />
     <ClCompile Include="src\rendering\RenderingSystem.cpp" />
     <ClCompile Include="src\system\Config.cpp" />
-    <ClCompile Include="src\system\LuaX.cpp" />
+    <ClCompile Include="src\system\luaX\LuaX.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\system\luaX\LuaXClass.h" />
+    <ClInclude Include="src\system\luaX\luaXClasses.h" />
     <ClInclude Include="src\CommandLine.h" />
     <ClInclude Include="src\lib\BasicTypes.h" />
     <ClInclude Include="src\lib\gargamel.h" />
@@ -166,6 +168,7 @@
     <ClInclude Include="src\system\Config.h" />
     <ClInclude Include="src\system\Events.h" />
     <ClInclude Include="src\system\LuaX.h" />
+    <ClInclude Include="src\system\luaX\luaXStack.h" />
     <ClInclude Include="src\system\RunnableMode.h" />
     <ClInclude Include="src\world\Map.h" />
     <ClInclude Include="src\lib\TypeMagic.h" />
