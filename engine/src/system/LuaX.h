@@ -7,6 +7,8 @@ PRE_STD_LIB
 #include <memory>
 #include <type_traits>
 #include <functional>
+#include <map>
+#include <typeindex>
 POST_STD_LIB
 
 #include <lua.hpp>
@@ -14,6 +16,7 @@ POST_STD_LIB
 #include "lib/TypeMagic.h"
 
 #define LUAX_NEED_LIBS true
+
 
 /* custom smart pointer for incredibly stupid reasons */
 /* lua state smart pointer. auto casts to lua_State* */
@@ -40,6 +43,8 @@ struct luaX_ref {
 	void push();
 	lua_State *s;
 };
+
+extern std::map<std::type_index, std::unique_ptr<luaX_ref>> luaX_typeTable;
 
 /* returns the requested value. Stack ends up in the same state as at the calling point */
 template<typename T>
@@ -68,11 +73,16 @@ void luaX_push(lua_State *s, T value);
 /* typed push onto the stack */
 template<typename T>
 void luaX_push(lua_State *s, T *value) {
-	lua_pushlightuserdata(s, value);
-	/* ::TODO:: 
-		use a map of type_info -> luaX_ref to get a function like Class:FromUserdata
-		to turn it into something usable if possible? maybe?
-	*/
+	auto flxr = luaX_typeTable.find(typeid(T));
+	if(flxr != luaX_typeTable.end()) {
+		luaX_push(s, *flxr->second);
+		lua_getfield(s, -1, "fromData");
+		lua_insert(s, -2); //needs a self argument
+		lua_pushlightuserdata(s, value);
+		lua_pcall(s, 2, 1, 0);
+	} else {
+		lua_pushlightuserdata(s, value);
+	}
 }
 
 template<typename T, typename... Args>
@@ -135,7 +145,7 @@ template<typename... Args>
 int luaX_setglobal(lua_State* s, char const *name, Args... args) {
 	lua_getglobal(s, name);
 	if(lua_istable(s, -1))
-		return 1 + luaX_setlocal(s, vargs...);
+		return 1 + luaX_setlocal(s, args...);
 	return 1;
 }
 
@@ -153,7 +163,7 @@ int luaX_setlocal(lua_State *lua, char const *firstKey, Args... args) {
 /* returns the number of items the stack gained during this call*/
 template<typename T>
 int luaX_setlocal(lua_State *lua, char const *key, T val) {
-	luaX_push(val);
+	luaX_push(lua, val);
 	lua_setfield(lua, -2, key);
 	return 0;
 }
@@ -184,12 +194,17 @@ void luaX_settable(lua_State *lua, char const *key, T val) {
 
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
+	auto flxr = luaX_typeTable.find(typeid(T));
+	if(flxr != luaX_typeTable.end())
+		return *flxr->second;
 	luaX_getglobal(lua, "CreateNativeClass");
 	lua_pcall(lua, 0, 1, 0);
 	luaX_registerClassMethod(lua, args...);
 
-	//Need to register the constructor here, or something...
-	return luaX_ref(lua);
+	auto lxr = std::make_unique<luaX_ref>(lua);
+	auto lxrp = lxr.get();
+	luaX_typeTable[typeid(T)] = std::move(lxr);
+	return *lxrp;
 }
 
 template<typename T, typename... Args>
@@ -288,8 +303,6 @@ public:
 	std::get<0>(ret) = luaX_return<std::tuple_element<0, Tuple>::type>(lua);
 	}
 };
-
-//TODO specialise for std::tuple and factor out some duplication?
 
 template<typename C, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* member)(Args...)) {

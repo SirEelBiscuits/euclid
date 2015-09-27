@@ -20,7 +20,7 @@ namespace Modes {
 		std::tuple<int, int, int> testFun3() {
 			return std::tuple<int, int, int>{x, y, 5};
 		}
-	} testS;
+	} testS, test2;
 
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
@@ -37,16 +37,8 @@ namespace Modes {
 			,"method3", &testStruct::testFun3
 		);
 
-		luaX_getglobal(lua, "Game");
-		lr.push();
-		lua_setfield(lua, -2, "TestClass");
-		lua_pop(lua, 1);
-
-		luaX_getglobal(lua, "Game", "TestClass", "fromData");
-		lua_insert(lua, -2); //swap TestClass and fromData, so TestClass is fromData's first argument
-		luaX_push(lua, &testS);
-		lua_pcall(lua, 2, 1, 0);
-		lua_setfield(lua, -2, "testS");
+		lua, luaX_setglobal(lua, "Game", "TestClass", lr);
+		luaX_setlocal(lua, "testS", &testS); // Game is already on the stack
 		lua_pop(lua, 1);
 	}
 

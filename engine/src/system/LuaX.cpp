@@ -1,5 +1,6 @@
 #include "LuaX.h"
 
+std::map<std::type_index, std::unique_ptr<luaX_ref>> luaX_typeTable;
 
 luaX_ref::luaX_ref(lua_State *s)
 	: s(s)
@@ -81,6 +82,11 @@ void luaX_push<std::string>(lua_State *s, std::string value) {
 template<>
 void luaX_push<luaX_emptytable>(lua_State *s, luaX_emptytable em) {
 	lua_createtable(s, em.narr, em.nrec);
+}
+
+template<>
+void luaX_push<luaX_ref>(lua_State *s, luaX_ref ref) {
+	ref.push();
 }
 
 void luaX_showErrors(lua_State* s, char const *name, int errCode) {
