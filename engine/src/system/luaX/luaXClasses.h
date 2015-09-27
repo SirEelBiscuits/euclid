@@ -31,6 +31,7 @@ struct luaX_emptytable {
 
 luaX_State luaX_newstate();
 
+//TODO - ref counting, and destruction?
 struct luaX_ref {
 	luaX_ref(lua_State *s);
 	int ref{LUA_NOREF};

@@ -10,9 +10,10 @@ namespace Modes {
 	struct testStruct { 
 		int x{0}; 
 		int const y{3}; 
-		void testFun() {
-			printf("%d\n", x+y);
+		void testFun() const {
+			printf("constcall %d\n", x+y);
 		}
+
 		int testFun2() {
 			return x + y;
 		}
