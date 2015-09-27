@@ -7,7 +7,6 @@ POST_STD_LIB
 
 #include <lua.hpp>
 
-
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 	auto flxr = luaX_typeTable.find(typeid(T));
@@ -24,9 +23,14 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 }
 
 template<typename T, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args ) {
-	luaX_registerClassMethod(lua, name, member);
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
+	luaX_registerClassMethodSingle(lua, name, member);
 	luaX_registerClassMethod(lua, args...);
+}
+
+template<typename T, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
+	luaX_registerClassMethodSingle(lua, name, member);
 }
 
 template<
@@ -34,7 +38,7 @@ template<
 	typename T,
 	typename = std::enable_if_t<!std::is_function<T>::value, T>
 >
-void luaX_registerClassMethod(lua_State *lua, char const *name, T C::* member) {
+void luaX_registerClassMethodSingle(lua_State *lua, char const *name, T C::* member) {
 	luaX_registerClassGetter(lua, name, member);
 	luaX_registerClassSetter(lua, name, member);
 }
@@ -44,8 +48,84 @@ template<
 	typename T,
 	typename = std::enable_if_t<!std::is_function<T>::value, T>
 >
-void luaX_registerClassMethod(lua_State *lua, char const *name, T const C::* member) {
+void luaX_registerClassMethodSingle(lua_State *lua, char const *name, T const C::* member) {
 	luaX_registerClassGetter(lua, name, member);
+}
+
+template<typename C, typename T, typename... Args>
+void luaX_registerClassMethodSingle(lua_State *lua, char const *name, T (C::* member)(Args...)) {
+	luaX_registerClassMethodInner<C, T, 1, Args...>(lua, name, member);
+}
+template<typename C, typename... RetArgs, typename... Args>
+void luaX_registerClassMethodSingle(lua_State *lua, char const *name, std::tuple<RetArgs...> (C::* member)(Args...)) {
+	luaX_registerClassMethodInner<C, std::tuple<RetArgs...>, sizeof...(RetArgs), Args...>(lua, name, member);
+}
+
+template<typename C, typename... Args>
+void luaX_registerClassMethodSingle(lua_State *lua, char const *name, void (C::* member)(Args...)) {
+	luaX_registerClassMethodVoid(lua, name, member);
+}
+
+//weirdly the 'Inner' can be stripped from the name and overloading doesn't break, but that feels like
+// it's a bug, or non-conformant, and is non-obvious regardless
+template<typename C, typename T, int arity, typename... Args>
+void luaX_registerClassMethodInner(lua_State *lua, char const *name, T (C::* member)(Args...)) {
+	auto caller = [] (lua_State *l) {
+		if(lua_gettop(l) != 1 + sizeof...(Args)) {
+			return luaL_error(l, 
+					"Bad call to function, %d arguments provided, %d expected (including self)",
+					lua_gettop(l),
+					1+sizeof...(Args)
+				);
+		}
+		//Arg list contains self, and the arguments for the function
+		//we need to replace self with self._data
+		lua_getfield(l, 1, "_data");
+		lua_insert(l, 2);
+		auto args = luaX_returntuplefromstack<C*, Args...>(l);
+		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		);
+		luaX_push(l, TypeMagic::apply(callerF, args));
+		return arity;
+	};
+	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
+		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
+	);
+	new(callInner) std::function<T(C*, Args...)>;
+	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
+	lua_pushcclosure(lua, caller, 1);
+	lua_setfield(lua, -2, name);
+}
+
+template<typename C, typename... Args>
+void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* member)(Args...)) {
+	auto caller = [] (lua_State *l) {
+		if(lua_gettop(l) != 1 + sizeof...(Args)) {
+			return luaL_error(l, 
+					"Bad call to function, %d arguments provided, %d expected (including self)",
+					lua_gettop(l),
+					1+sizeof...(Args)
+				);
+		}
+		//Arg list contains self, and the arguments for the function
+		//we need to replace self with self._data
+		lua_getfield(l, 1, "_data");
+		lua_insert(l, 2);
+		auto args = luaX_returntuplefromstack<C*, Args...>(l);
+		auto callerF = *static_cast<std::function<void(C*, Args...)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		);
+		TypeMagic::apply(callerF, args);
+		return 0;
+	};
+	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
+		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
+	);
+	new(callInner) std::function<void(C*, Args...)>;
+	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
+	lua_pushcclosure(lua, caller, 1);
+	lua_setfield(lua, -2, name);
 }
 
 template<typename C, typename T>
@@ -93,77 +173,4 @@ void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
 	*setInner = [member](C* data, T val){data->*member = val;};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());
-}
-
-
-template<typename C, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, void (C::* member)(Args...)) {
-	auto caller = [] (lua_State *l) {
-		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
-					"Bad call to function, %d arguments provided, %d expected (including self)",
-					lua_gettop(l),
-					1+sizeof...(Args)
-				);
-		}
-		//Arg list contains self, and the arguments for the function
-		//we need to replace self with self._data
-		lua_getfield(l, 1, "_data");
-		lua_insert(l, 2);
-		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<void(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
-		TypeMagic::apply(callerF, args);
-		return 0;
-	};
-	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
-	);
-	new(callInner) std::function<void(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
-	lua_pushcclosure(lua, caller, 1);
-	lua_setfield(lua, -2, name);
-}
-
-
-template<typename C, typename T, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T (C::* member)(Args...)) {
-	luaX_registerClassMethodInner<C, T, 1, Args...>(lua, name, member);
-}
-template<typename C, typename... RetArgs, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, std::tuple<RetArgs...> (C::* member)(Args...)) {
-	luaX_registerClassMethodInner<C, std::tuple<RetArgs...>, sizeof...(RetArgs), Args...>(lua, name, member);
-}
-
-//weirdly the 'Inner' can be stripped from the name and overloading doesn't break, but that feels like
-// it's a bug, or non-conformant, and is non-obvious regardless
-template<typename C, typename T, int arity, typename... Args>
-void luaX_registerClassMethodInner(lua_State *lua, char const *name, T (C::* member)(Args...)) {
-	auto caller = [] (lua_State *l) {
-		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
-					"Bad call to function, %d arguments provided, %d expected (including self)",
-					lua_gettop(l),
-					1+sizeof...(Args)
-				);
-		}
-		//Arg list contains self, and the arguments for the function
-		//we need to replace self with self._data
-		lua_getfield(l, 1, "_data");
-		lua_insert(l, 2);
-		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
-		luaX_push(l, TypeMagic::apply(callerF, args));
-		return arity;
-	};
-	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
-	);
-	new(callInner) std::function<T(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
-	lua_pushcclosure(lua, caller, 1);
-	lua_setfield(lua, -2, name);
 }
