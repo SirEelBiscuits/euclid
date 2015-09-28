@@ -9,7 +9,7 @@ POST_STD_LIB
 
 /*
 	Used to register a class. Arguements are:
-	lua_State*, 
+	lua_State*,
 	"name", &Class::Member,...
 
 	If the member is a data member, it will register set_name(x) and get_name()
@@ -25,7 +25,7 @@ POST_STD_LIB
 	TODO register class const/non-const overloads
 
 	This method returns a luaX_ref which refers to the Class object. see Luaclid.lua for the format of the class.
-	Additionally after registration, calling luaX_push(T) with the registered type will push the lua wrapper.	
+	Additionally after registration, calling luaX_push(T) with the registered type will push the lua wrapper.
 	*/
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
@@ -62,7 +62,6 @@ template<typename C, typename T>
 class luaX_registerClassMethodSingle<T C::*> {
 public:
 	static void Register(lua_State *lua, char const *name, T C::* member) {
-		static_assert(!std::is_function<decltype(member)>::value, "what");
 		luaX_registerClassGetter(lua, name, member);
 		luaX_registerClassSetter(lua, name, member);
 	}
@@ -135,7 +134,7 @@ template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...)) {
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
+			return luaL_error(l,
 					"Bad call to function, %d arguments provided, %d expected (including self)",
 					lua_gettop(l),
 					1+sizeof...(Args)
@@ -165,7 +164,7 @@ template<typename C, typename... Args>
 void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* member)(Args...)) {
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
+			return luaL_error(l,
 					"Bad call to function, %d arguments provided, %d expected (including self)",
 					lua_gettop(l),
 					1+sizeof...(Args)
@@ -204,7 +203,7 @@ void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* mem
 	};
 	std::string getterName("get_");
 	getterName.append(name);
-	
+
 	std::function<T(C*)> *getInner = static_cast<std::function<T(C*)> *>(
 		lua_newuserdata(lua, sizeof(std::function<T(C*)>))
 	);
@@ -245,7 +244,7 @@ template<typename C, typename... Args>
 void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMemFunPtrConst<C, Args...> member) {
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
+			return luaL_error(l,
 					"Bad call to function, %d arguments provided, %d expected (including self)",
 					lua_gettop(l),
 					1+sizeof...(Args)
@@ -277,7 +276,7 @@ template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoidConst(lua_State *lua, char const *name, nonVoidMemFunPtrConst<T, C, Args...> member) {
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
-			return luaL_error(l, 
+			return luaL_error(l,
 					"Bad call to function, %d arguments provided, %d expected (including self)",
 					lua_gettop(l),
 					1+sizeof...(Args)

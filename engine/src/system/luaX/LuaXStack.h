@@ -57,7 +57,6 @@ std::enable_if_t<!std::is_pointer<T>::value, T> luaX_return(lua_State *s);
 /* returns the value from the top of the stack. the item is popped from the stack */
 template<typename T>
 std::enable_if_t<std::is_pointer<T>::value, T> luaX_return(lua_State *s) {
-	static_assert(std::is_pointer<T>::value, "T must be a pointer");
 	auto ud = lua_touserdata(s, -1);
 	lua_pop(s, 1);
 	return static_cast<T>(ud);
@@ -127,7 +126,7 @@ int luaX_getlocal(lua_State *lua, char const *first);
 
 /* returns the number of items the stack gained during this call*/
 template<typename T>
-int luaX_setglobal(lua_State *s, char const *name, T value) { 
+int luaX_setglobal(lua_State *s, char const *name, T value) {
 	luaX_push(s, value);
 	lua_setglobal(s, name);
 	return 0;
@@ -162,7 +161,7 @@ int luaX_setlocal(lua_State *lua, char const *key, T val) {
 }
 
 /* Designed to set multiple key-value pairs on a single table
-	args like: 
+	args like:
 		"key", someVal, "key2", someOtherVal"
 	and so forth.
 	expects the top of the stack to contain the table to be modified
