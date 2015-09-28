@@ -57,9 +57,18 @@ std::enable_if_t<!std::is_pointer<T>::value, T> luaX_return(lua_State *s);
 /* returns the value from the top of the stack. the item is popped from the stack */
 template<typename T>
 std::enable_if_t<std::is_pointer<T>::value, T> luaX_return(lua_State *s) {
-	auto ud = lua_touserdata(s, -1);
+	void *data{nullptr};
+	if(lua_isuserdata(s, -1)) {
+		data = lua_touserdata(s, -1);
+	}
+	else if(lua_istable(s, -1)) {
+		luaX_getlocal(s, "_data");
+		if(lua_isuserdata(s, -1))
+			data = lua_touserdata(s, -1);
+		lua_pop(s, 1);
+	}
 	lua_pop(s, 1);
-	return static_cast<T>(ud);
+	return static_cast<T>(data);
 }
 
 /* returns the requested value. Stack ends up in the same state as at the calling point */

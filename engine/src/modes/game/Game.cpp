@@ -7,45 +7,12 @@
 
 namespace Modes {
 
-	struct testStruct { 
-		int x{0}; 
-		int const y{3}; 
-		void testFun() const {
-			printf("constcall %d\n", x+y);
-		}
-		void testFun() {
-			printf("NON constcall %d\n", x+y);
-		}
-
-		int testFun2() const {
-			return x + y;
-		}
-
-		std::tuple<int, int, int> testFun3() const {
-			return std::tuple<int, int, int>{x, y, 5};
-		}
-	} testS, test2;
-
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
 		luaX_dofile(lua, "luaclid.lua");
 		luaX_dofile(lua, cfg.GetValue<std::string>("startscript").c_str());
-
-		auto lr = luaX_registerClass<testStruct>(lua 
-			,"x", &testStruct::x
-			,"y", &testStruct::y
-			//,"method", &testStruct::testFun
-			,"method2", &testStruct::testFun2
-			,"method3", &testStruct::testFun3
-		);
-		luaX_push(lua, lr);
-		luaX_registerClassMethodVoid(lua, "method", &testStruct::testFun);
-
-		lua, luaX_setglobal(lua, "Game", "TestClass", lr);
-		luaX_setlocal(lua, "testS", &testS); // Game is already on the stack
-		lua_pop(lua, 1);
 	}
 
 	Game::~Game() {
@@ -106,12 +73,6 @@ namespace Modes {
 			}
 		}
 		lua_pop(lua, 1); //remove "Game"
-
-		if(testS.x != 0) {
-			printf("x = %d\n", testS.x);
-			testS.x = 0;
-		}
-
 		return ret;
 	}
 
