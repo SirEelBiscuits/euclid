@@ -154,6 +154,7 @@ void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* m
 	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
 		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
 	);
+	//This object will be managed by Lua's GC
 	new(callInner) std::function<T(C*, Args...)>;
 	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
 	lua_pushcclosure(lua, caller, 1);
@@ -184,6 +185,7 @@ void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* m
 	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
 		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
 	);
+	//This object will be managed by Lua's GC
 	new(callInner) std::function<void(C*, Args...)>;
 	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
 	lua_pushcclosure(lua, caller, 1);
@@ -207,6 +209,7 @@ void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* mem
 	std::function<T(C*)> *getInner = static_cast<std::function<T(C*)> *>(
 		lua_newuserdata(lua, sizeof(std::function<T(C*)>))
 	);
+	//This object will be managed by Lua's GC
 	new(getInner) std::function<T(C*)>;
 	*getInner = [member](C* data){return data->*member;};
 	lua_pushcclosure(lua, getter, 1);
@@ -231,6 +234,7 @@ void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
 	std::function<void(C*, T)> *setInner = static_cast<std::function<void(C*, T)> *>(
 		lua_newuserdata(lua, sizeof(std::function<void(C*, T)>))
 	);
+	//This object will be managed by Lua's GC
 	new(setInner) std::function<void(C*, T)>;
 	*setInner = [member](C* data, T val){data->*member = val;};
 	lua_pushcclosure(lua, setter, 1);
@@ -264,6 +268,7 @@ void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMem
 	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
 		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
 	);
+	//This object will be managed by Lua's GC
 	new(callInner) std::function<void(C*, Args...)>;
 	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
 	lua_pushcclosure(lua, caller, 1);
@@ -296,8 +301,10 @@ void luaX_registerClassMethodNonVoidConst(lua_State *lua, char const *name, nonV
 	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
 		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
 	);
+	//This object will be managed by Lua's GC
 	new(callInner) std::function<T(C*, Args...)>;
 	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }
+
