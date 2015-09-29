@@ -42,6 +42,9 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 	return *lxrp;
 }
 
+template<typename T>
+class luaX_registerClassMethodSingle;
+
 template<typename T, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
 	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
@@ -74,6 +77,9 @@ public:
 		luaX_registerClassGetter(lua, name, member);
 	}
 };
+
+template<typename C, typename T, int arity, typename... Args>
+void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
 
 template<typename C, typename T, typename... Args>
 class luaX_registerClassMethodSingle<T (C::*)(Args...)> {
@@ -111,6 +117,9 @@ public:
 		luaX_registerClassMethodVoidConst(lua, name, member);
 	}
 };
+
+template<typename C, typename T, int arity, typename... Args>
+void luaX_registerClassMethodNonVoidConst(lua_State *lua, char const *name, nonVoidMemFunPtrConst<T, C, Args...> member);
 
 template<typename T, typename C, typename... Args>
 class luaX_registerClassMethodSingle<nonVoidMemFunPtrConst<T, C, Args...>> {

@@ -1,6 +1,5 @@
-libs=lua SDL2
 
-all: $(libs)
+all: lua SDL2
 
 lua:
 	make -C lua

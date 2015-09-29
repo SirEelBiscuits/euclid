@@ -14,7 +14,7 @@ all: $(TARGET)
 
 $(TARGET): .depend $(OBJ_FILES)
 	@echo "Building $(TARGET)"
-	@ar rvs $(TARGET).a `find $(OBJ_DIR) -name '*.o'` > /dev/null
+	@ar rvs lib$(TARGET).a `find $(OBJ_DIR) -name '*.o'` > /dev/null
 	@echo "Done"
 
 $(OBJ_DIR)/%.depend : %.c
@@ -33,7 +33,7 @@ clean:
 	@echo "Cleaning intermediate files"
 	@find $(OBJ_DIR) -name "*.o" -print0 | xargs -0 rm
 	@echo "Cleaning output files"
-	@rm $(OUT_DIR)/$(TARGET).a
+	@rm $(OUT_DIR)/lib$(TARGET).a
 	@echo "Done"
 
 .PHONY: clean .depend

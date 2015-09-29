@@ -9,9 +9,9 @@ OUT_DIR=bin
 INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src
 LIB_DIRS+=../extern/SDL2/bin ../extern/lua/
 
-C_FLAGS+= -std=c++14 -fpermissive -w
+C_FLAGS+= -std=c++14 -fpermissive -w -pthread
 C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
-LD_FLAGS+= -llua -llibSDL2 -llibSDL2main
+LD_FLAGS+= -llua -lSDL2 -lSDL2main -ldl
 LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
 
 SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp')
@@ -21,7 +21,7 @@ all: $(TARGET)
 
 $(TARGET): .depend $(OBJ_FILES)
 	@echo "Building $(TARGET)"
-	@$(CXX) $(C_FLAGS) $(LD_FLAGS) $(OBJ_FILES) -o $(OUT_DIR)/$(TARGET)
+	@$(CXX) $(C_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $(LD_FLAGS) -o $(OUT_DIR)/$(TARGET)
 	@echo "Done"
 
 $(OBJ_DIR)/%.depend : %.cpp

@@ -35,11 +35,11 @@ public:
 	{}
 
 	Matrix& operator=(Matrix const &other) = default;
-	BaseType &operator()(unsigned, unsigned y) { 
+	BaseType &operator()(unsigned, unsigned y) {
 		return y & 1? y : x;
 	}
-	
-	BaseType const &operator()(unsigned, unsigned y) const { 
+
+	BaseType const &operator()(unsigned, unsigned y) const {
 		return y & 1? y : x;
 	}
 
@@ -134,7 +134,7 @@ template<
 	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
 	ScalarType const &right
 ) {
-	Matrix<std::remove_const_t<decltype(left(0u, 0u) * right)>, t_w, t_h, DownCastType> ret;
+	Matrix<std::remove_const_t<decltype(left(0u, 0u) * right)>, T_w, T_h, DownCastType> ret;
 	for(auto y = 0u; y < T_h; ++y)
 		for(auto x = 0u; x < T_w; ++x)
 			ret(x, y) = left(x, y) * right;
@@ -152,7 +152,7 @@ template<
 	ScalarType const &left,
 	Matrix<BaseType, T_w, T_h, DownCastType> const &right
 ) {
-	Matrix<std::remove_const_t<decltype(left * right(0u, 0u))>, t_w, t_h, DownCastType> ret;
+	Matrix<std::remove_const_t<decltype(left * right(0u, 0u))>, T_w, T_h, DownCastType> ret;
 	for(auto y = 0u; y < T_h; ++y)
 		for(auto x = 0u; x < T_w; ++x)
 			ret(x, y) = left * right(x, y);
@@ -170,7 +170,7 @@ template<
 	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
 	ScalarType const &right
 ) {
-	Matrix<std::remove_const_t<decltype(left(0u, 0u) / right)>, t_w, t_h, DownCastType> ret;
+	Matrix<std::remove_const_t<decltype(left(0u, 0u) / right)>, T_w, T_h, DownCastType> ret;
 	for(auto y = 0u; y < T_h; ++y)
 		for(auto x = 0u; x < T_w; ++x)
 			ret(x, y) = left(x, y) / right;

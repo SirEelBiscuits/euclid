@@ -78,6 +78,9 @@ T luaX_returnglobal(lua_State *s, char const *name) {
 	return luaX_return<T>(s);
 }
 
+template<typename Tuple, int I>
+class luaX_returntuplefromstackInner;
+
 template<typename... Args>
 std::tuple<Args...> luaX_returntuplefromstack(lua_State *lua) {
 	std::tuple<Args...> ret;
@@ -107,6 +110,9 @@ public:
 // Get
 
 /* returns the number of items the stack gained during this call*/
+int luaX_getglobal(lua_State *lua, char const *first);
+
+/* returns the number of items the stack gained during this call*/
 template<typename... Types>
 int luaX_getglobal(lua_State *lua, char const *first, Types... rest) {
 	luaX_getglobal(lua, first);
@@ -114,9 +120,6 @@ int luaX_getglobal(lua_State *lua, char const *first, Types... rest) {
 		return 1 + luaX_getlocal(lua, rest...);
 	return 1;
 }
-
-/* returns the number of items the stack gained during this call*/
-int luaX_getglobal(lua_State *lua, char const *first);
 
 /* returns the number of items the stack gained during this call*/
 template<typename... Types>
@@ -155,7 +158,7 @@ template<typename... Args>
 int luaX_setlocal(lua_State *lua, char const *firstKey, Args... args) {
 	lua_getfield(lua, -1, firstKey);
 	if(lua_istable(lua, -1))
-		return 1 + luaX_setlocal(lua, args);
+		return 1 + luaX_setlocal(lua, args...);
 	return 1;
 }
 
