@@ -1,4 +1,5 @@
 # Generic makefile for C libraries
+# TODO add include directories, library directories, and libraries
 
 TARGET=euclid
 CXX=g++

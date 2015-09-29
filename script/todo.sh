@@ -2,4 +2,6 @@
 
 result=`find . -regex ".*\.\(cpp\|h\|lua\)"`
 filtered=`echo "$result" | grep -v extern`
-echo "$filtered" | xargs grep -in todo
+makefiles=`find . | grep makefile | grep -v extern`
+echo "$filtered $makefiles" | xargs grep -in todo
+
