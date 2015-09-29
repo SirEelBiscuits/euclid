@@ -33,9 +33,9 @@ namespace Rendering {
 		SDLContext(unsigned Width, unsigned Height, unsigned Scale, bool Fullscreen, char const *Title);
 		virtual ~SDLContext();
 
-		virtual void Clear(Color c);
-		virtual void SetResolution(unsigned Width, unsigned Height);
-		virtual void FlipBuffers();
+		virtual void Clear(Color c) override;
+		virtual void SetResolution(unsigned Width, unsigned Height) override;
+		virtual void FlipBuffers() override;
 
 		int ScreenWidth;
 		int ScreenHeight;
