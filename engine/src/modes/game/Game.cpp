@@ -1,7 +1,9 @@
 #include "Game.h"
 
+#include "platform/Files.h"
+
+#include "platform/Events.h"
 #include "system/Config.h"
-#include "system/Events.h"
 
 #include "world/Map.h"
 
@@ -12,7 +14,13 @@ namespace Modes {
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
 		luaX_dofile(lua, "luaclid.lua");
-		luaX_dofile(lua, cfg.GetValue<std::string>("startscript").c_str());
+		auto startscript = cfg.GetValue<std::string>("startscript");
+		luaX_dofile(lua, startscript.c_str());
+		
+		System::Events::RegisterFileToWatch("luaclid.lua", 
+			[this](char const*){luaX_dofile(lua, "luaclid.lua");});
+		System::Events::RegisterFileToWatch(startscript.c_str(), 
+			[this, startscript](char const*){luaX_dofile(lua, startscript.c_str());});
 	}
 
 	Game::~Game() {
@@ -35,6 +43,8 @@ namespace Modes {
 	}
 
 	bool Game::Update() {
+		System::Events::TickFileWatchers();
+
 		auto ret = true;
 
 		auto timePoint = std::chrono::high_resolution_clock::time_point {std::chrono::high_resolution_clock::now()};

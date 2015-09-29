@@ -36,6 +36,7 @@ namespace System {
 		enum class Types {
 			Quit,
 			Unknown,
+			FileChange,
 		};
 		void SetHandlers(std::function<void(Types, void*, void*)> callback);
 	}
