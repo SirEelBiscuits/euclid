@@ -6,8 +6,13 @@ CXX=g++
 SRC_DIR=src
 OBJ_DIR=int
 OUT_DIR=bin
-C_FLAGS+= -std=c++14
-LD_FLAGS+=
+INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src
+LIB_DIRS+=../extern/SDL2/bin ../extern/lua/
+
+C_FLAGS+= -std=c++14 -fpermissive -w
+C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
+LD_FLAGS+= -llua -llibSDL2 -llibSDL2main
+LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
 
 SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp')
 OBJ_FILES := $(patsubst %.cpp, %.o, $(patsubst $(SRC_DIR)%, $(OBJ_DIR)%, $(SRC_FILES)))

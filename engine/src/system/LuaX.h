@@ -15,9 +15,9 @@ POST_STD_LIB
 
 #include "lib/TypeMagic.h"
 
-#include "luaX/luaXClasses.h"
-#include "luaX/luaXStack.h"
-#include "luaX/luaXClass.h"
+#include "luaX/LuaXClasses.h"
+#include "luaX/LuaXStack.h"
+#include "luaX/LuaXClass.h"
 
 /* if errCode is not LUA_ERROK, this will print the error at the top of the stack and pop it */
 void luaX_showErrors(lua_State* s, char const *name, int errCode);
