@@ -11,4 +11,9 @@ extern:
 engine:
 	make -C engine
 
-.PHONY: all package extern engine
+clean:
+	make -C extern clean
+	make -C engine clean
+	rm -r pkg
+
+.PHONY: all package extern engine clean

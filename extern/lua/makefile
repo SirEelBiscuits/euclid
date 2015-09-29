@@ -3,8 +3,8 @@
 TARGET=lua
 CC=gcc
 SRC_DIR=src
-OBJ_DIR=bin
-OUT_DIR=.
+OBJ_DIR=int
+OUT_DIR=bin
 C_FLAGS+=
 
 SRC_FILES = $(shell find $(SRC_DIR) -name '*.c')
@@ -12,28 +12,25 @@ OBJ_FILES := $(patsubst %.c, %.o, $(patsubst $(SRC_DIR)%, $(OBJ_DIR)%, $(SRC_FIL
 
 all: $(TARGET)
 
-$(TARGET): .depend $(OBJ_FILES)
+$(TARGET): make_dirs $(OBJ_FILES)
 	@echo "Building $(TARGET)"
-	@ar rvs lib$(TARGET).a `find $(OBJ_DIR) -name '*.o'` > /dev/null
+	@ar rvs $(OUT_DIR)/lib$(TARGET).a `find $(OBJ_DIR) -name '*.o'` > /dev/null
 	@echo "Done"
-
-$(OBJ_DIR)/%.depend : %.c
-	@rm -f .depend
-	echo "Building dependencies"
-	@$(foreach var, $(SRC_FILES), $(CC) $(C_FLAGS) -MM $(var) >> .depend;)
-	@echo "Dependencies done"
-
--include .depend
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	@echo "Building $<"
 	@$(CC) $(C_FLAGS) -c $< -o $@
 
+make_dirs:
+	@echo "creating directories"
+	@find $(SRC_DIR) -type d | sed "s/$(SRC_DIR)/$(OBJ_DIR)/" | xargs mkdir -p
+	@mkdir -p $(OUT_DIR)
+
 clean:
 	@echo "Cleaning intermediate files"
-	@find $(OBJ_DIR) -name "*.o" -print0 | xargs -0 rm
+	@rm -rf $(OBJ_DIR)
 	@echo "Cleaning output files"
-	@rm $(OUT_DIR)/lib$(TARGET).a
+	@rm -rf $(OUT_DIR)
 	@echo "Done"
 
-.PHONY: clean .depend
+.PHONY: clean .depend make_dirs

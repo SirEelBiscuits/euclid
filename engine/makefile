@@ -7,7 +7,7 @@ SRC_DIR=src
 OBJ_DIR=int
 OUT_DIR=bin
 INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src
-LIB_DIRS+=../extern/SDL2/bin ../extern/lua/
+LIB_DIRS+=../extern/SDL2/bin ../extern/lua/bin
 
 C_FLAGS+= -std=c++14 -fpermissive -w -pthread
 C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
@@ -19,7 +19,12 @@ OBJ_FILES := $(patsubst %.cpp, %.o, $(patsubst $(SRC_DIR)%, $(OBJ_DIR)%, $(SRC_F
 
 all: $(TARGET)
 
-$(TARGET): .depend $(OBJ_FILES)
+make_dirs:
+	@echo "creating directories"
+	@find $(SRC_DIR) -type d | sed "s/$(SRC_DIR)/$(OBJ_DIR)/" | xargs mkdir -p
+	@mkdir -p $(OUT_DIR)
+
+$(TARGET): make_dirs $(OBJ_FILES)
 	@echo "Building $(TARGET)"
 	@$(CXX) $(C_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $(LD_FLAGS) -o $(OUT_DIR)/$(TARGET)
 	@echo "Done"
@@ -38,9 +43,9 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 
 clean:
 	@echo "Cleaning intermediate files"
-	@find $(OBJ_DIR) -name "*.o" -print0 | xargs -0 rm
+	@rm -rf $(OBJ_DIR)
 	@echo "Cleaning output files"
-	@rm $(OUT_DIR)/$(TARGET).a
+	@rm -rf $(OUT_DIR)
 	@echo "Done"
 
 .PHONY: clean .depend

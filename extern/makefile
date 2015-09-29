@@ -8,4 +8,8 @@ SDL2:
 	cd SDL2; mkdir bin 2> /dev/null; cd bin; cmake ..
 	make -C SDL2/bin
 
-.PHONY: lua SDL2 all
+clean:
+	make -C lua clean
+	make -C SDL2/bin clean
+
+.PHONY: lua SDL2 all clean
