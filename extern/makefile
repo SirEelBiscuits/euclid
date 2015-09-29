@@ -10,6 +10,6 @@ SDL2:
 
 clean:
 	make -C lua clean
-	make -C SDL2/bin clean
+	rm -rf SDL2/bin
 
 .PHONY: lua SDL2 all clean
