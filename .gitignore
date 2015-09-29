@@ -46,3 +46,6 @@ extern/SDL2/VisualC/SDLmain/Win32/*
 
 
 extern/libs/
+
+extern/lua/.depend
+extern/lua/lua.a
