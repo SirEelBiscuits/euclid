@@ -9,7 +9,7 @@ OUT_DIR=bin
 INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src
 LIB_DIRS+=../extern/SDL2/bin ../extern/lua/bin
 
-C_FLAGS+= -std=c++14 -fpermissive -w -pthread
+C_FLAGS+= -std=c++14 -fpermissive -w -pthread -static-libstdc++
 C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
 LD_FLAGS+= -llua -lSDL2 -lSDL2main -ldl
 LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
