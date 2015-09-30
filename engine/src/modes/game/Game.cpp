@@ -13,9 +13,9 @@ namespace Modes {
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
-		CRITICAL_ASSERT(luaX_dofile(lua, "luaclid.lua"), "Couldn't load luaclid.lua");
+		CRITICAL_ASSERT(luaX_dofile(lua, "luaclid.lua"));
 		auto startscript = cfg.GetValue<std::string>("startscript");
-		CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()), "Couldn't load startscript");
+		CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()));
 
 		System::Events::RegisterFileToWatch("luaclid.lua",
 			[this](char const*){

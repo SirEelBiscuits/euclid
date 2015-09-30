@@ -50,20 +50,20 @@
 #endif
 
 #ifdef EUCLID_DEBUG
-#	define ASSERT(p, printfargs...) \
-	do {\
- 		if(!p) {\
-		 	printf(printfargs);\
-		 	DEBUG_BREAK();\
-		}\
-	} while(false)
-#	define CRITICAL_ASSERT(p, printfargs...) ASSERT(p, printfargs)
-#else
-#	define ASSERT(p, printfargs...)
-# define CRITICAL_ASSERT(p, printfargs...) \
+#	define ASSERT(p) \
 	do {\
 		if(!p) {\
-			printf(printfargs);\
+			printf(__FILE__ "(%d) Assertion failed: " #p, __LINE__);\
+			DEBUG_BREAK();\
+		}\
+	} while(false)
+#	define CRITICAL_ASSERT(p) ASSERT(p)
+#else
+#	define ASSERT(p)
+# define CRITICAL_ASSERT(p) \
+	do {\
+		if(!p) {\
+			printf(__FILE__"(%d) Critical assertion failed:" # p, __LINE__);\
 			exit(EXIT_FAILURE);\
 		}\
 	} while(false)
