@@ -14,7 +14,7 @@ C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
 LD_FLAGS+= -llua -lSDL2 -lSDL2main -ldl
 LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
 
-SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp')
+SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp' | grep -v SDLAndWindows)
 OBJ_FILES := $(patsubst %.cpp, %.o, $(patsubst $(SRC_DIR)%, $(OBJ_DIR)%, $(SRC_FILES)))
 
 all: $(TARGET)

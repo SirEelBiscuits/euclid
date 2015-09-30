@@ -13,14 +13,20 @@ namespace Modes {
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
-		luaX_dofile(lua, "luaclid.lua");
+		CRITICAL_ASSERT(luaX_dofile(lua, "luaclid.lua"), "Couldn't load luaclid.lua");
 		auto startscript = cfg.GetValue<std::string>("startscript");
-		luaX_dofile(lua, startscript.c_str());
-		
-		System::Events::RegisterFileToWatch("luaclid.lua", 
-			[this](char const*){luaX_dofile(lua, "luaclid.lua");});
-		System::Events::RegisterFileToWatch(startscript.c_str(), 
-			[this, startscript](char const*){luaX_dofile(lua, startscript.c_str());});
+		CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()), "Couldn't load startscript");
+
+		System::Events::RegisterFileToWatch("luaclid.lua",
+			[this](char const*){
+				ASSERT(luaX_dofile(lua, "luaclid.lua"));
+			}
+		);
+		System::Events::RegisterFileToWatch(startscript.c_str(),
+			[this, startscript](char const*){
+				ASSERT(luaX_dofile(lua, startscript.c_str()));
+			}
+		);
 	}
 
 	Game::~Game() {
@@ -34,7 +40,6 @@ namespace Modes {
 			--pushed;
 		}
 		lua_pop(lua, pushed);
-
 		System::Events::SetHandlers(
 			[this](System::Events::Types type, void *p1, void *p2) {
 				HandleEvents(type, p1, p2);
@@ -59,7 +64,7 @@ namespace Modes {
 			for(auto i = 0u; i < input.size(); ++i) {
 				luaX_push(lua, luaX_emptytable{0, 3});
 				luaX_settable(lua,
-					"key",       input[i].key, 
+					"key",       input[i].key,
 					"keyRepeat", input[i].repeat,
 					"eventType", (int)input[i].type
 				);
