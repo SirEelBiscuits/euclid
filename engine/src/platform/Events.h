@@ -34,9 +34,8 @@ namespace System {
 
 	namespace Events {
 		enum class Types {
-			Quit,
 			Unknown,
-			FileChange,
+			Quit,
 		};
 		void SetHandlers(std::function<void(Types, void*, void*)> callback);
 	}
