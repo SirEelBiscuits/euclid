@@ -1,5 +1,4 @@
 # Generic makefile for C libraries
-# TODO add include directories, library directories, and libraries
 
 TARGET=euclid
 CXX=g++
@@ -31,7 +30,7 @@ $(TARGET): make_dirs $(OBJ_FILES)
 
 $(OBJ_DIR)/%.depend : %.cpp
 	@rm -f .depend
-	echo "Building dependencies"
+	@echo "Building dependencies"
 	@$(foreach var, $(SRC_FILES), $(CXX) $(C_FLAGS) -MM $(var) >> .depend;)
 	@echo "Dependencies done"
 
