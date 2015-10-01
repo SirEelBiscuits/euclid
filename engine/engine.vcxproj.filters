@@ -19,14 +19,14 @@
     <ClCompile Include="src\platform\SDL\SDLEvents.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\system\luaX\LuaX.cpp">
-      <Filter>src\system</Filter>
-    </ClCompile>
     <ClCompile Include="src\platform\RenderingSystem.cpp">
       <Filter>src\platform</Filter>
     </ClCompile>
     <ClCompile Include="src\platform\SDLAndWindows\Files.cpp">
       <Filter>src\platform\SDLAndWindows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\system\luaX\LuaX.cpp">
+      <Filter>src\system\luaX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

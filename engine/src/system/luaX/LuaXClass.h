@@ -43,7 +43,9 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 }
 
 template<typename T>
-class luaX_registerClassMethodSingle;
+class luaX_registerClassMethodSingle {
+public:
+};
 
 template<typename T, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
@@ -55,11 +57,6 @@ template<typename T, typename... Args>
 void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
 	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
 }
-
-template<typename T>
-class luaX_registerClassMethodSingle {
-public:
-};
 
 template<typename C, typename T>
 class luaX_registerClassMethodSingle<T C::*> {
@@ -78,6 +75,7 @@ public:
 	}
 };
 
+//TODO this class can be shortened with TypeMagic::arity
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
 

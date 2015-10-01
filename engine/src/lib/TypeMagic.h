@@ -43,4 +43,19 @@ namespace TypeMagic {
 		using Indices = std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>::value>;
 		return apply_impl(std::forward<F>(f), std::forward<Tuple>(t), Indices{});
 	}
+
+	template<typename T>
+	struct arity {
+		static int const value = 1;
+	};
+
+	template<>
+	struct arity<void> {
+		static int const value = 0;
+	};
+
+	template<typename... Args>
+	struct arity<std::tuple<Args...>> {
+		static int const value = sizeof...(Args);
+	};
 }

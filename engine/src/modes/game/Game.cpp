@@ -17,15 +17,23 @@ namespace Modes {
 		auto startscript = cfg.GetValue<std::string>("startscript");
 		CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()));
 
-		System::Events::RegisterFileToWatch("luaclid.lua",
-			[this](char const*){
-				ASSERT(luaX_dofile(lua, "luaclid.lua"));
-			}
-		);
-		System::Events::RegisterFileToWatch(startscript.c_str(),
-			[this, startscript](char const*){
-				ASSERT(luaX_dofile(lua, startscript.c_str()));
-			}
+		
+		auto reloader = [this](char const* filename) {
+			ASSERT(luaX_dofile(lua, filename));
+		};
+
+		System::Events::RegisterFileToWatch("luaclid.lua", reloader);
+		System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
+
+		luaX_setglobal(lua,
+			"Game", "LoadAndWatchFile",
+			//TODO: this cast is ugly but necessary in VS2015. what do?
+			static_cast<std::function<void(std::string)>>(
+				[this, reloader](std::string filename) {
+					ASSERT(luaX_dofile(lua, filename.c_str()));
+					System::Events::RegisterFileToWatch(filename.c_str(), reloader);
+				}
+			)
 		);
 	}
 
