@@ -63,6 +63,9 @@ void luaX_pushfunction(lua_State *s, std::function<Ret(Args...)> f) {
 }
 
 template<typename... Args>
+std::tuple<Args...> luaX_returntuplefromstack(lua_State *lua);
+
+template<typename... Args>
 class luaX_registerfunction<std::function<void(Args...)>, 0> {
 public:
 	static void Register(lua_State *s, std::function<void(Args...)> f) {
@@ -91,7 +94,7 @@ template<typename Ret, int arity, typename... Args>
 class luaX_registerfunction<std::function<Ret(Args...)>, arity> {
 public:
 	static void Register(lua_State *s, std::function<Ret(Args...)> f) {
-		static_assert(arity == sizeof...(Args));
+		static_assert(arity == sizeof...(Args), "Bad call to luaX_registerfunction: arity must be set to sizeof...(Args)");
 		using F = std::function<Ret(Args...)>*;
 		auto wrapper = [](lua_State *l) {
 			if(lua_gettop(l) != sizeof...(Args)) {
@@ -106,7 +109,7 @@ public:
 			luaX_push(l, TypeMagic::apply(innerF, args));
 			return arity;
 		};
-		auto *callInner = static_cast<F*>(lua_newuserdata(lua, sizeof(F)));
+		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
 		new(callInner) F;
 		*callInner = f;
 		lua_pushcclosure(s, wrapper, 1);
@@ -149,17 +152,17 @@ class luaX_returntuplefromstackInner;
 
 template<typename... Args>
 std::tuple<Args...> luaX_returntuplefromstack(lua_State *lua) {
-	std::tuple<Args...> ret;
-	luaX_returntuplefromstackInner<std::tuple<Args...>, sizeof...(Args) - 1>::Fn(lua, ret);
-	return ret;
+		std::tuple<Args...> ret;
+		luaX_returntuplefromstackInner<std::tuple<Args...>, sizeof...(Args) - 1>::Fn(lua, ret);
+		return ret;
 }
 
 template<typename Tuple, int I>
 class luaX_returntuplefromstackInner {
 public:
 	static void Fn(lua_State *lua, Tuple& ret) {
-	std::get<I>(ret) = luaX_return<std::tuple_element<I, Tuple>::type>(lua);
-	luaX_returntuplefromstackInner<Tuple, I-1>::Fn(lua, ret);
+		std::get<I>(ret) = luaX_return<std::tuple_element<I, Tuple>::type>(lua);
+		luaX_returntuplefromstackInner<Tuple, I-1>::Fn(lua, ret);
 	}
 };
 
@@ -167,7 +170,7 @@ template<typename Tuple>
 class luaX_returntuplefromstackInner<Tuple, 0> {
 public:
 	static void Fn(lua_State *lua, Tuple& ret) {
-	std::get<0>(ret) = luaX_return<std::tuple_element<0, Tuple>::type>(lua);
+		std::get<0>(ret) = luaX_return<typename std::tuple_element<0, Tuple>::type>(lua);
 	}
 };
 
