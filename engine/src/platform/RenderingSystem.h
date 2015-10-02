@@ -19,14 +19,15 @@ namespace Rendering {
 		Context(unsigned Width, unsigned Height, bool shouldAllocateScreenBuffer);
 		virtual ~Context();
 
-		unsigned GetWidth();
-		unsigned GetHeight();
+		//inline because they need to be fast fast fast!
+		unsigned  GetWidth()                          { return Width; };
+		unsigned  GetHeight()                         { return Height; };
+		Color    &ScreenPixel(unsigned x, unsigned y) { return screen[x + Width * y]; };
 
 		virtual void Clear(Color c) = 0;
 		virtual void SetResolution(unsigned Width, unsigned Height) = 0;
 		virtual void FlipBuffers() = 0;
 
-		Color &ScreenPixel(unsigned x, unsigned y);
 
 	protected:
 		Color*   screen{nullptr};

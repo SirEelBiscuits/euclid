@@ -9,23 +9,7 @@ namespace Rendering {
 	{
 	}
 
-	Context::~Context()
-	{
-	}
-
-	unsigned Context::GetWidth()
-	{
-		return Width;
-	}
-
-	unsigned Context::GetHeight()
-	{
-		return Height;
-	}
-
-	Color &Context::ScreenPixel(unsigned x, unsigned y)
-	{
-		return screen[x + Width * y];
+	Context::~Context()	{
 	}
 
 }
