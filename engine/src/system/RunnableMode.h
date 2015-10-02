@@ -5,6 +5,8 @@ PREAMBLE
 PRE_STD_LIB
 POST_STD_LIB
 
+#include "rendering/RenderList.h"
+
 namespace Rendering {
 	struct Context;
 }
@@ -26,5 +28,7 @@ namespace System {
 	protected:
 		Rendering::Context &ctx;
 		Config& cfg;
+
+		Rendering::RenderList renderList{};
 	};
 }

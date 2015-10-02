@@ -13,7 +13,7 @@ function Game.Update(dt)
 	Game.calls = (Game.calls or 0) + 1
 
 	if(Game.timesecs > 1) then
-		--print(Game.calls .. " calls per second")
+		print(Game.calls .. " calls per second")
 		Game.calls = 0
 		Game.timesecs = Game.timesecs - 1
 	end

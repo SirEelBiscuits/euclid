@@ -21,6 +21,10 @@ namespace Modes {
 		virtual bool Update() override;
 
 	private:
+		void HandleInput();
+		bool GameLogic();
+		void RenderLogic();
+
 		bool done{false};
 		luaX_State lua{LUAX_NEED_LIBS};
 

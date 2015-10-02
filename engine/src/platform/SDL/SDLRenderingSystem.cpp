@@ -90,8 +90,8 @@ namespace Rendering {
 	}
 
 	void SDLContext::Clear(Color c) {
-		for(auto x = 0u; x < GetWidth(); ++x)
-			for(auto y = 0u; y < GetHeight(); ++y)
+		for(auto y = 0u; y < GetHeight(); ++y)
+			for(auto x = 0u; x < GetWidth(); ++x)
 				ScreenPixel(x, y) = c;
 	}
 

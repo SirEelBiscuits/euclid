@@ -90,6 +90,9 @@
     <ClInclude Include="src\platform\Files.h">
       <Filter>src\platform</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\RenderList.h">
+      <Filter>src\rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

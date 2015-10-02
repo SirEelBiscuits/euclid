@@ -1,8 +1,9 @@
 #include "Game.h"
 
 #include "platform/Files.h"
-
 #include "platform/Events.h"
+#include "platform/RenderingSystem.h"
+
 #include "system/Config.h"
 
 #include "world/Map.h"
@@ -58,12 +59,14 @@ namespace Modes {
 	bool Game::Update() {
 		System::Events::TickFileWatchers();
 
-		auto ret = true;
+		auto ret = GameLogic();
+		HandleInput();
+		RenderLogic();
 
-		auto timePoint = std::chrono::high_resolution_clock::time_point {std::chrono::high_resolution_clock::now()};
-		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(timePoint - oldTimePoint).count() / 1000000.0;
-		oldTimePoint = timePoint;
+		return ret;
+	}
 
+	void Game::HandleInput() {
 		auto input = System::Input::GetEvents();
 		lua_getglobal(lua, "Game");
 		if(lua_istable(lua, -1)) {
@@ -79,9 +82,20 @@ namespace Modes {
 
 				lua_seti(lua, -2, i + 1);
 			}
-
 			lua_setfield(lua, -2, "Input");
+		}
+		lua_pop(lua, 1); //remove "Game"
+	}
 
+	bool Game::GameLogic() {
+		auto ret = true;
+
+		auto timePoint = std::chrono::high_resolution_clock::time_point {std::chrono::high_resolution_clock::now()};
+		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(timePoint - oldTimePoint).count() / 1000000.0;
+		oldTimePoint = timePoint;
+
+		lua_getglobal(lua, "Game");
+		if(lua_istable(lua, -1)) {
 			lua_getfield(lua, -1, "Update");
 			if(lua_isfunction(lua, -1)) {
 				luaX_push(lua, dt);
@@ -97,6 +111,13 @@ namespace Modes {
 		}
 		lua_pop(lua, 1); //remove "Game"
 		return ret;
+	}
+
+	static Rendering::Color clearColour{100, 149, 237, 0};
+	void Game::RenderLogic() {
+		ctx.Clear(clearColour);
+		renderList.Render();
+		ctx.FlipBuffers();
 	}
 
 	void Game::HandleEvents(System::Events::Types type, void *p1, void *p2) {
