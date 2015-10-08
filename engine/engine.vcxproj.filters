@@ -28,6 +28,9 @@
     <ClCompile Include="src\system\luaX\LuaX.cpp">
       <Filter>src\system\luaX</Filter>
     </ClCompile>
+    <ClCompile Include="src\system\luaclid\Luaclid.cpp">
+      <Filter>src\system\luaclid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
@@ -93,6 +96,9 @@
     <ClInclude Include="src\rendering\RenderList.h">
       <Filter>src\rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\system\luaclid\Luaclid.h">
+      <Filter>src\system\luaclid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -130,6 +136,9 @@
     </Filter>
     <Filter Include="src\platform\SDLAndWindows">
       <UniqueIdentifier>{b5a32aad-9d9e-488d-abad-3f5e196fe6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\luaclid">
+      <UniqueIdentifier>{ec352a07-5e37-4937-99b1-aacd167291c5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

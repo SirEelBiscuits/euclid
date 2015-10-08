@@ -33,10 +33,26 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 	if(flxr != luaX_typeTable.end())
 		return *flxr->second;
 	luaX_getglobal(lua, "CreateNativeClass");
-	lua_pcall(lua, 0, 1, 0);
+	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
 	luaX_registerClassMethod(lua, args...);
 
 	auto lxr = std::make_unique<luaX_ref>(lua);
+	auto lxrp = lxr.get();
+	luaX_typeTable[typeid(T)] = std::move(lxr);
+	lua_pop(lua, 1);
+	return *lxrp;
+}
+
+template<typename T, typename... Args>
+luaX_ref luaX_registerClass(lua_State *lua) {
+	auto flxr = luaX_typeTable.find(typeid(T));
+	if(flxr != luaX_typeTable.end())
+		return *flxr->second;
+	luaX_getglobal(lua, "CreateNativeClass");
+	
+	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
+
+	auto lxr = std::make_unique<luaX_ref>(lua); // this pops the object
 	auto lxrp = lxr.get();
 	luaX_typeTable[typeid(T)] = std::move(lxr);
 	return *lxrp;
@@ -244,6 +260,60 @@ void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
 	//This object will be managed by Lua's GC
 	new(setInner) std::function<void(C*, T)>;
 	*setInner = [member](C* data, T val){data->*member = val;};
+	lua_pushcclosure(lua, setter, 1);
+	lua_setfield(lua, -2, setterName.c_str());
+}
+
+
+
+template<typename C, typename T>
+void luaX_registerClassGetterSpecial(lua_State *lua, char const *name, T C::* member) {
+	//expects an argument of lightuserdata, type C*
+	auto getter = [](lua_State *l) {
+		auto const t = lua_gettop(l);
+		luaX_getlocal(l, "_data");
+		auto member = (*static_cast<std::function<T*(C*)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		))(static_cast<C*>(lua_touserdata(l, -1)));
+		lua_pop(l, 1);
+		luaX_push(l, member);
+		ASSERT(lua_gettop(l) == t + 1);
+		return 1;
+	};
+	std::string getterName("get_");
+	getterName.append(name);
+
+	std::function<T*(C*)> *getInner = static_cast<std::function<T*(C*)> *>(
+		lua_newuserdata(lua, sizeof(std::function<T*(C*)>))
+	);
+	//This object will be managed by Lua's GC
+	new(getInner) std::function<T*(C*)>;
+	*getInner = [member](C* data){return &(data->*member);};
+	lua_pushcclosure(lua, getter, 1);
+	lua_setfield(lua, -2, getterName.c_str());
+}
+
+template<typename C, typename T>
+void luaX_registerClassSetterSpecial(lua_State *lua, char const *name, T C::* member) {
+	//expects an argument of lightuserdata, type C*, and the value to set arg1->*member to
+	auto setter = [] (lua_State *l) {
+		//Args list contains: self, val
+		auto val = luaX_return<T*>(l);
+		luaX_getlocal(l, "_data");
+		auto memberF = *static_cast<std::function<void(C*, T*)>*>(
+			lua_touserdata(l, lua_upvalueindex(1))
+		);
+		memberF(static_cast<C*>(lua_touserdata(l, -1)), val);
+		return 0;
+	};
+	std::string setterName("set_");
+	setterName.append(name);
+	std::function<void(C*, T*)> *setInner = static_cast<std::function<void(C*, T*)> *>(
+		lua_newuserdata(lua, sizeof(std::function<void(C*, T*)>))
+	);
+	//This object will be managed by Lua's GC
+	new(setInner) std::function<void(C*, T)>;
+	*setInner = [member](C* data, T* val){data->*member = *val;};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());
 }

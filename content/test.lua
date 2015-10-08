@@ -1,8 +1,23 @@
-Game = Game or {}
-
 function Game.Initialise()
 	print("Initialised")
 	local map = dofile("testmap.lua")
+end
+
+function Describe(t)
+	print(type(t))
+	if type(t) == "table" then
+		local k,v
+		for k,v in pairs(t) do
+			print(k, "=", v)
+		end
+
+		local mt = getmetatable(t)
+		if mt ~= nil then
+			Describe(mt)
+		end
+	else
+		print(t)
+	end
 end
 
 Game.quit = false
@@ -13,7 +28,14 @@ function Game.Update(dt)
 	Game.calls = (Game.calls or 0) + 1
 
 	if(Game.timesecs > 1) then
-		print(Game.calls .. " calls per second")
+		Describe(Game.wall)
+		print("---")
+		Describe(Game.wall:get_length())
+		print("---")
+		Describe(Game.wall:get_length():get_val())
+		print("-------")
+		--print(Game.wall:get_length())
+		--print(Game.calls .. " calls per second")
 		Game.calls = 0
 		Game.timesecs = Game.timesecs - 1
 	end
@@ -25,3 +47,4 @@ end
 function Game.Quit()
 	Game.quit = true;
 end
+

@@ -125,10 +125,32 @@ void luaX_showErrors(lua_State* s, char const *name, int errCode) {
 	lua_pop(s, 1);
 }
 
+static int traceback(lua_State *s) {
+	luaL_traceback(s, s, nullptr, 0);
+	printf("%s\n", lua_tostring(s, -1));
+	return 1;
+}
+
+int luaX_pcall(lua_State *s, int numArgs, int numReturns) {
+#ifdef EUCLID_DEBUG
+	lua_pushcfunction(s, &traceback);
+	auto ptr = 0 - numArgs - 2;
+	lua_insert(s, ptr);
+	auto ret = lua_pcall(s, numArgs, numReturns, ptr);
+	if(ret == LUA_OK)
+		lua_remove(s, 0 - numReturns - 1);
+	else
+		lua_remove(s, -2);
+	return ret;
+#else
+	return lua_pcall(s, numArgs, numReturns, 0);
+#endif
+}
+
 bool luaX_dofile(lua_State *s, char const *filename) {
 	auto err = luaL_loadfile(s, filename);
 	if(err == LUA_OK) {
-		err = lua_pcall(s, 0, 0, 0);
+		err = luaX_pcall(s, 0, 0);
 	}
 	luaX_showErrors(s, filename, err);
 	return err == LUA_OK;

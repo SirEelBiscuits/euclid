@@ -86,3 +86,6 @@ function serialise(o)
   return "return " .. serializeInner(o, "  ") .. "\n"
 end
 
+Game = {}
+
+print("luaclid.lua loaded")

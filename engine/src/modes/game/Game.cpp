@@ -1,41 +1,30 @@
 #include "Game.h"
 
-#include "platform/Files.h"
-#include "platform/Events.h"
 #include "platform/RenderingSystem.h"
 
 #include "system/Config.h"
+#include "platform/Files.h"
+#include "platform/Events.h"
 
+#include "system/luaclid/Luaclid.h"
 #include "world/Map.h"
 
 namespace Modes {
+
+	World::Vert v1;
+	World::Wall w1;
 
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
-		CRITICAL_ASSERT(luaX_dofile(lua, "luaclid.lua"));
-		auto startscript = cfg.GetValue<std::string>("startscript");
-		CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()));
+		System::Luaclid::SetUp(lua, cfg);
 
-		
-		auto reloader = [this](char const* filename) {
-			ASSERT(luaX_dofile(lua, filename));
-		};
-
-		System::Events::RegisterFileToWatch("luaclid.lua", reloader);
-		System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
-
-		luaX_setglobal(lua,
-			"Game", "LoadAndWatchFile",
-			//TODO: this cast is ugly but necessary in VS2015. what do?
-			static_cast<std::function<void(std::string)>>(
-				[this, reloader](std::string filename) {
-					ASSERT(luaX_dofile(lua, filename.c_str()));
-					System::Events::RegisterFileToWatch(filename.c_str(), reloader);
-				}
-			)
-		);
+		//DELETEME
+		w1.start = &v1;
+		v1.x.val = 1;
+		v1.y.val = 2.5;
+		lua_pop(lua, luaX_setglobal(lua, "Game", "wall", &w1));
 	}
 
 	Game::~Game() {

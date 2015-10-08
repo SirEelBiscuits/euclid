@@ -18,6 +18,7 @@ void luaX_push(lua_State *s, T value);
 /* typed push onto the stack */
 template<typename T>
 void luaX_push(lua_State *s, T *value) {
+	auto t = lua_gettop(s);
 	auto flxr = luaX_typeTable.find(typeid(T));
 	if(flxr != luaX_typeTable.end()) {
 		luaX_push(s, *flxr->second);
@@ -28,6 +29,7 @@ void luaX_push(lua_State *s, T *value) {
 	} else {
 		lua_pushlightuserdata(s, value);
 	}
+	ASSERT(lua_gettop(s) == t + 1);
 }
 
 template<typename T, typename... Args>
