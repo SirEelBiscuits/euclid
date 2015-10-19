@@ -149,13 +149,13 @@
     <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp" />
     <ClCompile Include="src\platform\SDL\SDLEvents.cpp" />
     <ClCompile Include="src\platform\SDL\SDLRenderingSystem.cpp" />
-    <ClCompile Include="src\platform\RenderingSystem.cpp" />
+    <ClCompile Include="src\rendering\RenderingSystem.cpp" />
     <ClCompile Include="src\system\Config.cpp" />
     <ClCompile Include="src\system\luaclid\Luaclid.cpp" />
     <ClCompile Include="src\system\luaX\LuaX.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\platform\Files.h" />
+    <ClInclude Include="src\system\Files.h" />
     <ClInclude Include="src\rendering\RenderList.h" />
     <ClInclude Include="src\system\luaclid\Luaclid.h" />
     <ClInclude Include="src\system\luaX\LuaXClass.h" />
@@ -169,9 +169,9 @@
     <ClInclude Include="src\lib\PortabilityHelper.h" />
     <ClInclude Include="src\modes\game\Game.h" />
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h" />
-    <ClInclude Include="src\platform\RenderingSystem.h" />
+    <ClInclude Include="src\rendering\RenderingSystem.h" />
     <ClInclude Include="src\system\Config.h" />
-    <ClInclude Include="src\platform\Events.h" />
+    <ClInclude Include="src\system\Events.h" />
     <ClInclude Include="src\system\LuaX.h" />
     <ClInclude Include="src\system\luaX\luaXStack.h" />
     <ClInclude Include="src\system\RunnableMode.h" />

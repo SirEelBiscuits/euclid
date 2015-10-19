@@ -9,7 +9,7 @@ POST_STD_LIB
 
 #include "CommandLine.h"
 #include "lib/gargamel.h"
-#include "platform/RenderingSystem.h"
+#include "rendering/RenderingSystem.h"
 #include "system/Config.h"
 #include "system/RunnableMode.h"
 #include "modes/game/Game.h"

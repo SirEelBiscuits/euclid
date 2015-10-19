@@ -6,7 +6,7 @@ PRE_STD_LIB
 #include <memory>
 POST_STD_LIB
 
-#include "platform/RenderingSystem.h"
+#include "rendering/RenderingSystem.h"
 
 struct SDL_Renderer;
 struct SDL_Window;

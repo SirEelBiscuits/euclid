@@ -19,9 +19,6 @@
     <ClCompile Include="src\platform\SDL\SDLEvents.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\RenderingSystem.cpp">
-      <Filter>src\platform</Filter>
-    </ClCompile>
     <ClCompile Include="src\platform\SDLAndWindows\Files.cpp">
       <Filter>src\platform\SDLAndWindows</Filter>
     </ClCompile>
@@ -30,6 +27,9 @@
     </ClCompile>
     <ClCompile Include="src\system\luaclid\Luaclid.cpp">
       <Filter>src\system\luaclid</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\RenderingSystem.cpp">
+      <Filter>src\rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -84,20 +84,20 @@
     <ClInclude Include="src\system\luaX\LuaXClass.h">
       <Filter>src\system\luaX</Filter>
     </ClInclude>
-    <ClInclude Include="src\platform\RenderingSystem.h">
-      <Filter>src\platform</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\Events.h">
-      <Filter>src\platform</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\Files.h">
-      <Filter>src\platform</Filter>
-    </ClInclude>
     <ClInclude Include="src\rendering\RenderList.h">
       <Filter>src\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\system\luaclid\Luaclid.h">
       <Filter>src\system\luaclid</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\Events.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\Files.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\RenderingSystem.h">
+      <Filter>src\rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

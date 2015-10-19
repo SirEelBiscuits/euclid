@@ -1,10 +1,10 @@
 #include "Game.h"
 
-#include "platform/RenderingSystem.h"
+#include "rendering/RenderingSystem.h"
 
 #include "system/Config.h"
-#include "platform/Files.h"
-#include "platform/Events.h"
+#include "system/Files.h"
+#include "system/Events.h"
 
 #include "system/luaclid/Luaclid.h"
 #include "world/Map.h"
