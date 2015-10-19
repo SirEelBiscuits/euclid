@@ -31,6 +31,12 @@
     <ClCompile Include="src\rendering\RenderingSystem.cpp">
       <Filter>src\rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\Textures.cpp">
+      <Filter>src\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\SDL\SDLTextures.cpp">
+      <Filter>src\platform\SDL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
@@ -97,6 +103,12 @@
       <Filter>src\system</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\RenderingSystem.h">
+      <Filter>src\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Textures.h">
+      <Filter>src\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\RenderingPrimitives.h">
       <Filter>src\rendering</Filter>
     </ClInclude>
   </ItemGroup>

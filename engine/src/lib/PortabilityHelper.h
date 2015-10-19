@@ -52,7 +52,7 @@
 #ifdef EUCLID_DEBUG
 #	define ASSERT(p) \
 	do {\
-		if(!p) {\
+		if(!(p)) {\
 			printf(__FILE__ "(%d) Assertion failed: " #p, __LINE__);\
 			DEBUG_BREAK();\
 		}\
@@ -62,7 +62,7 @@
 #	define ASSERT(p)
 # define CRITICAL_ASSERT(p) \
 	do {\
-		if(!p) {\
+		if(!(p)) {\
 			printf(__FILE__"(%d) Critical assertion failed:" # p, __LINE__);\
 			exit(EXIT_FAILURE);\
 		}\

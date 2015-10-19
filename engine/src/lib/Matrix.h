@@ -29,11 +29,6 @@ public:
 		, y(y)
 	{}
 
-	Matrix(DownCastType x, DownCastType y)
-		: x(x)
-		, y(y)
-	{}
-
 	Matrix& operator=(Matrix const &other) = default;
 	BaseType &operator()(unsigned, unsigned y) {
 		return y & 1? y : x;
@@ -191,10 +186,9 @@ constexpr Matrix<BaseType, T_w, T_h, DownCastType> operator+(
 
 template<typename BaseType, unsigned T_w, unsigned T_h, typename DownCastType>
 constexpr Matrix<BaseType, T_w, T_h, DownCastType> operator-(
-	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
+	Matrix<BaseType, T_w, T_h, DownCastType> left,
 	Matrix<BaseType, T_w, T_h, DownCastType> const &right
 ) {
-	auto ret = left;
-	ret -= right;
-	return ret;
+	left -= right;
+	return left;
 }

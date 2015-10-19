@@ -37,13 +37,14 @@ namespace Rendering {
 		virtual void SetResolution(unsigned Width, unsigned Height) override;
 		virtual void FlipBuffers() override;
 
+	private:
+
 		int ScreenWidth;
 		int ScreenHeight;
 
 		winType win{nullptr};
 		renType ren{nullptr};
 
-	private:
 		std::shared_ptr<SDLSystem>  sys{nullptr};
 		SDL_Texture                *t  {nullptr};
 	};
