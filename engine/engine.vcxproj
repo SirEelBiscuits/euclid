@@ -87,8 +87,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>

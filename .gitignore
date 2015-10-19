@@ -6,6 +6,7 @@ extern/*/intermediate/*
 
 extern/SDL2/VisualC/SDL/Win32/*
 extern/SDL2/VisualC/SDLmain/Win32/*
+extern/SDL2_image/VisualC/Win32/*
 
 *.suo
 *.user
