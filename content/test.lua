@@ -28,12 +28,6 @@ function Game.Update(dt)
 	Game.calls = (Game.calls or 0) + 1
 
 	if(Game.timesecs > 1) then
-		Describe(Game.wall)
-		print("---")
-		Describe(Game.wall:get_length())
-		print("---")
-		Describe(Game.wall:get_length():get_val())
-		print("-------")
 		--print(Game.wall:get_length())
 		--print(Game.calls .. " calls per second")
 		Game.calls = 0

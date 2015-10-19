@@ -11,20 +11,11 @@
 
 namespace Modes {
 
-	World::Vert v1;
-	World::Wall w1;
-
 	Game::Game(Rendering::Context &ctx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
 		System::Luaclid::SetUp(lua, cfg);
-
-		//DELETEME
-		w1.start = &v1;
-		v1.x.val = 1;
-		v1.y.val = 2.5;
-		lua_pop(lua, luaX_setglobal(lua, "Game", "wall", &w1));
 	}
 
 	Game::~Game() {

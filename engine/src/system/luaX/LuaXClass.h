@@ -75,19 +75,22 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
 }
 
 template<typename C, typename T>
+void luaX_registerClassMember(lua_State *lua, char const *name, T C::*member) {
+	luaX_registerClassGetter(lua, name, member);
+	luaX_registerClassSetter(lua, name, member);
+}
+
+template<typename C, typename T>
+void luaX_registerClassMember(lua_State *lua, char const *name, T const C::*member) {
+	luaX_registerClassGetter(lua, name, member);
+	luaX_registerClassSetter(lua, name, member);
+}
+
+template<typename C, typename T>
 class luaX_registerClassMethodSingle<T C::*> {
 public:
 	static void Register(lua_State *lua, char const *name, T C::* member) {
-		luaX_registerClassGetter(lua, name, member);
-		luaX_registerClassSetter(lua, name, member);
-	}
-};
-
-template<typename C, typename T>
-class luaX_registerClassMethodSingle<T const C::*> {
-public:
-	static void Register(lua_State *lua, char const *name, T const C::* member) {
-		luaX_registerClassGetter(lua, name, member);
+		luaX_registerClassMember(lua, name, member);
 	}
 };
 
@@ -217,10 +220,11 @@ void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* m
 
 template<typename C, typename T>
 void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* member) {
+	using functionType = std::function<T(C*)>;
 	//expects an argument of lightuserdata, type C*
 	auto getter = [](lua_State *l) {
 		luaX_getlocal(l, "_data");
-		auto member = (*static_cast<std::function<T(C*)>*>(
+		auto member = (*static_cast<functionType*>(
 			lua_touserdata(l, lua_upvalueindex(1))
 		))(static_cast<C*>(lua_touserdata(l, -1)));
 		luaX_push(l, member);
@@ -229,11 +233,11 @@ void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* mem
 	std::string getterName("get_");
 	getterName.append(name);
 
-	std::function<T(C*)> *getInner = static_cast<std::function<T(C*)> *>(
-		lua_newuserdata(lua, sizeof(std::function<T(C*)>))
+	functionType *getInner = static_cast<functionType*>(
+		lua_newuserdata(lua, sizeof(functionType))
 	);
 	//This object will be managed by Lua's GC
-	new(getInner) std::function<T(C*)>;
+	new(getInner) functionType;
 	*getInner = [member](C* data){return data->*member;};
 	lua_pushcclosure(lua, getter, 1);
 	lua_setfield(lua, -2, getterName.c_str());
@@ -241,12 +245,13 @@ void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* mem
 
 template<typename C, typename T>
 void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
+	using functionType = std::function<void(C*, T)>;
 	//expects an argument of lightuserdata, type C*, and the value to set arg1->*member to
 	auto setter = [] (lua_State *l) {
 		//Args list contains: self, val
 		auto val = luaX_return<T>(l);
 		luaX_getlocal(l, "_data");
-		auto memberF = *static_cast<std::function<void(C*, T)>*>(
+		auto memberF = *static_cast<functionType*>(
 			lua_touserdata(l, lua_upvalueindex(1))
 		);
 		memberF(static_cast<C*>(lua_touserdata(l, -1)), val);
@@ -254,40 +259,42 @@ void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
 	};
 	std::string setterName("set_");
 	setterName.append(name);
-	std::function<void(C*, T)> *setInner = static_cast<std::function<void(C*, T)> *>(
-		lua_newuserdata(lua, sizeof(std::function<void(C*, T)>))
+	functionType *setInner = static_cast<functionType*>(
+		lua_newuserdata(lua, sizeof(functionType))
 	);
 	//This object will be managed by Lua's GC
-	new(setInner) std::function<void(C*, T)>;
+	new(setInner) functionType;
 	*setInner = [member](C* data, T val){data->*member = val;};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());
 }
 
-
+template<typename C, typename T>
+void luaX_registerClassMemberSpecial(lua_State *lua, char const *name, T C::*member) {
+	luaX_registerClassGetterSpecial(lua, name, member);
+	luaX_registerClassSetterSpecial(lua, name, member);
+}
 
 template<typename C, typename T>
 void luaX_registerClassGetterSpecial(lua_State *lua, char const *name, T C::* member) {
+	using functionType = std::function<T *(C*)>;
 	//expects an argument of lightuserdata, type C*
 	auto getter = [](lua_State *l) {
-		auto const t = lua_gettop(l);
 		luaX_getlocal(l, "_data");
-		auto member = (*static_cast<std::function<T*(C*)>*>(
+		auto member = (*static_cast<functionType*>(
 			lua_touserdata(l, lua_upvalueindex(1))
 		))(static_cast<C*>(lua_touserdata(l, -1)));
-		lua_pop(l, 1);
 		luaX_push(l, member);
-		ASSERT(lua_gettop(l) == t + 1);
 		return 1;
 	};
 	std::string getterName("get_");
 	getterName.append(name);
 
-	std::function<T*(C*)> *getInner = static_cast<std::function<T*(C*)> *>(
+	functionType *getInner = static_cast<functionType *>(
 		lua_newuserdata(lua, sizeof(std::function<T*(C*)>))
 	);
 	//This object will be managed by Lua's GC
-	new(getInner) std::function<T*(C*)>;
+	new(getInner) functionType;
 	*getInner = [member](C* data){return &(data->*member);};
 	lua_pushcclosure(lua, getter, 1);
 	lua_setfield(lua, -2, getterName.c_str());
@@ -295,12 +302,13 @@ void luaX_registerClassGetterSpecial(lua_State *lua, char const *name, T C::* me
 
 template<typename C, typename T>
 void luaX_registerClassSetterSpecial(lua_State *lua, char const *name, T C::* member) {
+	using functionType = std::function<void(C*, T*)>;
 	//expects an argument of lightuserdata, type C*, and the value to set arg1->*member to
 	auto setter = [] (lua_State *l) {
 		//Args list contains: self, val
 		auto val = luaX_return<T*>(l);
 		luaX_getlocal(l, "_data");
-		auto memberF = *static_cast<std::function<void(C*, T*)>*>(
+		auto memberF = *static_cast<functionType*>(
 			lua_touserdata(l, lua_upvalueindex(1))
 		);
 		memberF(static_cast<C*>(lua_touserdata(l, -1)), val);
@@ -308,11 +316,11 @@ void luaX_registerClassSetterSpecial(lua_State *lua, char const *name, T C::* me
 	};
 	std::string setterName("set_");
 	setterName.append(name);
-	std::function<void(C*, T*)> *setInner = static_cast<std::function<void(C*, T*)> *>(
-		lua_newuserdata(lua, sizeof(std::function<void(C*, T*)>))
+	functionType *setInner = static_cast<functionType*>(
+		lua_newuserdata(lua, sizeof(functionType))
 	);
 	//This object will be managed by Lua's GC
-	new(setInner) std::function<void(C*, T)>;
+	new(setInner) functionType;
 	*setInner = [member](C* data, T* val){data->*member = *val;};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());

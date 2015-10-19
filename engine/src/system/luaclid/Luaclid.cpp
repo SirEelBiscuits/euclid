@@ -28,32 +28,38 @@ namespace System {
 
 		void RegisterTypes(lua_State *lua) {
 			// we need to pre-declare these classes, as there are some circular references within some of them
-			auto luaMeters = luaX_registerClass<MesiType<btStorageType, 1, 0, 0>>(lua
+			auto luaMeters = luaX_registerClass<Mesi::Meters>(lua
 				,"val", &Mesi::Meters::val);
 			auto luaPosVec2 = luaX_registerClass<PositionVec2>(lua);
-			auto luaWall = luaX_registerClass<World::Wall>(lua 
-				//"portal", &World::Wall::portal,
-				//"start", &World::Wall::start
-			);
+			auto luaSector = luaX_registerClass<World::Sector>(lua);
+			auto luaWall = luaX_registerClass<World::Wall>(lua); //setting portal and start here cause crashes !?
 
 
 			luaPosVec2.push();
-			luaX_registerClassGetterSpecial(lua,
+			luaX_registerClassMemberSpecial(lua,
 				"x", &PositionVec2::x );
-			luaX_registerClassSetterSpecial(lua,
-				"x", &PositionVec2::x );
-			luaX_registerClassGetterSpecial(lua,
-				"y", &PositionVec2::y );
-			luaX_registerClassSetterSpecial(lua,
+			luaX_registerClassMemberSpecial(lua,
 				"y", &PositionVec2::y );
 			lua_pop(lua, 1);
 
 			luaWall.push();
-			luaX_registerClassGetterSpecial(lua,
-				"length", &World::Wall::length
-			);
+			luaX_registerClassGetterSpecial(lua
+				, "length", &World::Wall::length);
+			//portal and start set here to prevent weird crashes. I wish I understood why this one happens..
+			luaX_registerClassMember(lua
+				, "portal", &World::Wall::portal);
+			luaX_registerClassMember(lua
+				, "start", &World::Wall::start);
 			lua_pop(lua, 1);
 
+			luaSector.push();
+			luaX_registerClassMemberSpecial(lua
+				, "ceilHeight", &World::Sector::ceilHeight);
+			luaX_registerClassMemberSpecial(lua
+				, "floorHeight", &World::Sector::floorHeight);
+			luaX_registerClassGetterSpecial(lua
+				, "ceilHeight", &World::Sector::centroid);
+			lua_pop(lua, 1);
 		}
 
 		void RegisterFunctions(lua_State *lua, reloaderType reloader) {
