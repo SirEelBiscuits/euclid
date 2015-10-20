@@ -37,6 +37,7 @@
     <ClCompile Include="src\platform\SDL\SDLTextures.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\RenderingPrimitives.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">

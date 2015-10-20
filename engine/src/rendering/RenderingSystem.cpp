@@ -119,7 +119,7 @@ namespace Rendering {
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawRect(Rect rect, Color c) {
+	void Context::DrawRect(ScreenRect rect, Color c) {
 		if(rect.size.x < 0) {
 			rect.pos.x += rect.size.x;
 			rect.size.x = -rect.size.x;
@@ -140,14 +140,123 @@ namespace Rendering {
 			rect.pos.y = 0;
 		}
 
-		auto top = rect.pos.y;
-		auto bottom = Maths::min(Height, static_cast<unsigned>(top + rect.size.y));
-		unsigned right = rect.pos.x + rect.size.x;
-		for(unsigned x = rect.pos.x; x < right && x < Width; ++x)
-			DrawVLine(x, top, bottom, c);
+		auto left = rect.pos.x;
+		auto right = Maths::min(Height, static_cast<unsigned>(left + rect.size.x));
+		unsigned bottom = rect.pos.y + rect.size.y;
+		for(unsigned y = rect.pos.y; y < bottom && y < Height; ++y)
+			DrawHLine(left, right, y, c);
 	}
 
 	void Context::DrawRect(ScreenVec2 topLeft, ScreenVec2 topRight, Color c) {
-		DrawRect(Rendering::Rect(topLeft, topRight - topLeft), c);
+		DrawRect(Rendering::ScreenRect(topLeft, topRight - topLeft), c);
+	}
+
+	void Context::DrawHLine(
+		unsigned xLeft, unsigned xRight,
+		unsigned y,
+		Texture const *tex,
+		UVVec2 start, UVVec2 end,
+		btStorageType colorMult
+	) {
+		//todo: use actual fixed point type?
+		auto const shift = 16u;
+
+		auto xLen = static_cast<float>(xRight - xLeft);
+		auto deltaUV = ScreenVec2{
+			static_cast<int>((1 << shift) * ((end.x - start.x) / xLen)),
+			static_cast<int>((1 << shift) * ((end.y - start.y) / xLen))
+		};
+	
+		auto uvCur = start * (1 << shift);
+		for(auto x = xLeft; x <= xRight; ++x) {
+			ScreenPixel(x, y) = tex->pixel((uvCur.x >> shift), (uvCur.y >> shift)) * colorMult;
+			uvCur += deltaUV;
+		}
+	}
+
+	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult) {
+		//todo: use actual fixed point type?
+		auto const bitShift = 16u;
+		auto const bitmult = 1 << bitShift;
+
+		auto const dx = bitmult * src.size.x / dest.size.x;
+		auto const dy = bitmult * src.size.y / dest.size.y;
+		auto const xTarget = dest.pos.x + dest.size.x;
+		auto const yTarget = dest.pos.y + dest.size.y;
+		auto ax = bitmult * src.pos.x;
+
+		auto const m = static_cast<unsigned>(bitmult * colorMult);
+
+		//handle dest.pos starting beyond the left of the screen
+		auto x = 0;
+		if(dest.pos.x < 0) {
+			ax -= dest.pos.x * dx;
+		} else {
+			x = dest.pos.x;
+		}
+
+		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+			//handle dest.pos starting beyond the top of the screen
+			auto ay = bitmult * src.pos.y;
+			auto y = 0;
+			if(dest.pos.y < 0) {
+				ay -= dest.pos.y * dx;
+			} else {
+				y = dest.pos.y;
+			}
+
+			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+				//todo: is this actually faster than float multiplication..?
+				Color c = tex->pixel(ax >> bitShift, ay >> bitShift);
+				c.r = (c.r * m) >> bitShift;
+				c.g = (c.g * m) >> bitShift;
+				c.b = (c.b * m) >> bitShift;
+				ScreenPixel(x, y) = c;
+			}
+		}
+	}
+
+	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, float colorMult) {
+		//todo: use actual fixed point type?
+		auto const bitShift = 16u;
+		auto const bitmult = 1 << bitShift;
+
+		auto const dx = bitmult * src.size.x / dest.size.x;
+		auto const dy = bitmult * src.size.y / dest.size.y;
+		auto const xTarget = dest.pos.x + dest.size.x;
+		auto const yTarget = dest.pos.y + dest.size.y;
+		auto ax = bitmult * src.pos.x;
+
+		auto const m = static_cast<unsigned>(bitmult * colorMult);
+
+		//handle dest.pos starting beyond the left of the screen
+		auto x = 0;
+		if(dest.pos.x < 0) {
+			ax -= dest.pos.x * dx;
+		} else {
+			x = dest.pos.x;
+		}
+
+		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+			//handle dest.pos starting beyond the top of the screen
+			auto ay = bitmult * src.pos.y;
+			auto y = 0;
+			if(dest.pos.y < 0) {
+				ay -= dest.pos.y * dx;
+			} else {
+				y = dest.pos.y;
+			}
+
+			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+				//todo - get rid of the floating point maths
+				Color dst = ScreenPixel(x, y);
+				Color c = tex->pixel(ax>>bitShift, ay>>bitShift);
+				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
+				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
+				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
+				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				ScreenPixel(x, y) = c;
+			}
+		}
 	}
 }

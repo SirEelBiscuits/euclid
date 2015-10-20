@@ -14,3 +14,4 @@ using btStorageType = float;
 using PositionVec2 = Vector<Mesi::Meters, 2, btStorageType>;
 using PositionVec3 = Vector<Mesi::Meters, 3, btStorageType>;
 using ScreenVec2   = Vector<int, 2>;
+using UVVec2       = Vector<int, 2>;

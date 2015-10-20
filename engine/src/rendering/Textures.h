@@ -22,7 +22,7 @@ namespace Rendering {
 			ASSERT((w & wMask) == 0);
 			ASSERT((h & hMask) == 0);
 
-			pixels = new Color[w * h];
+			pixels = std::make_unique<Color[]>(w * h);
 		}
 
 		unsigned const w, h;
@@ -32,14 +32,34 @@ namespace Rendering {
 		Color const & pixel(unsigned x, unsigned y) const;
 
 	private:
-		Color *pixels;
+		std::unique_ptr<Color[]> pixels;
 	};
 
 	namespace TextureStore {
+		/**
+			The authoritative type of a texture reference
+		*/
 		using TextureRef = std::shared_ptr<Texture>;
 
+		//This function is to be implemented by platform-specific code
+		/**
+			Load a texture from disk, and return a reference to it.
+
+			This will always load a new copy, even if it's already loaded.
+		 */
 		TextureRef LoadTexture(char const *filename);
+
+		/**
+			Get the texture with the given file name.
+
+			If the texture is already in memory, a reference to the already-loaded copy will 
+			be provided, and that reference will keep the texture loaded.
+		*/
 		TextureRef GetTexture(char const *filename);
+
+		/**
+			Check if any textures are no longer needed, and unload them.
+		*/
 		void ClearUnique();
 	}
 

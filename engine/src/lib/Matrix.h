@@ -126,14 +126,27 @@ template<
 	unsigned T_h,
 	typename DownCastType
 > constexpr auto operator*(
-	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
+	Matrix<BaseType, T_w, T_h, DownCastType> left,
 	ScalarType const &right
 ) {
-	Matrix<std::remove_const_t<decltype(left(0u, 0u) * right)>, T_w, T_h, DownCastType> ret;
 	for(auto y = 0u; y < T_h; ++y)
 		for(auto x = 0u; x < T_w; ++x)
-			ret(x, y) = left(x, y) * right;
-	return ret;
+			left(x, y) *= right;
+	return left;
+}
+
+template<
+	typename ScalarType,
+	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
+	typename BaseType,
+	typename DownCastType
+> auto operator*(
+	Matrix<BaseType, 1, 2, DownCastType> left,
+	ScalarType const &right
+) {
+	left.x *= right;
+	left.y *= right;
+	return left;
 }
 
 template<

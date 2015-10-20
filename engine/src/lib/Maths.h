@@ -15,7 +15,17 @@ POST_STD_LIB
 
 namespace Maths {
 	template<typename T, typename S>
-	constexpr auto min(T a, S b) -> decltype(a + b) {
+	constexpr auto min(T a, S b) {
 		return a > b ? b : a;
+	}
+
+	template<typename T, typename S, typename R>
+	constexpr auto interp(T start, S end, R alpha) {
+		return start + (end - start) * alpha;
+	}
+
+	template<typename T, typename S, typename R>
+	constexpr auto reverseInterp(T start, S end, R target) {
+		return (target - start) / (end - start);
 	}
 }
