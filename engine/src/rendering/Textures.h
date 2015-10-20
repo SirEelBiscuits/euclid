@@ -35,6 +35,11 @@ namespace Rendering {
 		std::unique_ptr<Color[]> pixels;
 	};
 
+	struct TextureInfo {
+		Texture *tex  {nullptr};
+		UVVec2 uvStart{0,0};
+	};
+
 	namespace TextureStore {
 		/**
 			The authoritative type of a texture reference

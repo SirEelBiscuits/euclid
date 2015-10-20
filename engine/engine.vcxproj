@@ -156,6 +156,7 @@
     <ClCompile Include="src\system\Config.cpp" />
     <ClCompile Include="src\system\luaclid\Luaclid.cpp" />
     <ClCompile Include="src\system\luaX\LuaX.cpp" />
+    <ClCompile Include="src\world\Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\rendering\RenderingPrimitives.h" />

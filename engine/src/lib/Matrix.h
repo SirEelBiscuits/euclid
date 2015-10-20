@@ -77,7 +77,7 @@ public:
 	}
 
 	BaseType Length() {
-		return std::sqrt(DownCastType(LengthSquared()));
+		return BaseType(std::sqrt(DownCastType(LengthSquared())));
 	}
 
 	static constexpr Matrix Zero() {
@@ -204,4 +204,14 @@ constexpr Matrix<BaseType, T_w, T_h, DownCastType> operator-(
 ) {
 	left -= right;
 	return left;
+}
+
+//vector operators
+
+template<typename BaseType1, typename BaseType2, typename DownCastType1, typename DownCastType2>
+auto operator^(
+	Matrix<BaseType1, 1u, 2u, DownCastType1> const &left,
+	Matrix<BaseType2, 1u, 2u, DownCastType2> const &right
+) {
+	return left.x * right.y - left.y * right.x;
 }

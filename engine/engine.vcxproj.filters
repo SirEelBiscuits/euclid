@@ -38,6 +38,7 @@
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
     <ClCompile Include="src\rendering\RenderingPrimitives.cpp" />
+    <ClCompile Include="src\world\Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\gargamel.h">
