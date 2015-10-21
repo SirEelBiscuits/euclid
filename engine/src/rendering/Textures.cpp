@@ -29,6 +29,14 @@ namespace Rendering {
 			return TextureRef{nullptr};
 		}
 
+		std::string GetTextureFilename(Texture const * tex) {
+			for(auto &kvp : TexLookup) {
+				if(kvp.second.get() == tex)
+					return kvp.first;
+			}
+			return "";
+		}
+
 		void ClearUnique() {
 			for(auto &kvp : TexLookup)
 				if(kvp.second.unique())

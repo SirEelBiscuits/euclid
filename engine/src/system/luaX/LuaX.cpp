@@ -61,6 +61,11 @@ void luaX_push<int>(lua_State *s, int value) {
 }
 
 template<>
+void luaX_push<unsigned>(lua_State *s, unsigned value) {
+	lua_pushinteger(s, value);
+}
+
+template<>
 void luaX_push<float>(lua_State *s, float value) {
 	lua_pushnumber(s, static_cast<lua_Number>(value));
 }

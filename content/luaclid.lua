@@ -54,6 +54,17 @@ local function char(c)
 	return ("\\%03d"):format(c:byte())
 end
 
+local function isArray(t)
+	local i = 0
+	for _ in pairs(t) do
+		i = i+1
+		if t[i] == nil then
+			return false
+		end
+	end
+	return true
+end
+
 local function serializeInner (o, indent)
   local ret = ""
   indent = indent or ""
@@ -67,9 +78,16 @@ local function serializeInner (o, indent)
     return ('"%s"'):format(o:gsub("[^ !#-~]", char))
 
   elseif type(o) == "table" then
+		local isArr = isArray(o)
     ret = ret .. ("{\n")
     for k,v in pairs(o) do
-      ret = ret .. indent .. "[" .. serializeInner(k) .. "]" .. " = "
+			if type(k) == "string" then
+				ret = ret .. indent .. k .. " = "
+			elseif isArr then
+				ret = ret .. indent
+			else
+	      ret = ret .. indent .. "[" .. serializeInner(k) .. "]" .. " = "
+			end
       ret = ret .. serializeInner(v, "  " .. indent)
       ret = ret .. ",\n"
     end

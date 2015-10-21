@@ -24,6 +24,8 @@ end
 
 Game.quit = false
 
+reloaded = true
+
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
 	Game.timesecs = (Game.timesecs or 0) + dt
@@ -34,6 +36,12 @@ function Game.Update(dt)
 		--print(Game.calls .. " calls per second")
 		Game.calls = 0
 		Game.timesecs = Game.timesecs - 1
+	end
+
+	if(reloaded) then
+		reloaded = false
+		Game.OpenMap(dofile("testmap.lua"))
+		print(serialise(Game.StoreMap()))
 	end
 
 	-- keep running forever!

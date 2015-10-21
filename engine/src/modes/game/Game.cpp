@@ -35,7 +35,7 @@ namespace Modes {
 			}
 		);
 
-		curMap = System::Luaclid::LoadMap(lua, "testmap.lua");
+		SetUpAdditionalLuaStuff();
 	}
 
 	bool Game::Update() {
@@ -100,6 +100,57 @@ namespace Modes {
 		ctx.Clear(clearColour);
 		renderList.Render();
 		ctx.FlipBuffers();
+	}
+
+	void Game::SetUpAdditionalLuaStuff() {
+		auto top = lua_gettop(lua);
+		lua_getglobal(lua, "Game");
+		//OpenMap
+		{
+			auto *innerF = static_cast<std::function<void(std::unique_ptr<World::Map>)>*> (
+					lua_newuserdata(lua, sizeof(std::function<void(std::unique_ptr<World::Map>)>))
+			);
+			new(innerF) std::function<void(std::unique_ptr<World::Map>)>;
+			*innerF = [this](std::unique_ptr<World::Map> map) {
+				this->curMap = std::move(map);
+			};
+
+			auto closure = [](lua_State *s) {
+				auto innerF = *static_cast<std::function<void(std::unique_ptr<World::Map>)>*>(
+					lua_touserdata(s, lua_upvalueindex(1))
+				);
+				auto filename = luaX_return<std::string>(s);
+				innerF(System::Luaclid::LoadMap(s));
+				return 0;
+			};
+
+			lua_pushcclosure(lua, closure, 1);
+			lua_setfield(lua, -2, "OpenMap");
+		}
+		//StoreMap
+		{
+			auto *innerF = static_cast<std::function<void(lua_State*)>*> (
+				lua_newuserdata(lua, sizeof(std::function<void(lua_State*)>))
+			);
+			new(innerF) std::function<void(lua_State*)>;
+			*innerF = [this](lua_State *s) {
+				System::Luaclid::StoreMap(s, *this->curMap);
+			};
+
+			auto closure = [](lua_State *s) {
+				auto innerF = *static_cast<std::function<void(lua_State*)>*>(
+					lua_touserdata(s, lua_upvalueindex(1))
+				);
+
+				innerF(s);
+				return 1;
+			};
+
+			lua_pushcclosure(lua, closure, 1);
+			lua_setfield(lua, -2, "StoreMap");
+		}
+		lua_pop(lua, 1);
+		ASSERT(lua_gettop(lua) == top);
 	}
 
 	void Game::HandleEvents(System::Events::Types type, void *p1, void *p2) {

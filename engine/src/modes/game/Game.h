@@ -26,6 +26,8 @@ namespace Modes {
 		bool GameLogic();
 		void RenderLogic();
 
+		void SetUpAdditionalLuaStuff();
+
 		bool done{false};
 		luaX_State lua{LUAX_NEED_LIBS};
 

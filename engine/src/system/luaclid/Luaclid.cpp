@@ -26,8 +26,6 @@ namespace System {
 			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
 		}
 
-		std::unique_ptr<World::Map> LoadMap(lua_State *lua);
-
 		std::unique_ptr<World::Map> LoadMap(lua_State *lua, char const *filename) {
 			luaX_dofile(lua, filename, 1);
 			return LoadMap(lua);
@@ -119,6 +117,57 @@ namespace System {
 			map->RegisterAllTextures();
 
 			return map;
+		}
+
+		void StoreTexInfo(lua_State *lua, char const * fieldname, Rendering::TextureInfo const & texInfo) {
+			luaX_push(lua, luaX_emptytable{0, 3});
+			luaX_setlocal(lua, "tex", Rendering::TextureStore::GetTextureFilename(texInfo.tex));
+			luaX_setlocal(lua, "uStart", texInfo.uvStart.x);
+			luaX_setlocal(lua, "vStart", texInfo.uvStart.y);
+			lua_setfield(lua, -2, fieldname);
+		}
+
+		void StoreMap(lua_State *lua, World::Map const &map) {
+			luaX_push(lua, luaX_emptytable{0, 2});
+			
+			luaX_setlocal(lua, "verts", luaX_emptytable{static_cast<int>(map.GetNumVerts()) , 0});
+			luaX_getlocal(lua, "verts");
+			for(auto i = 0u; i < map.GetNumVerts(); ++i) {
+				auto v = map.GetVert(i);
+				luaX_push(lua, luaX_emptytable{0, 2});
+				luaX_setlocal(lua, "x", v->x.val);
+				luaX_setlocal(lua, "y", v->y.val);
+				lua_seti(lua, -2, i+1); //pops the vert entry
+			}
+			lua_pop(lua, 1);
+
+			luaX_setlocal(lua, "sectors", luaX_emptytable{static_cast<int>(map.GetNumSectors()), 0});
+			luaX_getlocal(lua, "sectors");
+			for(auto i = 0u; i < map.GetNumSectors(); ++i) {
+				auto s = map.GetSector(i);
+				luaX_push(lua, luaX_emptytable{0, 5});
+				luaX_setlocal(lua, "floorHeight", s->floorHeight.val);
+				luaX_setlocal(lua, "ceilHeight", s->ceilHeight.val);
+				StoreTexInfo(lua, "floorTex", s->floor);
+				StoreTexInfo(lua, "ceilTex", s->ceiling);
+
+				luaX_setlocal(lua, "walls", luaX_emptytable{static_cast<int>(s->GetNumWalls()), 0});
+				luaX_getlocal(lua, "walls");
+				for(auto i = 0u; i < s->GetNumWalls(); ++i) {
+					auto w = s->GetWall(i);
+					luaX_push(lua, luaX_emptytable{0, 5});
+					luaX_setlocal(lua, "start", map.GetVertID(w->start) + 1);
+					luaX_setlocal(lua, "portal", map.GetSectorID(w->portal) + 1);
+					StoreTexInfo(lua, "mainTex", w->mainTex);
+					StoreTexInfo(lua, "bottomTex", w->bottomTex);
+					StoreTexInfo(lua, "topTex", w->topTex);
+					lua_seti(lua, -2, i+1);
+				}
+				lua_pop(lua, 1);
+
+				lua_seti(lua, -2, i+1);
+			}
+			lua_pop(lua, 1);
 		}
 
 		void RegisterTypes(lua_State *lua) {

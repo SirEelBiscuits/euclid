@@ -71,6 +71,8 @@ namespace Rendering {
 		*/
 		TextureRef GetTexture(Texture const * texp);
 
+		std::string GetTextureFilename(Texture const * tex);
+
 		/**
 			Check if any textures are no longer needed, and unload them.
 		*/

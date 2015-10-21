@@ -133,7 +133,10 @@ namespace World {
 
 	unsigned Map::GetSectorID(Sector const * sec) const {
 		auto si = 0u;
-		for(auto cur = sectors.cbegin(); si < GetNumSectors() && &*cur != sec; ++si, ++cur);
+		auto cur = sectors.cbegin();
+		for(; cur != sectors.cend() && &*cur != sec; ++si, ++cur);
+		if(cur == sectors.cend())
+			return (unsigned) -1;
 		return si;
 	}
 
