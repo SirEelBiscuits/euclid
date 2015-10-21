@@ -147,10 +147,10 @@ int luaX_pcall(lua_State *s, int numArgs, int numReturns) {
 #endif
 }
 
-bool luaX_dofile(lua_State *s, char const *filename) {
+bool luaX_dofile(lua_State *s, char const *filename, int numReturns /* = 0 */) {
 	auto err = luaL_loadfile(s, filename);
 	if(err == LUA_OK) {
-		err = luaX_pcall(s, 0, 0);
+		err = luaX_pcall(s, 0, numReturns);
 	}
 	luaX_showErrors(s, filename, err);
 	return err == LUA_OK;

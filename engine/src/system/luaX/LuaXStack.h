@@ -149,6 +149,12 @@ T luaX_returnglobal(lua_State *s, char const *name) {
 	return luaX_return<T>(s);
 }
 
+template<typename T>
+T luaX_returnlocal(lua_State *s, char const *name) {
+	luaX_getlocal(s, name); //no need to check return - if the field doesn't exist, it'll get nil
+	return luaX_return<T>(s);
+}
+
 template<typename Tuple, int I>
 class luaX_returntuplefromstackInner;
 

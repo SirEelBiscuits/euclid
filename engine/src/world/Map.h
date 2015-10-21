@@ -81,9 +81,13 @@ namespace World {
 		Vert           * AddNewVert    ();
 		void             RemoveVert    (Vert const * v);
 
+		void             RegisterTexture(std::shared_ptr<Rendering::Texture> ptr);
+		void             RegisterAllTextures();
+
 	private:
 		std::list<Sector> sectors  {};
 		std::list<Vert>   verts    {};
-		std::string       filename {};
+
+		std::vector<std::shared_ptr<Rendering::Texture>> TexturesUsed{};
 	};
 }

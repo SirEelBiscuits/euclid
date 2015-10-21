@@ -26,6 +26,101 @@ namespace System {
 			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
 		}
 
+		std::unique_ptr<World::Map> LoadMap(lua_State *lua);
+
+		std::unique_ptr<World::Map> LoadMap(lua_State *lua, char const *filename) {
+			luaX_dofile(lua, filename, 1);
+			return LoadMap(lua);
+		}
+
+		Rendering::TextureInfo LoadTexInfo(lua_State *lua, char const *fieldName) {
+			Rendering::TextureInfo ret;
+			luaX_getlocal(lua, fieldName);
+			if(lua_type(lua, -1) == LUA_TTABLE) {
+				auto texName = luaX_returnlocal<std::string>(lua, "tex");
+				ret.tex = texName.size() > 0 ? Rendering::TextureStore::GetTexture(texName.c_str()).get() : nullptr;
+				ret.uvStart.x = luaX_returnlocal<int>(lua, "uStart");
+				ret.uvStart.y = luaX_returnlocal<int>(lua, "vStart");
+			}
+			lua_pop(lua, 1);
+			return ret;
+		}
+
+		std::unique_ptr<World::Map> LoadMap(lua_State *lua) {
+			auto map = std::make_unique<World::Map>();
+			{
+				luaX_getlocal(lua, "verts");
+				auto vertIdx = 1;
+				do {
+					lua_geti(lua, -1, vertIdx);
+					if(lua_isnil(lua, -1)) {
+						lua_pop(lua, 1);
+						break;
+					}
+					auto v = map->AddNewVert();
+					v->x.val = luaX_returnlocal<btStorageType>(lua, "x");
+					v->y.val = luaX_returnlocal<btStorageType>(lua, "y");
+					++vertIdx;
+					lua_pop(lua, 1);
+				} while (true);
+				lua_pop(lua, 1);
+			}
+			{
+				luaX_getlocal(lua, "sectors");
+				auto secIdx = 1;
+				do {
+					lua_geti(lua, -1, secIdx);
+					if(lua_isnil(lua, -1)) {
+						lua_pop(lua, 1);
+						break;
+					}
+					auto sec = map->AddNewSector();
+					sec->ceilHeight.val = luaX_returnlocal<btStorageType>(lua, "ceilHeight");
+					sec->floorHeight.val = luaX_returnlocal<btStorageType>(lua, "floorHeight");
+					sec->floor = LoadTexInfo(lua, "floorTex");
+					sec->ceiling = LoadTexInfo(lua, "ceilTex");
+
+					{
+						luaX_getlocal(lua, "walls");
+						auto wallIdx = 1;
+						do {
+							lua_geti(lua, -1, wallIdx);
+							if(lua_isnil(lua, -1)) {
+								lua_pop(lua, 1);
+								break;
+							}
+							auto wall = sec->InsertWallBefore(wallIdx-1);
+							//indices supplied by lua are off by one because arrays start at 1
+							auto vertID = luaX_returnlocal<int>(lua, "start") - 1;
+							wall->start = vertID >= 0? map->GetVert(vertID) : nullptr;
+							auto portalID = luaX_returnlocal<int>(lua, "portal") - 1;
+							wall->portal = portalID >= 0 ? map->GetSector(portalID) : nullptr;
+							
+							wall->mainTex   = LoadTexInfo(lua, "mainTex");
+							wall->bottomTex = LoadTexInfo(lua, "bottomTex");
+							wall->topTex    = LoadTexInfo(lua, "topTex");
+
+							wallIdx++;
+							lua_pop(lua, 1);
+						} while(true);
+						lua_pop(lua, 1);
+					}
+
+					sec->FixWinding();
+					sec->UpdateCentroid();
+					sec->UpdateLineLengths();
+
+					secIdx++;
+					lua_pop(lua, 1);
+				} while (true);
+				lua_pop(lua, 1);
+			}
+
+			map->RegisterAllTextures();
+
+			return map;
+		}
+
 		void RegisterTypes(lua_State *lua) {
 			// we need to pre-declare these classes, as there are some circular references within some of them
 			auto luaMeters = luaX_registerClass<Mesi::Meters>(lua

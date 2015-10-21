@@ -63,6 +63,15 @@ namespace Rendering {
 		TextureRef GetTexture(char const *filename);
 
 		/**
+			Get the textureref of the texture at the given address.
+
+			If the texture is already in memory, a reference to the already-loaded copy will 
+			be provided, and that reference will keep the texture loaded.
+			Otherwise, it will return a TextureRef{nullptr}
+		*/
+		TextureRef GetTexture(Texture const * texp);
+
+		/**
 			Check if any textures are no longer needed, and unload them.
 		*/
 		void ClearUnique();

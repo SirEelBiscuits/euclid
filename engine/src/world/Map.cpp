@@ -212,4 +212,28 @@ namespace World {
 				break;
 			}
 	}
+
+	void Map::RegisterTexture(std::shared_ptr<Rendering::Texture> ptr) {
+		if(ptr.get() == nullptr)
+			return;
+		for(auto & t : TexturesUsed)
+			if(t.get() == ptr.get())
+				return;
+		 TexturesUsed.push_back(ptr);
+	}
+
+	void Map::RegisterAllTextures() {
+		using Rendering::TextureStore::GetTexture;
+		TexturesUsed.clear();
+		for(auto &s : sectors) {
+			RegisterTexture(GetTexture(s.floor.tex));
+			RegisterTexture(GetTexture(s.ceiling.tex));
+			for(auto wi = 0u; wi < s.GetNumWalls(); ++wi) {
+				auto w = s.GetWall(wi);
+				RegisterTexture(GetTexture(w->bottomTex.tex));
+				RegisterTexture(GetTexture(w->mainTex.tex));
+				RegisterTexture(GetTexture(w->topTex.tex));
+			}
+		}
+	}
 }

@@ -10,6 +10,7 @@ POST_STD_LIB
 #include "system/LuaX.h"
 
 namespace System { namespace Events { enum class Types; } }
+namespace World { class Map; }
 
 namespace Modes {
 	class Game : public System::RunnableMode {
@@ -31,5 +32,7 @@ namespace Modes {
 		std::chrono::high_resolution_clock::time_point oldTimePoint;
 
 		void HandleEvents(System::Events::Types type, void *p1, void *p2);
+
+		std::unique_ptr<World::Map> curMap{nullptr};
 	};
 }

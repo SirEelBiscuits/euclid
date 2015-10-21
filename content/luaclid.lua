@@ -50,6 +50,10 @@ InputEventType = MakeEnum({
 	"EventType"
 )
 
+local function char(c)
+	return ("\\%03d"):format(c:byte())
+end
+
 local function serializeInner (o, indent)
   local ret = ""
   indent = indent or ""

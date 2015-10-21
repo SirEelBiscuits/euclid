@@ -23,4 +23,4 @@ POST_STD_LIB
 void luaX_showErrors(lua_State* s, char const *name, int errCode);
 
 /* returns true on success. prints all error information available */
-bool luaX_dofile(lua_State *s, char const *filename);
+bool luaX_dofile(lua_State *s, char const *filename, int numReturns = 0);

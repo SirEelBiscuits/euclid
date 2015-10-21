@@ -1,6 +1,8 @@
 function Game.Initialise()
 	print("Initialised")
 	local map = dofile("testmap.lua")
+
+	print(serialise(map));
 end
 
 function Describe(t)

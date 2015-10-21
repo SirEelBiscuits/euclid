@@ -20,6 +20,15 @@ namespace Rendering {
 			return test;
 		}
 
+		TextureRef GetTexture(Texture const * texp) {
+			for(auto &i : TexLookup) {
+				if(i.second.get() == texp)
+					return i.second;
+			}
+
+			return TextureRef{nullptr};
+		}
+
 		void ClearUnique() {
 			for(auto &kvp : TexLookup)
 				if(kvp.second.unique())

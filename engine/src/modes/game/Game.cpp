@@ -34,6 +34,8 @@ namespace Modes {
 				HandleEvents(type, p1, p2);
 			}
 		);
+
+		curMap = System::Luaclid::LoadMap(lua, "testmap.lua");
 	}
 
 	bool Game::Update() {
