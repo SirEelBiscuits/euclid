@@ -96,8 +96,7 @@ template<typename Ret, int arity, typename... Args>
 class luaX_registerfunction<std::function<Ret(Args...)>, arity> {
 public:
 	static void Register(lua_State *s, std::function<Ret(Args...)> f) {
-		static_assert(arity == sizeof...(Args), "Bad call to luaX_registerfunction: arity must be set to sizeof...(Args)");
-		using F = std::function<Ret(Args...)>*;
+		using F = std::function<Ret(Args...)>;
 		auto wrapper = [](lua_State *l) {
 			if(lua_gettop(l) != sizeof...(Args)) {
 				return luaL_error(l,
@@ -109,6 +108,54 @@ public:
 			auto args = luaX_returntuplefromstack<Args...>(l);
 			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
 			luaX_push(l, TypeMagic::apply(innerF, args));
+			return arity;
+		};
+		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		new(callInner) F;
+		*callInner = f;
+		lua_pushcclosure(s, wrapper, 1);
+	}
+};
+
+template<>
+class luaX_registerfunction<std::function<void()>, 0> {
+public:
+	static void Register(lua_State *s, std::function<void()> f) {
+		using F = std::function<void()>;
+		auto wrapper = [](lua_State *l) {
+			if(lua_gettop(l) != 0) {
+				return luaL_error(l,
+					"Bad call to function, %d arguments provided, %d expecterd",
+					lua_gettop(l),
+					0
+				);
+			}
+			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			innerF();
+			return 0;
+		};
+		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		new(callInner) F;
+		*callInner = f;
+		lua_pushcclosure(s, wrapper, 1);
+	}
+};
+
+template<typename Ret, int arity>
+class luaX_registerfunction<std::function<Ret()>, arity> {
+public:
+	static void Register(lua_State *s, std::function<Ret()> f) {
+		using F = std::function<Ret()>;
+		auto wrapper = [](lua_State *l) {
+			if(lua_gettop(l) != 0) {
+				return luaL_error(l,
+					"Bad call to function, %d arguments provided, %d expecterd",
+					lua_gettop(l),
+					0
+				);
+			}
+			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			luaX_push(l, innerF());
 			return arity;
 		};
 		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));

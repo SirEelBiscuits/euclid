@@ -60,6 +60,18 @@ function Game.PostRender()
 	Draw.Line({x = inputKey, y = yval }, {x = 100, y = 53}, {r = 255})
 	Draw.Rect({x = 20, y = 50, w = 10, h = 10}, { r = 255, g = 255})
 	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, "ceil.png")
+
+	Draw.Line({x = -Draw.GetWidth()/2, y = Draw.GetHeight()/2}, 
+		{x = Draw.GetWidth()/2, y = -Draw.GetHeight()/2}, {g = 255})
+
+	Draw.Line({x = Draw.GetWidth()/2, y = -Draw.GetHeight()/2}, 
+		{x = 3*Draw.GetWidth()/2, y = Draw.GetHeight()/2}, {g = 255})
+
+	Draw.Line({x = 3*Draw.GetWidth()/2, y = Draw.GetHeight()/2}, 
+		{x = Draw.GetWidth()/2, y = 3*Draw.GetHeight()/2}, {g = 255})
+
+	Draw.Line({x = Draw.GetWidth()/2, y = 3*Draw.GetHeight()/2}, 
+		{x = -Draw.GetWidth()/2, y = Draw.GetHeight()/2}, {g = 255})
 end
 
 function Game.Quit()

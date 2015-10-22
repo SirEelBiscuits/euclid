@@ -369,9 +369,10 @@ namespace System {
 				)
 			));
 			
-			//Draw.Line
 			{
 				luaX_getglobal(lua, "Draw");
+
+				//Draw.Line
 				luaX_push(lua, 
 					static_cast<std::function<void(ScreenVec2, ScreenVec2, Rendering::Color)>>(
 						[ctx](ScreenVec2 start, ScreenVec2 end, Rendering::Color c) {
@@ -380,6 +381,7 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "Line");
+
 				//Draw.Rect
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Color)>>(
@@ -389,6 +391,7 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "Rect");
+
 				//Draw.RectTextured
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, std::string)>>(
@@ -399,6 +402,27 @@ namespace System {
 					)	
 				);
 				lua_setfield(lua, -2, "RectTextured");
+
+				//Draw.GetWidth
+				luaX_push(lua,
+					static_cast<std::function<int()>>(
+						[ctx](){
+							return (int)ctx->GetWidth();
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetWidth");
+
+				//Draw.GetHeight
+				luaX_push(lua,
+					static_cast<std::function<int()>>(
+						[ctx](){
+							return (int)ctx->GetHeight();
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetHeight");
+
 				lua_pop(lua, 1);
 			}
 

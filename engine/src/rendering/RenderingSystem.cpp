@@ -47,8 +47,46 @@ namespace Rendering {
 		//todo IMPORTANT handle start and end values that are way off the screen.
 		// either clip shit, or discard!
 
+		if(start.x == end.x)
+			DrawVLine(start.x, start.y, end.y, c);
+		if(start.y == end.y)
+			DrawHLine(start.x, end.x, start.y, c);
+
 		if(start.x > end.x)
 			std::swap(start, end);
+		
+		if(start.x < 0) {
+			float m = -(float)start.x / (end.x - start.x);
+			start.y += std::round(m * (end.y - start.y));
+			start.x = 0;
+		}
+		if(end.x >= Width) {
+			float m = ((float)Width - 1 - start.x) / (end.x - start.x);
+			end.y = start.y + std::round(m * (end.y - start.y));
+			end.x = Width - 1;
+		}
+
+		if(start.y < 0) {
+			float m = -(float)start.y / (end.y - start.y);
+			start.x += std::round(m * (end.x - start.x));
+			start.y = 0;
+		}
+		if(end.y >= Height) {
+			float m = ((float)Width - 1 - start.y) / (end.y - start.y);
+			end.x = start.x + std::round(m * (end.x - start.x));
+			end.y = Height - 1;
+		}
+
+		if(end.y < 0) {
+			float m = -(float)end.y / (start.y - end.y);
+			end.x += std::round(m * (start.x - end.x));
+			end.y = 0;
+		}
+		if(start.y >= Height) {
+			float m = ((float)Width - 1 - end.y) / (start.y - end.y);
+			start.x = end.x + std::round(m * (start.x - end.x));
+			start.y = Height - 1;
+		}
 
 		ScreenPixel_slow(start) = c;
 		ScreenPixel_slow(end) = c;
