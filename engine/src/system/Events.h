@@ -36,6 +36,9 @@ namespace System {
 		enum class Types {
 			Unknown,
 			Quit,
+			InputLoopStart,
+			InputLoopMarkEnd,
+			InputLoopStop,
 		};
 		void SetHandlers(std::function<void(Types, void*, void*)> callback);
 	}

@@ -138,6 +138,7 @@ static int traceback(lua_State *s) {
 
 int luaX_pcall(lua_State *s, int numArgs, int numReturns) {
 #ifdef EUCLID_DEBUG
+	auto x = lua_gettop(s);
 	lua_pushcfunction(s, &traceback);
 	auto ptr = 0 - numArgs - 2;
 	lua_insert(s, ptr);
@@ -146,6 +147,7 @@ int luaX_pcall(lua_State *s, int numArgs, int numReturns) {
 		lua_remove(s, 0 - numReturns - 1);
 	else
 		lua_remove(s, -2);
+	ASSERT(lua_gettop(s) == x - numArgs  - 1 + (ret == LUA_OK ? numReturns : 1));
 	return ret;
 #else
 	return lua_pcall(s, numArgs, numReturns, 0);

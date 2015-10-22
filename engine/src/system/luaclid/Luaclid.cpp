@@ -170,6 +170,73 @@ namespace System {
 			lua_pop(lua, 1);
 		}
 
+		bool GameUpdate(lua_State *lua, double dt) {
+			auto ret = true;
+			auto x = lua_gettop(lua);
+
+			auto pushed = luaX_getglobal(lua, "Game", "Update");
+			lua_gettop(lua);
+			if(pushed == 2 && lua_isfunction(lua, -1)) {
+				luaX_push(lua, dt);
+				lua_gettop(lua);
+				if(LUA_OK == luaX_pcall(lua, 1, 1)) {
+					lua_gettop(lua);
+					ret = luaX_return<bool>(lua);
+					lua_gettop(lua);
+					--pushed;
+				}
+			}
+			lua_pop(lua, pushed);
+
+			ASSERT(lua_gettop(lua) == x);
+			return ret;
+		}
+
+		void GameQuit(lua_State *lua) {
+			auto x = lua_gettop(lua);
+			auto pushed = luaX_getglobal(lua, "Game", "Quit");
+			if(2 == pushed && lua_isfunction(lua, -1)) {
+				luaX_pcall(lua, 0, 0);
+				--pushed;
+			}
+			lua_pop(lua, pushed);
+			ASSERT(lua_gettop(lua) == x);
+		}
+
+		void GameInitialise(lua_State *lua) {
+			auto x = lua_gettop(lua);
+			auto pushed = luaX_getglobal(lua, "Game", "Initialise");
+			lua_gettop(lua);
+			if(2 == pushed && lua_isfunction(lua, -1)) {
+				if(LUA_OK == luaX_pcall(lua, 0, 0) )
+					--pushed;
+			}
+			lua_pop(lua, pushed);
+			ASSERT(lua_gettop(lua) == x);
+		}
+
+		void GameSaveState(lua_State * lua) {
+			auto x = lua_gettop(lua);
+			auto pushed = luaX_getglobal(lua, "Game", "SaveState");
+			if(2 == pushed && lua_isfunction(lua, -1)) {
+				luaX_pcall(lua, 0, 0);
+				--pushed;
+			}
+			lua_pop(lua, pushed);
+			ASSERT(lua_gettop(lua) == x);
+		}
+
+		void GameLoadState(lua_State * lua) {
+			auto x = lua_gettop(lua);
+			auto pushed = luaX_getglobal(lua, "Game", "LoadState");
+			if(2 == pushed && lua_isfunction(lua, -1)) {
+				luaX_pcall(lua, 0, 0);
+				--pushed;
+			}
+			lua_pop(lua, pushed);
+			ASSERT(lua_gettop(lua) == x);
+		}
+
 		void RegisterTypes(lua_State *lua) {
 			// we need to pre-declare these classes, as there are some circular references within some of them
 			auto luaMeters = luaX_registerClass<Mesi::Meters>(lua

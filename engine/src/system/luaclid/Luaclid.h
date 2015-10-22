@@ -22,5 +22,12 @@ namespace System {
 		std::unique_ptr<World::Map> LoadMap(lua_State *lua);
 		void StoreMap(lua_State *lua, World::Map const &map);
 
+		//wrappers for Lua functions
+		bool GameUpdate(lua_State *lua, double dt);
+		void GameQuit(lua_State *lua);
+		void GameInitialise(lua_State *lua);
+
+		void GameSaveState(lua_State *lua);
+		void GameLoadState(lua_State *lua);
 	}
 }

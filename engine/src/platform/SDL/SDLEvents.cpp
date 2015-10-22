@@ -28,28 +28,41 @@ namespace System {
 			return ret;
 		}
 
-		std::vector<Event> GetEvents() {
-			SDL_Event marker;
-			marker.type = SDL_USEREVENT;
-			marker.user.code = 0xfeedcafe;
-			SDL_PushEvent(&marker);
+		static int const DEBUG_START_RECORD_KEY = SDLK_F10;
+		static int const DEBUG_STOP_RECORD_KEY = SDLK_F11;
+		static int const DEBUG_LOOP_RECORD_KEY = SDLK_F12;
 
+		std::vector<Event> GetEvents() {
 			std::vector<Event> events;
 			auto done = false;
 			SDL_Event e;
 			while(SDL_PollEvent(&e) && !done) {
 				switch(e.type) {
-					// when we find our marker, we've examined the whole list and can stop
-				case SDL_USEREVENT:
-					if(e.user.code == 0xfeedcafe) {
-						done = true;
-						break;
-					} else {
-						SDL_PushEvent(&e);
-					}
-					break;
 				case SDL_KEYDOWN:
+#ifdef EUCLID_DEBUG
+					switch(e.key.keysym.sym) {
+					case DEBUG_START_RECORD_KEY:
+						EventCallback(Events::Types::InputLoopStart, nullptr, nullptr);
+						break;
+					case DEBUG_STOP_RECORD_KEY:
+						EventCallback(Events::Types::InputLoopStop, nullptr, nullptr);
+						break;
+					case DEBUG_LOOP_RECORD_KEY:
+						EventCallback(Events::Types::InputLoopMarkEnd, nullptr, nullptr);
+						break;
+					default:;
+					}
+#endif
+				//FALLTHROUGH
 				case SDL_KEYUP:
+#ifdef EUCLID_DEBUG
+					if(e.key.keysym.sym == DEBUG_START_RECORD_KEY
+						|| e.key.keysym.sym == DEBUG_STOP_RECORD_KEY
+						|| e.key.keysym.sym == DEBUG_LOOP_RECORD_KEY
+					)
+						break;
+#endif
+				//FALLTHROUGH
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 					events.emplace_back(Transform(e));
@@ -101,7 +114,7 @@ namespace System {
 					break;
 
 				default:
-					SDL_PushEvent(&e);
+					//SDL_PushEvent(&e);
 					break;
 				}
 			}

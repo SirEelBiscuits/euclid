@@ -22,13 +22,7 @@ namespace Modes {
 	}
 
 	void Game::Run() {
-		auto pushed = luaX_getglobal(lua, "Game", "Initialise");
-		if(2 == pushed && lua_isfunction(lua, -1)) {
-			auto err = lua_pcall(lua, 0, 0, 0);
-			luaX_showErrors(lua, "Game.Initialise()", err);
-			--pushed;
-		}
-		lua_pop(lua, pushed);
+		System::Luaclid::GameInitialise(lua);
 		System::Events::SetHandlers(
 			[this](System::Events::Types type, void *p1, void *p2) {
 				HandleEvents(type, p1, p2);
@@ -47,14 +41,35 @@ namespace Modes {
 
 		return ret;
 	}
-
+	
 	void Game::HandleInput() {
 		auto input = System::Input::GetEvents();
+
+		switch(inputRecordState) {
+		case InputRecordState::Recording:
+			inputqueue.push_back(input);
+			break;
+		case InputRecordState::PlayingBack:
+			input = inputqueue[inputqueuePosition];
+			++inputqueuePosition;
+			if(inputqueuePosition > inputqueue.size()) {
+				inputqueuePosition = 0;
+				System::Luaclid::GameLoadState(lua);
+			}
+			break;
+		case InputRecordState::Normal:
+			break;
+		default:
+			ASSERT(false);
+		}
+
 		lua_getglobal(lua, "Game");
 		if(lua_istable(lua, -1)) {
-			lua_createtable(lua, input.size(), 0);
+			luaX_push(lua, luaX_emptytable{(int)input.size(), 0});
 
+			auto offset = 1u;
 			for(auto i = 0u; i < input.size(); ++i) {
+
 				luaX_push(lua, luaX_emptytable{0, 3});
 				luaX_settable(lua,
 					"key",       input[i].key,
@@ -62,7 +77,7 @@ namespace Modes {
 					"eventType", (int)input[i].type
 				);
 
-				lua_seti(lua, -2, i + 1);
+				lua_seti(lua, -2, i + offset);
 			}
 			lua_setfield(lua, -2, "Input");
 		}
@@ -70,29 +85,11 @@ namespace Modes {
 	}
 
 	bool Game::GameLogic() {
-		auto ret = true;
-
 		auto timePoint = std::chrono::high_resolution_clock::time_point {std::chrono::high_resolution_clock::now()};
 		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(timePoint - oldTimePoint).count() / 1000000.0;
 		oldTimePoint = timePoint;
 
-		lua_getglobal(lua, "Game");
-		if(lua_istable(lua, -1)) {
-			lua_getfield(lua, -1, "Update");
-			if(lua_isfunction(lua, -1)) {
-				luaX_push(lua, dt);
-				auto err = lua_pcall(lua, 1, 1, 0);
-				luaX_showErrors(lua, "Game.Update()", err);
-				if(LUA_OK == err) {
-					ret = !!lua_toboolean(lua, -1);
-					lua_pop(lua, 1);
-				}
-			} else {
-				lua_pop(lua, 1); //remove "Update"
-			}
-		}
-		lua_pop(lua, 1); //remove "Game"
-		return ret;
+		return System::Luaclid::GameUpdate(lua, dt);
 	}
 
 	static Rendering::Color clearColour{100, 149, 237, 0};
@@ -153,21 +150,40 @@ namespace Modes {
 		ASSERT(lua_gettop(lua) == top);
 	}
 
+	void Game::MarkLoopStart() {
+		System::Luaclid::GameSaveState(lua);
+		inputRecordState = InputRecordState::Recording;
+		inputqueue.clear();
+	}
+
+	void Game::MarkLoopEnd() {
+		if(inputRecordState == InputRecordState::Recording && inputqueue.size() > 0) {
+			System::Luaclid::GameLoadState(lua);
+			inputRecordState = InputRecordState::PlayingBack;
+			inputqueuePosition = 0u;
+		}	else 
+			inputRecordState = InputRecordState::Normal;
+	}
+
+	void Game::StopLoop() {
+		inputRecordState = InputRecordState::Normal;
+		inputqueue.clear();
+	}
+
 	void Game::HandleEvents(System::Events::Types type, void *p1, void *p2) {
 		using System::Events::Types;
 		switch(type) {
 		case Types::Quit:
-			lua_getglobal(lua, "Game");
-			if(lua_istable(lua, -1)) {
-				lua_getfield(lua, -1, "Quit");
-				if(lua_isfunction(lua, -1)) {
-					auto err = lua_pcall(lua, 0, 0, 0);
-					luaX_showErrors(lua, "Game.Quit()", err);
-				} else {
-					lua_pop(lua, 1);
-				}
-			}
-			lua_pop(lua, 1);
+			System::Luaclid::GameQuit(lua);
+			break;
+		case Types::InputLoopMarkEnd:
+			MarkLoopEnd();
+			break;
+		case Types::InputLoopStart:
+			MarkLoopStart();
+			break;
+		case Types::InputLoopStop:
+			StopLoop();
 			break;
 		default:
 			break;
