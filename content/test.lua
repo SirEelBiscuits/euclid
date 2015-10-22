@@ -1,8 +1,6 @@
 function Game.Initialise()
 	print("Initialised")
 	local map = dofile("testmap.lua")
-
-	print(serialise(map));
 end
 
 function Describe(t)
@@ -26,6 +24,9 @@ Game.quit = false
 
 reloaded = true
 
+inputKey = 0
+Game.oldCalls = 0
+
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
 	Game.timesecs = (Game.timesecs or 0) + dt
@@ -33,10 +34,14 @@ function Game.Update(dt)
 
 	if(#Game.Input > 0) then
 		print(Game.Input[1].key)
+		inputKey = Game.Input[1].key
+	else
+		inputKey = 0
 	end
 
 	if(Game.timesecs > 1) then
-		print(Game.calls .. " calls per second")
+		--print(Game.calls .. " calls per second")
+		Game.oldCalls = Game.calls
 		Game.calls = 0
 		Game.timesecs = Game.timesecs - 1
 	end
@@ -44,11 +49,15 @@ function Game.Update(dt)
 	if(reloaded) then
 		reloaded = false
 		Game.OpenMap(dofile("testmap.lua"))
-		print(serialise(Game.StoreMap()))
 	end
 
 	-- keep running forever!
 	return not Game.quit
+end
+
+function Game.PostRender()
+	local yval = Game.oldCalls / 10
+	Draw.Line({x = inputKey, y = yval }, {x = 100, y = 53}, {r = 255})
 end
 
 function Game.Quit()

@@ -3,26 +3,31 @@
 #include "world/Map.h"
 #include "system/Files.h"
 
+#include "Rendering/RenderingSystem.h"
+
 namespace System {
 	namespace Luaclid {
 
 		using reloaderType = std::function<void(char const *)>;
 
 		void RegisterTypes(lua_State *lua);
-		void RegisterFunctions(lua_State *lua, reloaderType reloader);
+		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader);
 
-		void SetUp(lua_State *lua, System::Config const &cfg) {
+		void SetUp(lua_State *lua, Rendering::Context &ctx, System::Config const &cfg) {
 			auto reloader = [lua](char const* filename) {
-				ASSERT(luaX_dofile(lua, filename));
+				auto ret = luaX_dofile(lua, filename);
+				ASSERT(ret);
 			};
-			CRITICAL_ASSERT(luaX_dofile(lua, "luaclid.lua"));
+			auto ret = luaX_dofile(lua, "luaclid.lua");
+			CRITICAL_ASSERT(ret);
 			System::Events::RegisterFileToWatch("luaclid.lua", reloader);
 
 			RegisterTypes(lua);
-			RegisterFunctions(lua, reloader);
+			RegisterFunctions(lua, &ctx, reloader);
 
 			auto startscript = cfg.GetValue<std::string>("startscript");
-			CRITICAL_ASSERT(luaX_dofile(lua, startscript.c_str()));
+			ret = luaX_dofile(lua, startscript.c_str());
+			CRITICAL_ASSERT(ret);
 			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
 		}
 
@@ -215,7 +220,7 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void GameSaveState(lua_State * lua) {
+		void GameSaveState(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			auto pushed = luaX_getglobal(lua, "Game", "SaveState");
 			if(2 == pushed && lua_isfunction(lua, -1)) {
@@ -226,12 +231,23 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void GameLoadState(lua_State * lua) {
+		void GameLoadState(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			auto pushed = luaX_getglobal(lua, "Game", "LoadState");
 			if(2 == pushed && lua_isfunction(lua, -1)) {
 				luaX_pcall(lua, 0, 0);
 				--pushed;
+			}
+			lua_pop(lua, pushed);
+			ASSERT(lua_gettop(lua) == x);
+		}
+
+		void GamePostRender(lua_State *lua) {
+			auto x = lua_gettop(lua);
+			auto pushed = luaX_getglobal(lua, "Game", "PostRender");
+			if(2 == pushed && lua_isfunction(lua, -1)) {
+				if(LUA_OK == luaX_pcall(lua, 0, 0))
+					--pushed;
 			}
 			lua_pop(lua, pushed);
 			ASSERT(lua_gettop(lua) == x);
@@ -273,9 +289,31 @@ namespace System {
 			lua_pop(lua, 1);
 		}
 
-		void RegisterFunctions(lua_State *lua, reloaderType reloader) {
+		Rendering::Color ReturnColorFromLuaTable(lua_State *lua) {
+			Rendering::Color ret;
+			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+			ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
+			ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
+			ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
+			ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
+			lua_pop(lua, 1);
+			return ret;
+		}
 
-			luaX_setglobal(lua,
+		ScreenVec2 ReturnScreenVec2FromLuaTable(lua_State *lua) {
+			ScreenVec2 ret;
+			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+			ret.x = luaX_returnlocal<int>(lua, "x");
+			ret.y = luaX_returnlocal<int>(lua, "y");
+			lua_pop(lua, 1);
+			return ret;
+		}
+
+		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader) {
+			ASSERT(lua);
+			ASSERT(ctx);
+
+			lua_pop(lua, luaX_setglobal(lua,
 				"Game", "LoadAndWatchFile",
 				//TODO: this cast is ugly but necessary in VS2015. what do?
 				static_cast<std::function<void(std::string)>>(
@@ -284,7 +322,31 @@ namespace System {
 						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
 					}
 				)
-			);
+			));
+			
+			//Draw.Line
+			{
+				luaX_getglobal(lua, "Draw");
+				lua_pushlightuserdata(lua, (void*)ctx);
+				auto closure = [](lua_State *s) {
+					auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
+
+					//assume arguments: {x,y}, {x,y}, {r,g,b,a}
+					ASSERT(lua_type(s, -1) == LUA_TTABLE);
+					ASSERT(lua_type(s, -2) == LUA_TTABLE);
+					ASSERT(lua_type(s, -2) == LUA_TTABLE);
+
+					//args are on stack in order, so pull in reverse
+					Rendering::Color c =     ReturnColorFromLuaTable(s);
+					ScreenVec2       end =   ReturnScreenVec2FromLuaTable(s);
+					ScreenVec2       start = ReturnScreenVec2FromLuaTable(s);
+					ctx->DrawLine(start, end, c);
+					return 0;
+				};
+				lua_pushcclosure(lua, closure, 1);
+				lua_setfield(lua, -2, "Line");
+			}
+
 		}
 	}
 }

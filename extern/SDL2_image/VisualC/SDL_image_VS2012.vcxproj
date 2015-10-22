@@ -200,6 +200,9 @@ xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/SDL2_image.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>

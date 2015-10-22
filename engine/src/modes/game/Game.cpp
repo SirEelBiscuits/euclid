@@ -15,7 +15,7 @@ namespace Modes {
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 	{
-		System::Luaclid::SetUp(lua, cfg);
+		System::Luaclid::SetUp(lua, ctx, cfg);
 	}
 
 	Game::~Game() {
@@ -96,6 +96,7 @@ namespace Modes {
 	void Game::RenderLogic() {
 		ctx.Clear(clearColour);
 		renderList.Render();
+		System::Luaclid::GamePostRender(lua);
 		ctx.FlipBuffers();
 	}
 

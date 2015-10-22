@@ -109,5 +109,6 @@ function serialise(o)
 end
 
 Game = {}
+Draw = {}
 
 print("luaclid.lua loaded")

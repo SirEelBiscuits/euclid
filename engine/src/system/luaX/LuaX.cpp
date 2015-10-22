@@ -19,7 +19,7 @@ void luaX_ref::push() {
 
 template<>
 int luaX_return<int>(lua_State *s) {
-	auto ret = static_cast<int>(lua_tointeger(s, -1));
+	auto ret = static_cast<int>(lua_tonumber(s, -1));
 	lua_pop(s, 1);
 	return ret;
 }

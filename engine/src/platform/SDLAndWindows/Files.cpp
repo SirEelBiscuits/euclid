@@ -9,54 +9,28 @@ namespace System { namespace Events {
 
 static std::map<std::string, std::pair<FILETIME, handler_type>> filenames;
 
-bool RegisterFileToWatch(char const *filename, handler_type handler) {
+FILETIME GetLastWriteTime(char const *filename) {
 	//TODO error handling, aliased filenames
-	auto file = CreateFile(
-		filename,
-		GENERIC_READ,
-		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		NULL,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL
-	);
-	FILETIME writetime;
-	GetFileTime(
-		file,
-		NULL,
-		NULL,
-		&writetime
-	);
-	CloseHandle(file);
+	WIN32_FIND_DATA dummy;
+	auto file = FindFirstFile(filename, &dummy);
+	return dummy.ftLastWriteTime;
+}
+
+bool RegisterFileToWatch(char const *filename, handler_type handler) {
+	auto writetime = GetLastWriteTime(filename);
 	filenames[filename] = std::pair<FILETIME,handler_type>(writetime, handler);
 
 	return true;
 }
 
 bool cmpFileTime(FILETIME a, FILETIME b) {
-	return a.dwHighDateTime < b.dwHighDateTime
-		|| (a.dwHighDateTime == b.dwHighDateTime && a.dwLowDateTime < b.dwLowDateTime);
+	return a.dwHighDateTime != b.dwHighDateTime
+		|| a.dwLowDateTime != b.dwLowDateTime;
 }
 
 void TickFileWatchers() {
 	for(auto & kvp : filenames) {
-		auto file = CreateFile(
-			kvp.first.c_str(),
-			GENERIC_READ,
-			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-			NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL,
-			NULL
-		);
-		FILETIME writetime;
-		GetFileTime(
-			file,
-			NULL,
-			NULL,
-			&writetime
-		);
-		CloseHandle(file);
+		auto writetime = GetLastWriteTime(kvp.first.c_str());
 		if(cmpFileTime(kvp.second.first, writetime)) {
 			kvp.second.first = writetime;
 			kvp.second.second(kvp.first.c_str());

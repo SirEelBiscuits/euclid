@@ -44,6 +44,9 @@ namespace Rendering {
 		// Bresenham's algorithm, see:
 		// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
+		//todo IMPORTANT handle start and end values that are way off the screen.
+		// either clip shit, or discard!
+
 		if(start.x > end.x)
 			std::swap(start, end);
 
