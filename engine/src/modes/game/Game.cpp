@@ -52,7 +52,7 @@ namespace Modes {
 		case InputRecordState::PlayingBack:
 			input = inputqueue[inputqueuePosition];
 			++inputqueuePosition;
-			if(inputqueuePosition > inputqueue.size()) {
+			if(inputqueuePosition >= inputqueue.size()) {
 				inputqueuePosition = 0;
 				System::Luaclid::GameLoadState(lua);
 			}

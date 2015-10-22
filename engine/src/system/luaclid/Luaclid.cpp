@@ -1,9 +1,45 @@
 #include "Luaclid.h"
 
+#include "system/LuaX.h"
+
 #include "world/Map.h"
 #include "system/Files.h"
 
 #include "Rendering/RenderingSystem.h"
+
+template<>
+Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
+	Rendering::Color ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
+	ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
+	ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
+	ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+ScreenVec2 luaX_return<ScreenVec2>(lua_State *lua) {
+	ScreenVec2 ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.x = luaX_returnlocal<int>(lua, "x");
+	ret.y = luaX_returnlocal<int>(lua, "y");
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+Rendering::ScreenRect luaX_return<Rendering::ScreenRect>(lua_State *lua) {
+	Rendering::ScreenRect ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.pos.x = luaX_returnlocal<int>(lua, "x");
+	ret.pos.y = luaX_returnlocal<int>(lua, "y");
+	ret.size.x = luaX_returnlocal<int>(lua, "w");
+	ret.size.y = luaX_returnlocal<int>(lua, "h");
+	lua_pop(lua, 1);
+	return ret;
+}
 
 namespace System {
 	namespace Luaclid {
@@ -291,39 +327,6 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		//TODO make these into luaX_push and luaX_return specialisations?
-
-		Rendering::Color ReturnColorFromLuaTable(lua_State *lua) {
-			Rendering::Color ret;
-			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
-			ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
-			ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
-			ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
-			ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
-			lua_pop(lua, 1);
-			return ret;
-		}
-
-		ScreenVec2 ReturnScreenVec2FromLuaTable(lua_State *lua) {
-			ScreenVec2 ret;
-			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
-			ret.x = luaX_returnlocal<int>(lua, "x");
-			ret.y = luaX_returnlocal<int>(lua, "y");
-			lua_pop(lua, 1);
-			return ret;
-		}
-
-		Rendering::ScreenRect ReturnScreenRectFromLuaTable(lua_State *lua) {
-			Rendering::ScreenRect ret;
-			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
-			ret.pos.x = luaX_returnlocal<int>(lua, "x");
-			ret.pos.y = luaX_returnlocal<int>(lua, "y");
-			ret.size.x = luaX_returnlocal<int>(lua, "w");
-			ret.size.y = luaX_returnlocal<int>(lua, "h");
-			lua_pop(lua, 1);
-			return ret;
-		}
-
 		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader) {
 			ASSERT(lua);
 			ASSERT(ctx);
@@ -355,9 +358,9 @@ namespace System {
 						ASSERT(lua_type(s, 2) == LUA_TTABLE);
 
 						//args are on stack in order, so pull in reverse
-						auto c =     ReturnColorFromLuaTable(s);
-						auto end =   ReturnScreenVec2FromLuaTable(s);
-						auto start = ReturnScreenVec2FromLuaTable(s);
+						auto c =     luaX_return<Rendering::Color>(s);//ReturnColorFromLuaTable(s);
+						auto end =   luaX_return<ScreenVec2>(s);
+						auto start = luaX_return<ScreenVec2>(s);
 						ctx->DrawLine(start, end, c);
 						return 0;
 					};
@@ -374,8 +377,8 @@ namespace System {
 						ASSERT(lua_type(s, 1) == LUA_TTABLE);
 						ASSERT(lua_type(s, 2) == LUA_TTABLE);
 
-						auto c = ReturnColorFromLuaTable(s);
-						auto rect = ReturnScreenRectFromLuaTable(s);
+						auto c =    luaX_return<Rendering::Color>(s);
+						auto rect = luaX_return<Rendering::ScreenRect>(s);
 						ctx->DrawRect(rect, c);
 						return 0;
 					};
@@ -394,9 +397,9 @@ namespace System {
 							ASSERT(lua_type(s, 2) == LUA_TSTRING);
 							ASSERT(lua_type(s, 3) == LUA_TTABLE);
 
-							auto UVRect     = ReturnScreenRectFromLuaTable(s);
+							auto UVRect     = luaX_return<Rendering::ScreenRect>(s);
 							auto texName    = luaX_return<std::string>(s);
-							auto screenRect = ReturnScreenRectFromLuaTable(s);
+							auto screenRect = luaX_return<Rendering::ScreenRect>(s);
 							ctx->DrawRectAlpha(screenRect, Rendering::TextureStore::GetTexture(texName.c_str()).get(), UVRect, 1);
 						} else if(lua_gettop(s) == 2) {
 							//assume arguments: {x, y, w, h}, "tex name"
@@ -405,7 +408,7 @@ namespace System {
 
 							auto texName    = luaX_return<std::string>(s);
 							auto tex        = Rendering::TextureStore::GetTexture(texName.c_str()).get();
-							auto screenRect = ReturnScreenRectFromLuaTable(s);
+							auto screenRect = luaX_return<Rendering::ScreenRect>(s);
 							ctx->DrawRectAlpha(screenRect, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
 						}
 						return 0;
@@ -420,3 +423,4 @@ namespace System {
 		}
 	}
 }
+
