@@ -26,6 +26,7 @@ reloaded = true
 
 inputKey = 0
 Game.oldCalls = 0
+Game.Input={}
 
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
@@ -36,7 +37,6 @@ function Game.Update(dt)
 		print(Game.Input[1].key)
 		inputKey = Game.Input[1].key
 	else
-		inputKey = 0
 	end
 
 	if(Game.timesecs > 1) then
@@ -58,6 +58,7 @@ end
 function Game.PostRender()
 	local yval = Game.oldCalls / 10
 	Draw.Line({x = inputKey, y = yval }, {x = 100, y = 53}, {r = 255})
+	Draw.Rect({x = 20, y = 50, w = 10, h = 10}, { r = 255, g = 255})
 end
 
 function Game.Quit()

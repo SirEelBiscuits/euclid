@@ -254,13 +254,13 @@ namespace System {
 		}
 
 		void RegisterTypes(lua_State *lua) {
+			auto x = lua_gettop(lua);
 			// we need to pre-declare these classes, as there are some circular references within some of them
 			auto luaMeters = luaX_registerClass<Mesi::Meters>(lua
 				,"val", &Mesi::Meters::val);
 			auto luaPosVec2 = luaX_registerClass<PositionVec2>(lua);
 			auto luaSector = luaX_registerClass<World::Sector>(lua);
 			auto luaWall = luaX_registerClass<World::Wall>(lua); //setting portal and start here cause crashes !?
-
 
 			luaPosVec2.push();
 			luaX_registerClassMemberSpecial(lua,
@@ -287,6 +287,8 @@ namespace System {
 			luaX_registerClassGetterSpecial(lua
 				, "ceilHeight", &World::Sector::centroid);
 			lua_pop(lua, 1);
+
+			ASSERT(lua_gettop(lua) == x);
 		}
 
 		Rendering::Color ReturnColorFromLuaTable(lua_State *lua) {
@@ -309,9 +311,22 @@ namespace System {
 			return ret;
 		}
 
+		Rendering::ScreenRect ReturnScreenRectFromLuaTable(lua_State *lua) {
+			Rendering::ScreenRect ret;
+			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+			ret.pos.x = luaX_returnlocal<int>(lua, "x");
+			ret.pos.y = luaX_returnlocal<int>(lua, "y");
+			ret.size.x = luaX_returnlocal<int>(lua, "w");
+			ret.size.y = luaX_returnlocal<int>(lua, "h");
+			lua_pop(lua, 1);
+			return ret;
+		}
+
 		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader) {
 			ASSERT(lua);
 			ASSERT(ctx);
+
+			auto x = lua_gettop(lua);
 
 			lua_pop(lua, luaX_setglobal(lua,
 				"Game", "LoadAndWatchFile",
@@ -327,26 +342,48 @@ namespace System {
 			//Draw.Line
 			{
 				luaX_getglobal(lua, "Draw");
-				lua_pushlightuserdata(lua, (void*)ctx);
-				auto closure = [](lua_State *s) {
-					auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
+				{
+					lua_pushlightuserdata(lua, (void*)ctx);
+					auto closure = [](lua_State *s) {
+						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
 
-					//assume arguments: {x,y}, {x,y}, {r,g,b,a}
-					ASSERT(lua_type(s, -1) == LUA_TTABLE);
-					ASSERT(lua_type(s, -2) == LUA_TTABLE);
-					ASSERT(lua_type(s, -2) == LUA_TTABLE);
+						//assume arguments: {x,y}, {x,y}, {r,g,b,a}
+						ASSERT(lua_type(s, -1) == LUA_TTABLE);
+						ASSERT(lua_type(s, -2) == LUA_TTABLE);
+						ASSERT(lua_type(s, -2) == LUA_TTABLE);
 
-					//args are on stack in order, so pull in reverse
-					Rendering::Color c =     ReturnColorFromLuaTable(s);
-					ScreenVec2       end =   ReturnScreenVec2FromLuaTable(s);
-					ScreenVec2       start = ReturnScreenVec2FromLuaTable(s);
-					ctx->DrawLine(start, end, c);
-					return 0;
-				};
-				lua_pushcclosure(lua, closure, 1);
-				lua_setfield(lua, -2, "Line");
+						//args are on stack in order, so pull in reverse
+						Rendering::Color c =     ReturnColorFromLuaTable(s);
+						ScreenVec2       end =   ReturnScreenVec2FromLuaTable(s);
+						ScreenVec2       start = ReturnScreenVec2FromLuaTable(s);
+						ctx->DrawLine(start, end, c);
+						return 0;
+					};
+					lua_pushcclosure(lua, closure, 1);
+					lua_setfield(lua, -2, "Line");
+				}
+				//Draw.Rect
+				{
+					lua_pushlightuserdata(lua, (void*)ctx);
+					auto closure = [](lua_State *s) {
+						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
+
+						//assume arguments: {x, y, w, h}, {r, g, b, a}
+						ASSERT(lua_type(s, -1) == LUA_TTABLE);
+						ASSERT(lua_type(s, -2) == LUA_TTABLE);
+
+						Rendering::Color c = ReturnColorFromLuaTable(s);
+						Rendering::ScreenRect rect = ReturnScreenRectFromLuaTable(s);
+						ctx->DrawRect(rect, c);
+						return 0;
+					};
+					lua_pushcclosure(lua, closure, 1);
+					lua_setfield(lua, -2, "Rect");
+				}
+				lua_pop(lua, 1);
 			}
 
+			//ASSERT(lua_gettop(lua) == x);
 		}
 	}
 }

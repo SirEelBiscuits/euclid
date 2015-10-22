@@ -29,9 +29,12 @@ POST_STD_LIB
 	*/
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
+	auto x = lua_gettop(lua);
 	auto flxr = luaX_typeTable.find(typeid(T));
-	if(flxr != luaX_typeTable.end())
+	if(flxr != luaX_typeTable.end()) {
+		ASSERT(lua_gettop(lua) == x);
 		return *flxr->second;
+	}
 	luaX_getglobal(lua, "CreateNativeClass");
 	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
 	luaX_registerClassMethod(lua, args...);
@@ -39,15 +42,18 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 	auto lxr = std::make_unique<luaX_ref>(lua);
 	auto lxrp = lxr.get();
 	luaX_typeTable[typeid(T)] = std::move(lxr);
-	lua_pop(lua, 1);
+	ASSERT(lua_gettop(lua) == x);
 	return *lxrp;
 }
 
 template<typename T, typename... Args>
 luaX_ref luaX_registerClass(lua_State *lua) {
+	auto x = lua_gettop(lua);
 	auto flxr = luaX_typeTable.find(typeid(T));
-	if(flxr != luaX_typeTable.end())
+	if(flxr != luaX_typeTable.end()) {
+		ASSERT(lua_gettop(lua) == x);
 		return *flxr->second;
+	}
 	luaX_getglobal(lua, "CreateNativeClass");
 	
 	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
@@ -55,6 +61,7 @@ luaX_ref luaX_registerClass(lua_State *lua) {
 	auto lxr = std::make_unique<luaX_ref>(lua); // this pops the object
 	auto lxrp = lxr.get();
 	luaX_typeTable[typeid(T)] = std::move(lxr);
+	ASSERT(lua_gettop(lua) == x);
 	return *lxrp;
 }
 
