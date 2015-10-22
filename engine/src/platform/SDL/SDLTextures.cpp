@@ -17,7 +17,7 @@ namespace Rendering {
 				for(decltype(surface->h) y = 0; y < surface->h; ++y) {
 					Color c;
 					auto i = *(uint32_t*)((uint8_t*)surface->pixels + (x + y * surface->w) * bpp);
-					c.a = (i & surface->format->Amask) >> surface->format->Ashift;
+					c.a = bpp == 4 ? (i & surface->format->Amask) >> surface->format->Ashift : 255;
 					c.r = (i & surface->format->Rmask) >> surface->format->Rshift;
 					c.g = (i & surface->format->Gmask) >> surface->format->Gshift;
 					c.b = (i & surface->format->Bmask) >> surface->format->Bshift;

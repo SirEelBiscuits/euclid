@@ -291,6 +291,8 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
+		//TODO make these into luaX_push and luaX_return specialisations?
+
 		Rendering::Color ReturnColorFromLuaTable(lua_State *lua) {
 			Rendering::Color ret;
 			ASSERT(lua_type(lua, -1) == LUA_TTABLE);
@@ -348,14 +350,14 @@ namespace System {
 						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
 
 						//assume arguments: {x,y}, {x,y}, {r,g,b,a}
-						ASSERT(lua_type(s, -1) == LUA_TTABLE);
-						ASSERT(lua_type(s, -2) == LUA_TTABLE);
-						ASSERT(lua_type(s, -2) == LUA_TTABLE);
+						ASSERT(lua_type(s, 1) == LUA_TTABLE);
+						ASSERT(lua_type(s, 2) == LUA_TTABLE);
+						ASSERT(lua_type(s, 2) == LUA_TTABLE);
 
 						//args are on stack in order, so pull in reverse
-						Rendering::Color c =     ReturnColorFromLuaTable(s);
-						ScreenVec2       end =   ReturnScreenVec2FromLuaTable(s);
-						ScreenVec2       start = ReturnScreenVec2FromLuaTable(s);
+						auto c =     ReturnColorFromLuaTable(s);
+						auto end =   ReturnScreenVec2FromLuaTable(s);
+						auto start = ReturnScreenVec2FromLuaTable(s);
 						ctx->DrawLine(start, end, c);
 						return 0;
 					};
@@ -369,16 +371,47 @@ namespace System {
 						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
 
 						//assume arguments: {x, y, w, h}, {r, g, b, a}
-						ASSERT(lua_type(s, -1) == LUA_TTABLE);
-						ASSERT(lua_type(s, -2) == LUA_TTABLE);
+						ASSERT(lua_type(s, 1) == LUA_TTABLE);
+						ASSERT(lua_type(s, 2) == LUA_TTABLE);
 
-						Rendering::Color c = ReturnColorFromLuaTable(s);
-						Rendering::ScreenRect rect = ReturnScreenRectFromLuaTable(s);
+						auto c = ReturnColorFromLuaTable(s);
+						auto rect = ReturnScreenRectFromLuaTable(s);
 						ctx->DrawRect(rect, c);
 						return 0;
 					};
 					lua_pushcclosure(lua, closure, 1);
 					lua_setfield(lua, -2, "Rect");
+				}
+				//Draw.RectTextured
+				{
+					lua_pushlightuserdata(lua, (void*)ctx);
+					auto closure = [](lua_State *s) {
+						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
+
+						if(lua_gettop(s) == 3) {
+							//assume arguments: {x, y, w, h}, "tex name", {x, y, w, h}
+							ASSERT(lua_type(s, 1) == LUA_TTABLE);
+							ASSERT(lua_type(s, 2) == LUA_TSTRING);
+							ASSERT(lua_type(s, 3) == LUA_TTABLE);
+
+							auto UVRect     = ReturnScreenRectFromLuaTable(s);
+							auto texName    = luaX_return<std::string>(s);
+							auto screenRect = ReturnScreenRectFromLuaTable(s);
+							ctx->DrawRectAlpha(screenRect, Rendering::TextureStore::GetTexture(texName.c_str()).get(), UVRect, 1);
+						} else if(lua_gettop(s) == 2) {
+							//assume arguments: {x, y, w, h}, "tex name"
+							ASSERT(lua_type(s, 1) == LUA_TTABLE);
+							ASSERT(lua_type(s, 2) == LUA_TSTRING);
+
+							auto texName    = luaX_return<std::string>(s);
+							auto tex        = Rendering::TextureStore::GetTexture(texName.c_str()).get();
+							auto screenRect = ReturnScreenRectFromLuaTable(s);
+							ctx->DrawRectAlpha(screenRect, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+						}
+						return 0;
+					};
+					lua_pushcclosure(lua, closure, 1);
+					lua_setfield(lua, -2, "RectTextured");
 				}
 				lua_pop(lua, 1);
 			}
