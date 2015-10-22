@@ -11,12 +11,21 @@ template<>
 Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
 	Rendering::Color ret;
 	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
-	ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
 	ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
 	ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
 	ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
+	ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
 	lua_pop(lua, 1);
 	return ret;
+}
+
+template<>
+void luaX_push<Rendering::Color>(lua_State *lua, Rendering::Color c) {
+	luaX_push(lua, luaX_emptytable{0, 4});
+	luaX_setlocal(lua, "r", (int)c.r);
+	luaX_setlocal(lua, "g", (int)c.g);
+	luaX_setlocal(lua, "b", (int)c.b);
+	luaX_setlocal(lua, "a", (int)c.a);
 }
 
 template<>
@@ -30,6 +39,13 @@ ScreenVec2 luaX_return<ScreenVec2>(lua_State *lua) {
 }
 
 template<>
+void luaX_push<ScreenVec2>(lua_State *lua, ScreenVec2 v) {
+	luaX_push(lua, luaX_emptytable{0, 2});
+	luaX_setlocal(lua, "x", v.x);
+	luaX_setlocal(lua, "y", v.y);
+}
+
+template<>
 Rendering::ScreenRect luaX_return<Rendering::ScreenRect>(lua_State *lua) {
 	Rendering::ScreenRect ret;
 	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
@@ -39,6 +55,15 @@ Rendering::ScreenRect luaX_return<Rendering::ScreenRect>(lua_State *lua) {
 	ret.size.y = luaX_returnlocal<int>(lua, "h");
 	lua_pop(lua, 1);
 	return ret;
+}
+
+template<>
+void luaX_push<Rendering::ScreenRect>(lua_State *lua, Rendering::ScreenRect r) {
+	luaX_push(lua, luaX_emptytable{0, 2});
+	luaX_setlocal(lua, "x", r.pos.x);
+	luaX_setlocal(lua, "y", r.pos.y);
+	luaX_setlocal(lua, "w", r.size.x);
+	luaX_setlocal(lua, "h", r.size.y);
 }
 
 namespace System {
@@ -347,75 +372,33 @@ namespace System {
 			//Draw.Line
 			{
 				luaX_getglobal(lua, "Draw");
-				{
-					lua_pushlightuserdata(lua, (void*)ctx);
-					auto closure = [](lua_State *s) {
-						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
-
-						//assume arguments: {x,y}, {x,y}, {r,g,b,a}
-						ASSERT(lua_type(s, 1) == LUA_TTABLE);
-						ASSERT(lua_type(s, 2) == LUA_TTABLE);
-						ASSERT(lua_type(s, 2) == LUA_TTABLE);
-
-						//args are on stack in order, so pull in reverse
-						auto c =     luaX_return<Rendering::Color>(s);//ReturnColorFromLuaTable(s);
-						auto end =   luaX_return<ScreenVec2>(s);
-						auto start = luaX_return<ScreenVec2>(s);
-						ctx->DrawLine(start, end, c);
-						return 0;
-					};
-					lua_pushcclosure(lua, closure, 1);
-					lua_setfield(lua, -2, "Line");
-				}
-				//Draw.Rect
-				{
-					lua_pushlightuserdata(lua, (void*)ctx);
-					auto closure = [](lua_State *s) {
-						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
-
-						//assume arguments: {x, y, w, h}, {r, g, b, a}
-						ASSERT(lua_type(s, 1) == LUA_TTABLE);
-						ASSERT(lua_type(s, 2) == LUA_TTABLE);
-
-						auto c =    luaX_return<Rendering::Color>(s);
-						auto rect = luaX_return<Rendering::ScreenRect>(s);
-						ctx->DrawRect(rect, c);
-						return 0;
-					};
-					lua_pushcclosure(lua, closure, 1);
-					lua_setfield(lua, -2, "Rect");
-				}
-				//Draw.RectTextured
-				{
-					lua_pushlightuserdata(lua, (void*)ctx);
-					auto closure = [](lua_State *s) {
-						auto ctx = static_cast<Rendering::Context*>(lua_touserdata(s, lua_upvalueindex(1)));
-
-						if(lua_gettop(s) == 3) {
-							//assume arguments: {x, y, w, h}, "tex name", {x, y, w, h}
-							ASSERT(lua_type(s, 1) == LUA_TTABLE);
-							ASSERT(lua_type(s, 2) == LUA_TSTRING);
-							ASSERT(lua_type(s, 3) == LUA_TTABLE);
-
-							auto UVRect     = luaX_return<Rendering::ScreenRect>(s);
-							auto texName    = luaX_return<std::string>(s);
-							auto screenRect = luaX_return<Rendering::ScreenRect>(s);
-							ctx->DrawRectAlpha(screenRect, Rendering::TextureStore::GetTexture(texName.c_str()).get(), UVRect, 1);
-						} else if(lua_gettop(s) == 2) {
-							//assume arguments: {x, y, w, h}, "tex name"
-							ASSERT(lua_type(s, 1) == LUA_TTABLE);
-							ASSERT(lua_type(s, 2) == LUA_TSTRING);
-
-							auto texName    = luaX_return<std::string>(s);
-							auto tex        = Rendering::TextureStore::GetTexture(texName.c_str()).get();
-							auto screenRect = luaX_return<Rendering::ScreenRect>(s);
-							ctx->DrawRectAlpha(screenRect, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+				luaX_push(lua, 
+					static_cast<std::function<void(ScreenVec2, ScreenVec2, Rendering::Color)>>(
+						[ctx](ScreenVec2 start, ScreenVec2 end, Rendering::Color c) {
+							ctx->DrawLine(start, end, c);
 						}
-						return 0;
-					};
-					lua_pushcclosure(lua, closure, 1);
-					lua_setfield(lua, -2, "RectTextured");
-				}
+					)
+				);
+				lua_setfield(lua, -2, "Line");
+				//Draw.Rect
+				luaX_push(lua,
+					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Color)>>(
+						[ctx](Rendering::ScreenRect rec, Rendering::Color c) {
+							ctx->DrawRect(rec, c);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "Rect");
+				//Draw.RectTextured
+				luaX_push(lua,
+					static_cast<std::function<void(Rendering::ScreenRect, std::string)>>(
+						[ctx](Rendering::ScreenRect dest, std::string texName) {
+							auto tex = Rendering::TextureStore::GetTexture(texName.c_str()).get();
+							ctx->DrawRectAlpha(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+						}
+					)	
+				);
+				lua_setfield(lua, -2, "RectTextured");
 				lua_pop(lua, 1);
 			}
 
