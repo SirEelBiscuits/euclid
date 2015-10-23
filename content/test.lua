@@ -59,14 +59,9 @@ end
 
 function Game.PostRender()
 	local yval = Game.oldCalls / 10
+	Draw.RectTextured({x = 0, y = 0, w = Draw.GetWidth(), h = Draw.GetHeight()}, tex)
 	Draw.Line({x = inputKey, y = yval }, {x = 100, y = 53}, {r = 255})
 	Draw.Rect({x = 20, y = 50, w = 10, h = 10}, { r = 255, g = 255})
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
-	Draw.RectTextured({x = 100, y = 100, w = 100, h = 100}, tex)
 end
 
 function Game.Quit()
