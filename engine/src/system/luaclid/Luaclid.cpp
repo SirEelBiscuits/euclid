@@ -321,7 +321,12 @@ namespace System {
 				,"val", &Mesi::Meters::val);
 			auto luaPosVec2 = luaX_registerClass<PositionVec2>(lua);
 			auto luaSector = luaX_registerClass<World::Sector>(lua);
-			auto luaWall = luaX_registerClass<World::Wall>(lua); //setting portal and start here cause crashes !?
+			auto luaWall = luaX_registerClass<World::Wall>(lua
+				,"portal", &World::Wall::portal
+				,"start" , &World::Wall::start);
+			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
+				, "width", &Rendering::Texture::w
+				, "height", &Rendering::Texture::h);
 
 			luaPosVec2.push();
 			luaX_registerClassMemberSpecial(lua,
@@ -333,11 +338,6 @@ namespace System {
 			luaWall.push();
 			luaX_registerClassGetterSpecial(lua
 				, "length", &World::Wall::length);
-			//portal and start set here to prevent weird crashes. I wish I understood why this one happens..
-			luaX_registerClassMember(lua
-				, "portal", &World::Wall::portal);
-			luaX_registerClassMember(lua
-				, "start", &World::Wall::start);
 			lua_pop(lua, 1);
 
 			luaSector.push();
@@ -394,14 +394,23 @@ namespace System {
 
 				//Draw.RectTextured
 				luaX_push(lua,
-					static_cast<std::function<void(Rendering::ScreenRect, std::string)>>(
-						[ctx](Rendering::ScreenRect dest, std::string texName) {
-							auto tex = Rendering::TextureStore::GetTexture(texName.c_str()).get();
-							ctx->DrawRectAlpha(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
+						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
+							ctx->DrawRect(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
 						}
 					)	
 				);
 				lua_setfield(lua, -2, "RectTextured");
+
+				//Draw.RectTexturedAlpha
+				luaX_push(lua,
+					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
+						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
+							ctx->DrawRectAlpha(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+						}
+					)	
+				);
+				lua_setfield(lua, -2, "RectTexturedAlpha");
 
 				//Draw.GetWidth
 				luaX_push(lua,
@@ -422,6 +431,16 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "GetHeight");
+
+				//Draw.GetTexture
+				luaX_push(lua,
+					static_cast<std::function<Rendering::Texture*(std::string)>>(
+						[](std::string filename){
+							return Rendering::TextureStore::GetTexture(filename.c_str()).get();
+						}		
+					)
+				);
+				lua_setfield(lua, -2, "GetTexture");
 
 				lua_pop(lua, 1);
 			}

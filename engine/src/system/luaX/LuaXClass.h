@@ -90,7 +90,6 @@ void luaX_registerClassMember(lua_State *lua, char const *name, T C::*member) {
 template<typename C, typename T>
 void luaX_registerClassMember(lua_State *lua, char const *name, T const C::*member) {
 	luaX_registerClassGetter(lua, name, member);
-	luaX_registerClassSetter(lua, name, member);
 }
 
 template<typename C, typename T>
