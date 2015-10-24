@@ -37,14 +37,17 @@
     <ClCompile Include="src\platform\SDL\SDLTextures.cpp">
       <Filter>src\platform\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\rendering\RenderingPrimitives.cpp" />
-    <ClCompile Include="src\world\Map.cpp" />
-    <ClCompile Include="src\lib\Maths.cpp" />
+    <ClCompile Include="src\rendering\RenderingPrimitives.cpp">
+      <Filter>src\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\Maths.cpp">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\Map.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\lib\gargamel.h">
-      <Filter>src\lib</Filter>
-    </ClInclude>
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
       <Filter>src\platform\SDL</Filter>
     </ClInclude>
@@ -113,6 +116,9 @@
     </ClInclude>
     <ClInclude Include="src\rendering\RenderingPrimitives.h">
       <Filter>src\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\gargamel.h">
+      <Filter>src\lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
