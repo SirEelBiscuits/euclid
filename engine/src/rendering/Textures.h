@@ -13,14 +13,20 @@ namespace Rendering {
 	class Texture {
 	public:
 		Texture(unsigned w, unsigned h)
-			: w(w)
-			, h(h)
-			, wMask(w - 1)
-			, hMask(h - 1)
+			: w(Maths::nextBiggestPow2(w))
+			, h(Maths::nextBiggestPow2(h))
+			, wMask(this->w - 1)
+			, hMask(this->h - 1)
 		{
-			//TODO on error at runtime?
-			ASSERT((w & wMask) == 0);
-			ASSERT((h & hMask) == 0);
+			/* Note:
+				the nextBiggestPow2 hack means we can use the & array bounding method, at the 
+				cost of only being able to address things by pixel. additionally, non pow2 
+				textures will be padded with junk, and hence can't loop.
+
+				finally, this can cause textures to use up to 4x more memory than is necessary
+			*/
+			ASSERT((this->w & wMask) == 0);
+			ASSERT((this->h & hMask) == 0);
 
 			pixels = std::make_unique<Color[]>(w * h);
 		}

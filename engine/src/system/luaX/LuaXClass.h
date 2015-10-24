@@ -22,8 +22,6 @@ POST_STD_LIB
 		- luaX_registerClassMethodNonVoidConst
 	As appropriate.
 
-	TODO register class const/non-const overloads
-
 	This method returns a luaX_ref which refers to the Class object. see Luaclid.lua for the format of the class.
 	Additionally after registration, calling luaX_push(T) with the registered type will push the lua wrapper.
 	*/
@@ -100,7 +98,6 @@ public:
 	}
 };
 
-//TODO this class can be shortened with TypeMagic::arity
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
 

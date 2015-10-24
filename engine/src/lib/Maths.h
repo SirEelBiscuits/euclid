@@ -28,4 +28,6 @@ namespace Maths {
 	constexpr auto reverseInterp(T start, S end, R target) {
 		return (target - start) / (end - start);
 	}
+
+	/*constexpr*/ int nextBiggestPow2(int val);
 }

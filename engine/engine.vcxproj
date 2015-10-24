@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\lib\Maths.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\modes\game\Game.cpp" />
     <ClCompile Include="src\platform\SDLAndWindows\Files.cpp" />
