@@ -46,6 +46,7 @@
     <ClCompile Include="src\world\Map.cpp">
       <Filter>src\world</Filter>
     </ClCompile>
+    <ClCompile Include="src\modes\editor\Editor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
@@ -119,6 +120,9 @@
     </ClInclude>
     <ClInclude Include="src\lib\gargamel.h">
       <Filter>src\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modes\editor\Editor.h">
+      <Filter>src\modes\editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
