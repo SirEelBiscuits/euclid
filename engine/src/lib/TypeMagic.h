@@ -6,8 +6,12 @@ PRE_STD_LIB
 #include <utility>
 POST_STD_LIB
 
-namespace TypeMagic {
+#define X_TO_POWER(x, power) (TypeMagic::pow<power>::calculate(x))
+#define X_TO_POWER_TYPE(x, power) decltype(X_TO_POWER(x, power))
+#define SAFISH_INVERT(in) (TypeMagic::invert(in))
+#define INVERSE_TYPE(in) decltype(SAFISH_INVERT(in))
 
+namespace TypeMagic {
 	template<unsigned power>
 	class pow {
 	public:
