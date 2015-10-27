@@ -46,7 +46,15 @@
     <ClCompile Include="src\world\Map.cpp">
       <Filter>src\world</Filter>
     </ClCompile>
-    <ClCompile Include="src\modes\editor\Editor.cpp" />
+    <ClCompile Include="src\rendering\world\MapRenderer.cpp">
+      <Filter>src\rendering\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\BasicTypes.cpp">
+      <Filter>src\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modes\editor\Editor.cpp">
+      <Filter>src\modes\editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
@@ -124,6 +132,9 @@
     <ClInclude Include="src\modes\editor\Editor.h">
       <Filter>src\modes\editor</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\world\MapRenderer.h">
+      <Filter>src\rendering\world</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -164,6 +175,9 @@
     </Filter>
     <Filter Include="src\system\luaclid">
       <UniqueIdentifier>{ec352a07-5e37-4937-99b1-aacd167291c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\rendering\world">
+      <UniqueIdentifier>{48fb5859-24d5-45e8-b6fe-3046f813be72}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

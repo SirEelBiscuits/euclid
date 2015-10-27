@@ -37,6 +37,7 @@ namespace Rendering {
 		Color & pixel(unsigned x, unsigned y);
 		Color const & pixel(unsigned x, unsigned y) const;
 
+		static unsigned PixelsPerMeter;
 	private:
 		std::unique_ptr<Color[]> pixels;
 	};

@@ -91,7 +91,7 @@ public:
 template<typename BaseType, typename DownCastType>
 class Matrix<BaseType, 1, 3, DownCastType> {
 public:
-	BaseType x,y;
+	BaseType x,y,z;
 
 	Matrix() : x(0), y (0), z(0) {}
 	Matrix(BaseType x, BaseType y, BaseType z)
@@ -412,11 +412,11 @@ auto operator|(
 }
 
 template<typename BaseType1, typename BaseType2,  typename DowncastType1, typename DowncastType2>
-auto operator*(Matrix<BaseType1, 2, 2, DowncastType1> &left, Matrix<BaseType2, 1, 2, DowncastType2> &right) {
+auto operator*(Matrix<BaseType1, 2, 2, DowncastType1> const &left, Matrix<BaseType2, 1, 2, DowncastType2> const &right) {
 	Matrix<
 		std::remove_const_t<decltype(left(0,0) * right.x)>,
 		1, 2,
-		std::remove_const_t<decltype(DowcastType1(0) * DowncastType2(0))>
+		std::remove_const_t<decltype(DowncastType1(0) * DowncastType2(0))>
 	> ret;
 
 	ret.x = left.data[0][0] * right.x + left.data[1][0] * right.y;

@@ -10,6 +10,8 @@ POST_STD_LIB
 #include "system/LuaX.h"
 #include "system/Events.h"
 
+#include "rendering/world/MapRenderer.h"
+
 namespace System { namespace Events { enum class Types; } }
 namespace World { class Map; }
 
@@ -43,6 +45,7 @@ namespace Modes {
 		std::chrono::high_resolution_clock::time_point oldTimePoint;
 
 		std::unique_ptr<World::Map> curMap{nullptr};
+		Rendering::World::View      view;
 
 		enum class InputRecordState {
 			Normal,

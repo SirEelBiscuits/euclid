@@ -9,25 +9,25 @@ namespace World {
 		return walls.size();
 	}
 
-	Wall * Sector::GetWall(unsigned ID) {
+	Wall * Sector::GetWall(IDType ID) {
 		return &walls[ID];
 	}
 
-	Wall const * Sector::GetWall(unsigned ID) const {
+	Wall const * Sector::GetWall(IDType ID) const {
 		return &walls[ID];
 	}
 
-	Wall * Sector::InsertWallAfter(unsigned ID) {
+	Wall * Sector::InsertWallAfter(IDType ID) {
 		using difType = std::vector<World::Wall>::iterator::difference_type;
 		return &*walls.insert(walls.begin() + static_cast<difType>(ID) + 1, Wall{});
 	}
 
-	Wall * Sector::InsertWallBefore(unsigned ID) {
+	Wall * Sector::InsertWallBefore(IDType ID) {
 		using difType = std::vector<World::Wall>::iterator::difference_type;
 		return &*walls.insert(walls.begin() + static_cast<difType>(ID), Wall{});
 	}
 
-	void Sector::DeleteWall(unsigned ID) {
+	void Sector::DeleteWall(IDType ID) {
 		using difType = std::vector<World::Wall>::iterator::difference_type;
 		walls.erase(walls.begin() + static_cast<difType>(ID));
 	}
@@ -119,24 +119,24 @@ namespace World {
 		return sectors.size();
 	} 
 
-	Sector * Map::GetSector(unsigned ID) {
+	Sector * Map::GetSector(IDType ID) {
 		auto cur = sectors.begin();
 		for(auto i = 0u; i < sectors.size() && i < ID; ++i, ++cur);
 		return &*cur;
 	}
 
-	Sector const * Map::GetSector(unsigned ID) const {
+	Sector const * Map::GetSector(IDType ID) const {
 		auto cur = sectors.cbegin();
 		for(auto i = 0u; i < sectors.size() && i < ID; ++i, ++cur);
 		return &*cur;
 	}
 
-	unsigned Map::GetSectorID(Sector const * sec) const {
+	IDType Map::GetSectorID(Sector const * sec) const {
 		auto si = 0u;
 		auto cur = sectors.cbegin();
 		for(; cur != sectors.cend() && &*cur != sec; ++si, ++cur);
 		if(cur == sectors.cend())
-			return (unsigned) -1;
+			return (IDType) -1;
 		return si;
 	}
 
@@ -182,24 +182,24 @@ namespace World {
 		return verts.size();
 	}
 
-	Vert * Map::GetVert(unsigned ID) {
+	Vert * Map::GetVert(IDType ID) {
 		auto cur = verts.begin();
 		for(auto i = 0u; i < verts.size() && i < ID; ++i, ++cur);
 		return &*cur;
 	}
 
-	Vert const * Map::GetVert(unsigned ID) const {
+	Vert const * Map::GetVert(IDType ID) const {
 		auto cur = verts.cbegin();
 		for(auto i = 0u; i < verts.size() && i < ID; ++i, ++cur);
 		return &*cur;
 	}
 
-	unsigned Map::GetVertID(Vert const * v) const {
+	IDType Map::GetVertID(Vert const * v) const {
 		auto ret = 0u;
 		auto it = verts.cbegin();
 		for(; it != verts.cend() && &*it != v; ++it, ++ret);
 		if(it == verts.cend())
-			ret = (unsigned)-1;
+			ret = (IDType)-1;
 		return ret;
 	}
 

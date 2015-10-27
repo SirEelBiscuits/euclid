@@ -46,6 +46,25 @@ void luaX_push<ScreenVec2>(lua_State *lua, ScreenVec2 v) {
 }
 
 template<>
+PositionVec3 luaX_return<PositionVec3>(lua_State *lua) {
+	PositionVec3 ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.x.val = luaX_returnlocal<btStorageType>(lua, "x");
+	ret.y.val = luaX_returnlocal<btStorageType>(lua, "y");
+	ret.z.val = luaX_returnlocal<btStorageType>(lua, "z");
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+void luaX_push<PositionVec3>(lua_State *lua, PositionVec3 v) {
+	luaX_push(lua, luaX_emptytable{0, 2});
+	luaX_setlocal(lua, "x", v.x.val);
+	luaX_setlocal(lua, "y", v.y.val);
+	luaX_setlocal(lua, "z", v.z.val);
+}
+
+template<>
 Rendering::ScreenRect luaX_return<Rendering::ScreenRect>(lua_State *lua) {
 	Rendering::ScreenRect ret;
 	ASSERT(lua_type(lua, -1) == LUA_TTABLE);

@@ -2,6 +2,8 @@
 
 namespace Rendering {
 
+	unsigned Texture::PixelsPerMeter = 32;
+
 	Color & Texture::pixel(unsigned x, unsigned y) {
 		return pixels[(x & wMask) * h + (y & hMask)];
 	}

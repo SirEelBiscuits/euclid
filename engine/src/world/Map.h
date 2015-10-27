@@ -13,6 +13,7 @@ POST_STD_LIB
 namespace World {
 
 	using Vert = PositionVec2;
+	using IDType = unsigned;
 
 	struct Wall {
 	public:
@@ -30,12 +31,12 @@ namespace World {
 		Sector(std::vector<Wall> const &walls);
 
 		unsigned         GetNumWalls      () const;
-		Wall           * GetWall          (unsigned ID);
-		Wall     const * GetWall          (unsigned ID) const;
+		Wall           * GetWall          (IDType ID);
+		Wall     const * GetWall          (IDType ID) const;
 
-		Wall           * InsertWallAfter  (unsigned ID);
-		Wall           * InsertWallBefore (unsigned ID);
-		void             DeleteWall       (unsigned ID);
+		Wall           * InsertWallAfter  (IDType ID);
+		Wall           * InsertWallBefore (IDType ID);
+		void             DeleteWall       (IDType ID);
 
 		bool             IsConvex         () const;
 
@@ -68,16 +69,16 @@ namespace World {
 		//todo move operations
 
 		unsigned         GetNumSectors () const;
-		Sector         * GetSector     (unsigned ID);
-		Sector   const * GetSector     (unsigned ID) const;
-		unsigned         GetSectorID   (Sector const * sec) const;
+		Sector         * GetSector     (IDType ID);
+		Sector   const * GetSector     (IDType ID) const;
+		IDType           GetSectorID   (Sector const * sec) const;
 		Sector         * AddNewSector  ();
 		void             RemoveSector  (Sector *s);
 
 		unsigned         GetNumVerts   () const;
-		Vert           * GetVert       (unsigned ID);
-		Vert     const * GetVert       (unsigned ID) const;
-		unsigned         GetVertID     (Vert const * v) const;
+		Vert           * GetVert       (IDType ID);
+		Vert     const * GetVert       (IDType ID) const;
+		IDType           GetVertID     (Vert const * v) const;
 		Vert           * AddNewVert    ();
 		void             RemoveVert    (Vert const * v);
 

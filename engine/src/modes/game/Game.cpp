@@ -147,6 +147,19 @@ namespace Modes {
 			lua_pushcclosure(lua, closure, 1);
 			lua_setfield(lua, -2, "StoreMap");
 		}
+		//SetView
+		{
+			luaX_push(lua,
+				static_cast<std::function<void(PositionVec3, btStorageType, World::Sector *)>>(
+					[this](PositionVec3 eyePos, btStorageType angle, World::Sector *sec) {
+						this->view.eye = eyePos;
+						this->view.forward = RotationMatrix(angle);
+						this->view.sector = sec;
+					}	
+				)
+			);
+			lua_setfield(lua, -2, "SetView");
+		}
 		lua_pop(lua, 1);
 		ASSERT(lua_gettop(lua) == top);
 	}

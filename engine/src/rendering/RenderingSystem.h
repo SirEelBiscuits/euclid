@@ -102,11 +102,26 @@ namespace Rendering {
 			src represents the subtexture to be stretched over the region dest on screen.
 		*/
 		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, float colorMult);
+		
+		btStorageType GetVFOV() const { return vFOV; }
+		btStorageType GetVFOVMult() const { return vFOVMult; };
+		void SetvFov(btStorageType fovAngle) { vFOV = fovAngle; vFOVMult = tan(fovAngle); }
 
+		btStorageType GetHFOV() const { return hFOV; }
+		btStorageType GetHFOVMult() const { return hFOVMult; };
+		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = tan(fovAngle); }
+
+		//////////
+		// DATA //
+		//////////
+	
 	protected:
 		Color*   screen{nullptr};
 		unsigned Height{0u};
 		unsigned Width {0u};
+
+		btStorageType vFOV, vFOVMult;
+		btStorageType hFOV, hFOVMult;
 
 	private:
 		//used to redirect bad writes to
