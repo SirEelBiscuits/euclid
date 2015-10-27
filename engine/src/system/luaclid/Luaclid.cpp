@@ -151,6 +151,12 @@ namespace System {
 			{
 				luaX_getlocal(lua, "sectors");
 				auto secIdx = 1;
+
+				struct patchup {
+					World::IDType secID, wallID, portalToID;
+				};
+				std::vector<patchup> patchupList;
+
 				do {
 					lua_geti(lua, -1, secIdx);
 					if(lua_isnil(lua, -1)) {
@@ -174,10 +180,13 @@ namespace System {
 							}
 							auto wall = sec->InsertWallBefore(wallIdx-1);
 							//indices supplied by lua are off by one because arrays start at 1
-							auto vertID = luaX_returnlocal<int>(lua, "start") - 1;
+							auto vertID = luaX_returnlocal<World::IDType>(lua, "start") - 1;
 							wall->start = vertID >= 0? map->GetVert(vertID) : nullptr;
-							auto portalID = luaX_returnlocal<int>(lua, "portal") - 1;
-							wall->portal = portalID >= 0 ? map->GetSector(portalID) : nullptr;
+							auto portalID = luaX_returnlocal<World::IDType>(lua, "portal") - 1;
+							//wall->portal = portalID >= 0 ? map->GetSector(portalID) : nullptr;
+							if(portalID != World::IDType(-1)) {
+								patchupList.emplace_back(patchup{World::IDType(secIdx - 1), World::IDType(wallIdx - 1), portalID});
+							}
 							
 							wall->mainTex   = LoadTexInfo(lua, "mainTex");
 							wall->bottomTex = LoadTexInfo(lua, "bottomTex");
@@ -197,7 +206,12 @@ namespace System {
 					lua_pop(lua, 1);
 				} while (true);
 				lua_pop(lua, 1);
+
+				for(auto &p : patchupList) {
+					map->GetSector(p.secID)->GetWall(p.wallID)->portal = map->GetSector(p.portalToID);
+				}
 			}
+
 
 			map->RegisterAllTextures();
 

@@ -20,6 +20,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,      ///< viewslot, will be used to clip the render
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
+			Rendering::Color tmpc,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS);
@@ -74,6 +75,10 @@ namespace Rendering {
 				if(!ClipToView(hFOVMult, wallStartVS, wallEndVS))
 					continue;
 
+				auto isPortal = wall.portal != nullptr;
+				auto toSector = wall.portal;
+				auto wasPortalDrawn = false;
+
 				//project
 				wallStartVS.x /= wallStartVS.y.val;
 				wallEndVS.x   /= wallEndVS.y.val;
@@ -107,27 +112,92 @@ namespace Rendering {
 				auto wallEndSS = wallEndVS;
 				wallEndSS.x.val   = wallEndSS.x.val * halfScreenWidth + halfScreenWidth;
 
+				//neighbouring sector, if relevant
+				auto nWallTopStart    = .0f;
+				auto nWallTopEnd      = .0f;
+				auto nWallBottomStart = .0f;
+				auto nWallBottomEnd   = .0f;
+				if(isPortal) {
+					auto nCeilHeight = toSector->ceilHeight - view.eye.z;
+					auto nFloorHeight = toSector->floorHeight - view.eye.z;
+					nWallTopStart    = ScreenHeight/2 - nCeilHeight * wallScalarStart;
+					nWallTopEnd      = ScreenHeight/2 - nCeilHeight * wallScalarEnd;
+					nWallBottomStart = ScreenHeight/2 - nFloorHeight * wallScalarStart;
+					nWallBottomEnd   = ScreenHeight/2 - nFloorHeight * wallScalarEnd;
+				}
+
 				//initialise for inner loop
 
 				unsigned const shift = 16;
 				unsigned const shiftMult = 1<<shift;
 
 				//treat the wall-space coordinate as 0-1, so one screen pixel is 1 / (width in pixels)
-				auto d           = 1.0f / ((int)wallEndSS.x.val - (int)wallStartSS.x.val + 1);
-				auto dWallTop    = (d * (wallTopEnd - wallTopStart)); //todo fixed point?
-				auto wallTop     = (wallTopStart - dWallTop);
-				auto dWallBottom = (d * (wallBottomEnd - wallBottomStart));
-				auto wallBottom  = (wallBottomStart - dWallBottom);
+				auto d              = 1.0f / ((int)wallEndSS.x.val - (int)wallStartSS.x.val + 1);
+				auto dWallTop       = d * (wallTopEnd - wallTopStart); //todo fixed point?
+				auto wallTop        = wallTopStart - dWallTop;
+				auto dWallBottom    = d * (wallBottomEnd - wallBottomStart);
+				auto wallBottom     = wallBottomStart - dWallBottom;
+				auto dPortalTop     = d * (nWallTopEnd - nWallTopStart);
+				auto portalTop      = nWallTopStart - dPortalTop;
+				auto dPortalBottom  = d * (nWallBottomEnd - nWallBottomStart);
+				auto portalBottom   = nWallBottomStart - dPortalBottom;
 
 				for(auto x = static_cast<int>(wallStartSS.x.val); x < static_cast<int>(wallEndSS.x.val); ++x) {
 					wallTop += dWallTop;
 					wallBottom += dWallBottom;
+					portalTop += dPortalTop;
+					portalBottom += dPortalBottom;
 
 					if(x < minX || x >= maxX) {
 						continue;
 					}
 
-					{ // regular wall
+					if(isPortal && !(portalTop > wallBottom) && !(portalBottom < wallTop)) {
+						if(wallTop < portalTop)
+							DrawWallSlice(
+								ctx,
+								x,
+								(int)wallTop, (int)portalTop-1,
+								0,
+								0, 0,
+								wallRenderableTop[x], wallRenderableBottom[x],
+								nullptr,
+								1
+								, Rendering::Color{64, 0, 0, 255}
+							);
+
+						DrawWallSlice(
+							ctx,
+							x,
+							(int)portalTop, (int)portalBottom,
+							0,
+							0, 0,
+							wallRenderableTop[x], wallRenderableBottom[x],
+							nullptr,
+							1
+							, Rendering::Color{0, 128, 0, 255}
+						);
+
+						if(wallBottom > portalBottom)
+							DrawWallSlice(
+								ctx,
+								x,
+								(int)portalBottom + 1, (int)wallBottom,
+								0,
+								0, 0,
+								wallRenderableTop[x], wallRenderableBottom[x],
+								nullptr,
+								1
+								, Rendering::Color{128, 0, 0, 255}
+							);
+
+						wallRenderableTop[x] = static_cast<int>(Maths::min(ScreenHeight-1, 
+							Maths::max(Maths::max(portalTop, wallTop), wallRenderableTop[x])
+						));
+						wallRenderableBottom[x] = static_cast<int>(Maths::max(0, 
+							Maths::min(Maths::min(portalBottom, wallBottom), wallRenderableBottom[x])
+						));
+					} else { // regular wall
 						DrawWallSlice(
 							ctx,
 							x,
@@ -136,7 +206,8 @@ namespace Rendering {
 							0, 0, //V0,Vmax
 							wallRenderableTop[x], wallRenderableBottom[x],
 							nullptr, //texToUse
-							0 //invDist
+							1 //invDist
+							, Rendering::Color{255, 0, 0, 255}
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -155,6 +226,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,
 			Rendering::Texture *tex,
 			btStorageType colorScale,
+			Rendering::Color tmpc,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
@@ -163,7 +235,7 @@ namespace Rendering {
 			wallTop = Maths::max(wallTop, viewSlotTop);
 			wallBottom = Maths::min(wallBottom, viewSlotBottom);
 
-			ctx.DrawVLine(x, wallTop, wallBottom, Rendering::Color{255, 0, 0, 0});
+			ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
 			return true;
 		}
 
