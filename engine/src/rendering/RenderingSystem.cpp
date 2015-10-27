@@ -45,9 +45,18 @@ namespace Rendering {
 		// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
 		if(start.x == end.x)
-			DrawVLine(start.x, start.y, end.y, c);
+			DrawVLine(start.x,
+				Maths::clamp(start.y, 0, (int)GetWidth()-1),
+				Maths::clamp(end.y, 0, (int)GetHeight()-1),
+				c
+			);
 		if(start.y == end.y)
-			DrawHLine(start.x, end.x, start.y, c);
+			DrawHLine(
+				Maths::clamp(start.x, 0, (int)GetWidth()-1),
+				Maths::clamp(end.x, 0, (int)GetWidth()-1),
+				start.y,
+				c
+			);
 
 		if(start.x > end.x)
 			std::swap(start, end);

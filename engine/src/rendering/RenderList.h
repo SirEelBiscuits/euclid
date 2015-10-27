@@ -9,20 +9,18 @@ PRE_STD_LIB
 POST_STD_LIB
 
 namespace Rendering {
-	class Renderable_base;
-
 	class RenderList {
 	public:
-		using RenderFunction = void (*)(Renderable_base*);
-		using pairType = std::pair<Renderable_base*, RenderFunction>;
+		using RenderFunction = void (*)(void*);
+		using pairType = std::pair<void*, RenderFunction>;
 
-		void Register(Renderable_base *rb, RenderFunction rf) {
+		void Register(void *rb, RenderFunction rf) {
 			if(_registry.size() == _registry.capacity())
 				Compact();
 			_registry.emplace_back(pairType{rb, rf});
 		}
 
-		void Deregister(Renderable_base *rb) {
+		void Deregister(void *rb) {
 			for(auto &p : _registry)
 				p.first = p.first == rb ? nullptr : p.first;
 		}

@@ -15,9 +15,9 @@ namespace Rendering {
 	namespace World {
 
 		struct View {
-			PositionVec3            eye;
-			::World::Sector const * sector;
-			TransformMat2           forward;
+			PositionVec3            eye    {};
+			::World::Sector const * sector {nullptr};
+			TransformMat2           forward{};
 		};
 
 		class MapRenderer {

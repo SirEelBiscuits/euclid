@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-PositionVec2 AsVec2(PositionVec3 & vec) {
+PositionVec2 AsVec2(PositionVec3 const & vec) {
 	return PositionVec2(vec.x, vec.y);
 }
 

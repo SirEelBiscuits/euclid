@@ -24,6 +24,11 @@ namespace Maths {
 		return a > b ? a : b;
 	}
 
+	template<typename T, typename S>
+	constexpr auto clamp(T a, S lower, S upper) {
+		return min(max(a, lower), upper);
+	}
+
 	template<typename T, typename S, typename R>
 	constexpr auto interp(T start, S end, R alpha) {
 		return start + (end - start) * alpha;

@@ -17,6 +17,6 @@ using ScreenVec2    = Vector<int, 2>;
 using UVVec2        = Vector<int, 2>;
 using TransformMat2 = Matrix<btStorageType, 2, 2>;
 
-PositionVec2 AsVec2(PositionVec3 &vec);
+PositionVec2 AsVec2(PositionVec3 const &vec);
 
 TransformMat2 RotationMatrix(btStorageType angle);

@@ -95,7 +95,9 @@ namespace Modes {
 	static Rendering::Color clearColour{100, 149, 237, 0};
 	void Game::RenderLogic() {
 		ctx.Clear(clearColour);
-		renderList.Render();
+
+		static Rendering::World::MapRenderer mr(ctx);
+		mr.Render(view);
 		System::Luaclid::GamePostRender(lua);
 		ctx.FlipBuffers();
 	}
@@ -147,13 +149,24 @@ namespace Modes {
 			lua_pushcclosure(lua, closure, 1);
 			lua_setfield(lua, -2, "StoreMap");
 		}
+		//GetMap
+		{
+			luaX_push(lua,
+				static_cast<std::function<World::Map*()>>(
+					[this]() {
+						return this->curMap.get();
+					}	
+				)
+			);
+			lua_setfield(lua, -2, "GetMap");
+		}
 		//SetView
 		{
 			luaX_push(lua,
 				static_cast<std::function<void(PositionVec3, btStorageType, World::Sector *)>>(
 					[this](PositionVec3 eyePos, btStorageType angle, World::Sector *sec) {
 						this->view.eye = eyePos;
-						this->view.forward = RotationMatrix(angle);
+						this->view.forward = RotationMatrix(angle * 3.141592653f / 180.f); //todo magic numbers
 						this->view.sector = sec;
 					}	
 				)

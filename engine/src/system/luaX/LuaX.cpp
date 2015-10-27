@@ -25,6 +25,13 @@ int luaX_return<int>(lua_State *s) {
 }
 
 template<>
+unsigned luaX_return<unsigned>(lua_State *s) {
+	auto ret = static_cast<unsigned>(lua_tonumber(s, -1));
+	lua_pop(s, 1);
+	return ret;
+}
+
+template<>
 float luaX_return<float>(lua_State *s) {
 	auto ret = static_cast<float>(lua_tonumber(s, -1));
 	lua_pop(s, 1);

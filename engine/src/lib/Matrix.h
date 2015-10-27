@@ -31,19 +31,19 @@ public:
 
 	Matrix& operator=(Matrix const &other) = default;
 	BaseType &operator()(unsigned, unsigned y) {
-		return y & 1? y : x;
+		return y & 1? this->y : x;
 	}
 
 	BaseType const &operator()(unsigned, unsigned y) const {
-		return y & 1? y : x;
+		return y & 1? this->y : x;
 	}
 
 	BaseType &operator[](unsigned y) {
-		return y & 1? y : x;
+		return y & 1? this->y : x;
 	}
 
 	BaseType const &operator[](unsigned y) const {
-		return y & 1? y : x;
+		return y & 1? this->y : x;
 	}
 
 	Matrix &operator+=(Matrix const &other) {
@@ -304,7 +304,7 @@ template<
 	unsigned T_w,
 	unsigned T_h,
 	typename DownCastType
-> constexpr auto operator*(
+> auto operator*( //should be constexpr, fucking VS
 	Matrix<BaseType, T_w, T_h, DownCastType> left,
 	ScalarType const &right
 ) {
@@ -319,7 +319,7 @@ template<
 	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
 	typename BaseType,
 	typename DownCastType
-> auto operator*(
+> auto operator*( //should be constexpr, fucking VS
 	Matrix<BaseType, 1, 2, DownCastType> left,
 	ScalarType const &right
 ) {
@@ -335,7 +335,7 @@ template<
 	unsigned T_w,
 	unsigned T_h,
 	typename DownCastType
-> constexpr auto operator*(
+> auto operator*( //should be constexpr, fucking VS
 	ScalarType const &left,
 	Matrix<BaseType, T_w, T_h, DownCastType> const &right
 ) {
@@ -353,7 +353,7 @@ template<
 	unsigned T_w,
 	unsigned T_h,
 	typename DownCastType
-> constexpr auto operator/(
+> auto operator/( //should be constexpr, fucking VS
 	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
 	ScalarType const &right
 ) {
@@ -368,12 +368,11 @@ template<
 
 template<typename BaseType, unsigned T_w, unsigned T_h, typename DownCastType>
 constexpr Matrix<BaseType, T_w, T_h, DownCastType> operator+(
-	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
+	Matrix<BaseType, T_w, T_h, DownCastType> left,
 	Matrix<BaseType, T_w, T_h, DownCastType> const &right
 ) {
-	auto ret = left;
-	ret += right;
-	return ret;
+	left += right;
+	return left;
 }
 
 template<typename BaseType, unsigned T_w, unsigned T_h, typename DownCastType>

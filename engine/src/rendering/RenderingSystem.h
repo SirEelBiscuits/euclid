@@ -105,11 +105,11 @@ namespace Rendering {
 		
 		btStorageType GetVFOV() const { return vFOV; }
 		btStorageType GetVFOVMult() const { return vFOVMult; };
-		void SetvFov(btStorageType fovAngle) { vFOV = fovAngle; vFOVMult = tan(fovAngle); }
+		void SetvFov(btStorageType fovAngle) { vFOV = fovAngle; vFOVMult = tan(fovAngle * 0.01745329251f); } //todo magic numbers and move to .cpp
 
 		btStorageType GetHFOV() const { return hFOV; }
 		btStorageType GetHFOVMult() const { return hFOVMult; };
-		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = tan(fovAngle); }
+		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = tan(fovAngle * 0.01745329251f); } //todo magic numbers and move to .cpp
 
 		//////////
 		// DATA //
@@ -120,8 +120,8 @@ namespace Rendering {
 		unsigned Height{0u};
 		unsigned Width {0u};
 
-		btStorageType vFOV, vFOVMult;
-		btStorageType hFOV, hFOVMult;
+		btStorageType vFOV{45}, vFOVMult{1};
+		btStorageType hFOV{45}, hFOVMult{1};
 
 	private:
 		//used to redirect bad writes to

@@ -51,17 +51,57 @@ function Game.Update(dt)
 	if(reloaded) then
 		reloaded = false
 		Game.OpenMap(dofile("testmap.lua"))
+		Describe(Game.GetMap().GetSector)
+		angle = 135
+		pos = {x = 0, y = 0.5, z = 1.8}
 	end
+
+	
+	if #Game.Input > 0 and Game.Input[1].eventType == InputEventType.KeyDown then
+		if Game.Input[1].key == 101 then -- E
+			angle = angle + 140 *dt
+		end
+		if Game.Input[1].key == 113 then -- Q
+			angle = angle - 140 *dt
+		end
+		if Game.Input[1].key == 97 then -- A
+			pos.x = pos.x + math.sin(math.rad(90-angle)) * dt *10
+			pos.y = pos.y - math.cos(math.rad(90-angle)) * dt *10
+		end
+		if Game.Input[1].key == 100 then -- D
+			pos.x = pos.x - math.sin(math.rad(90-angle)) * dt *10
+			pos.y = pos.y + math.cos(math.rad(90-angle)) * dt *10
+		end
+		if Game.Input[1].key == 115 then -- S
+			pos.x = pos.x - math.sin(math.rad(-angle)) * dt *10
+			pos.y = pos.y + math.cos(math.rad(-angle)) * dt *10
+		end
+		if Game.Input[1].key == 119 then -- W
+			pos.x = pos.x + math.sin(math.rad(-angle)) * dt *10
+			pos.y = pos.y - math.cos(math.rad(-angle)) * dt *10
+		end
+	end
+
+
+	if angle > 360 then
+		angle = angle - 360
+	end
+
+	Game.SetView(pos, angle, Game.GetMap():GetSector(0))
 
 	-- keep running forever!
 	return not Game.quit
 end
 
 function Game.PostRender()
-	local yval = Game.oldCalls / 10
-	Draw.RectTextured({x = 0, y = 0, w = Draw.GetWidth(), h = Draw.GetHeight()}, tex)
-	Draw.Line({x = inputKey, y = yval }, {x = 100, y = 53}, {r = 255})
-	Draw.Rect({x = 20, y = 50, w = 10, h = 10}, { r = 255, g = 255})
+	local w = 50
+	local h = 50
+	Draw.Rect({x = 1, y = 1, w = w - 1, h = h - 1}, {})
+	local startpoint = {x = w / 2 - pos.x * w / 4, y = h / 2 + pos.y * h / 4}
+	local endpoint = {}
+	endpoint.x = startpoint.x - math.sin(math.rad(-angle)) * (w / 3)
+	endpoint.y = startpoint.y - math.cos(math.rad(-angle)) * (h / 3)
+	Draw.Line(startpoint, endpoint, {g = 255})
 end
 
 function Game.Quit()

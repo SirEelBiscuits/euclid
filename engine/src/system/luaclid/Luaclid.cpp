@@ -346,6 +346,7 @@ namespace System {
 			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
 				, "width", &Rendering::Texture::w
 				, "height", &Rendering::Texture::h);
+			auto luaMap = luaX_registerClass<World::Map>(lua);
 
 			luaPosVec2.push();
 			luaX_registerClassMemberSpecial(lua,
@@ -366,6 +367,10 @@ namespace System {
 				, "floorHeight", &World::Sector::floorHeight);
 			luaX_registerClassGetterSpecial(lua
 				, "ceilHeight", &World::Sector::centroid);
+			lua_pop(lua, 1);
+
+			luaMap.push();
+			luaX_registerClassMethodNonVoid<World::Map, World::Sector*, 1, World::IDType>(lua, "GetSector", &World::Map::GetSector);
 			lua_pop(lua, 1);
 
 			ASSERT(lua_gettop(lua) == x);

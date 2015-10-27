@@ -45,7 +45,7 @@ namespace Modes {
 		std::chrono::high_resolution_clock::time_point oldTimePoint;
 
 		std::unique_ptr<World::Map> curMap{nullptr};
-		Rendering::World::View      view;
+		Rendering::World::View      view  {};
 
 		enum class InputRecordState {
 			Normal,
