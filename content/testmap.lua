@@ -4,7 +4,7 @@ return {
 		{ x = -2, y = 2},
 		{ x = -2, y = -2},
 		{ x = 2, y = -2},
-		{ x = 1, y = 3},
+		{ x = 0, y = 3},
 	},
 	sectors = {
 		{
@@ -15,7 +15,7 @@ return {
 				{ start = 4, wallTex = {tex = "wall.png"} },
 			},
 			floorHeight = 0,
-			ceilHeight = 2,
+			ceilHeight = 2.25,
 
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
@@ -30,7 +30,7 @@ return {
 			},
 
 			floorHeight = 1,
-			ceilHeight = 1.5,
+			ceilHeight = 2.0,
 		}
 	}
 }

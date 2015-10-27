@@ -80,6 +80,14 @@ function Game.Update(dt)
 			pos.x = pos.x + math.sin(math.rad(-angle)) * dt *10
 			pos.y = pos.y - math.cos(math.rad(-angle)) * dt *10
 		end
+
+		if Game.Input[1].key == 1073741886 then -- F5
+			Game.OpenMap(dofile("testmap.lua"))
+		end
+
+		if Game.Input[1].key == 27 then -- Escape
+			Game.quit = true;
+		end
 	end
 
 
@@ -92,6 +100,7 @@ function Game.Update(dt)
 	-- keep running forever!
 	return not Game.quit
 end
+
 
 function Game.PostRender()
 	local w = 50

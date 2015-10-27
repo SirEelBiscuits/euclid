@@ -54,12 +54,13 @@ namespace Rendering {
 			}
 			
 
-			RenderRoom(view, 0, ctx.GetWidth());
+			RenderRoom(view, 0, ctx.GetWidth() - 1);
 		}
 
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int portalDepth) {
 			if(portalDepth == 0 || minX > maxX || view.sector == nullptr)
 				return;
+			ASSERT(maxX < (int)widthUsed);
 			auto &sec = *view.sector;
 
 			for(auto wi = 0u; wi < sec.GetNumWalls(); ++wi) {
@@ -148,7 +149,7 @@ namespace Rendering {
 					portalTop += dPortalTop;
 					portalBottom += dPortalBottom;
 
-					if(x < minX || x >= maxX) {
+					if(x < minX || x > maxX) {
 						continue;
 					}
 
@@ -166,17 +167,18 @@ namespace Rendering {
 								, Rendering::Color{64, 0, 0, 255}
 							);
 
-						DrawWallSlice(
-							ctx,
-							x,
-							(int)portalTop, (int)portalBottom,
-							0,
-							0, 0,
-							wallRenderableTop[x], wallRenderableBottom[x],
-							nullptr,
-							1
-							, Rendering::Color{0, 128, 0, 255}
-						);
+						//DrawWallSlice(
+						//	ctx,
+						//	x,
+						//	(int)portalTop, (int)portalBottom,
+						//	0,
+						//	0, 0,
+						//	wallRenderableTop[x], wallRenderableBottom[x],
+						//	nullptr,
+						//	1
+						//	, Rendering::Color{0, 128, 0, 255}
+						//);
+						wasPortalDrawn = true;
 
 						if(wallBottom > portalBottom)
 							DrawWallSlice(
@@ -213,6 +215,12 @@ namespace Rendering {
 						wallRenderableTop[x] = ScreenHeight;
 						wallRenderableBottom[x] = 0u;
 					}
+				}
+
+				if(wasPortalDrawn) {
+					auto v2 = view;
+					v2.sector = toSector;
+					RenderRoom(v2, Maths::max(static_cast<int>(wallStartSS.x.val), minX), Maths::min(static_cast<int>(wallEndSS.x.val), maxX));
 				}
 			}
 		}
