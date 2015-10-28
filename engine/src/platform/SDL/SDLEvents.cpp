@@ -41,10 +41,10 @@ namespace System {
 			return ret;
 		}
 
-		static int const DEBUG_START_RECORD_KEY = SDLK_F10;
-		static int const DEBUG_STOP_RECORD_KEY  = SDLK_F11;
-		static int const DEBUG_LOOP_RECORD_KEY  = SDLK_F12;
-		static int const DEBUG_RENDERING_KEY    = SDLK_F9;
+		static int const DEBUG_START_RECORD_KEY = SDLK_F5;
+		static int const DEBUG_STOP_RECORD_KEY  = SDLK_F6;
+		static int const DEBUG_LOOP_RECORD_KEY  = SDLK_F7;
+		static int const DEBUG_RENDERING_KEY    = SDLK_F4;
 
 		std::vector<Event> GetEvents() {
 			std::vector<Event> events;

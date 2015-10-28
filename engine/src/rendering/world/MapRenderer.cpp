@@ -23,6 +23,7 @@ namespace Rendering {
 			Rendering::Color tmpc,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
+
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS);
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
@@ -30,6 +31,10 @@ namespace Rendering {
 			, widthUsed(ctx.GetWidth())
 			, wallRenderableTop(new int[widthUsed])
 			, wallRenderableBottom(new int[widthUsed])
+			, floorRenderableTop(new int[widthUsed])
+			, floorRenderableBottom(new int[widthUsed])
+			, ceilRenderableTop(new int[widthUsed])
+			, ceilRenderableBottom(new int[widthUsed])
 		{
 		
 		}
@@ -37,6 +42,10 @@ namespace Rendering {
 		MapRenderer::~MapRenderer() {
 			delete[] wallRenderableTop;
 			delete[] wallRenderableBottom;
+			delete[] floorRenderableTop;
+			delete[] floorRenderableBottom;
+			delete[] ceilRenderableTop;
+			delete[] ceilRenderableBottom;
 		}
 
 		void MapRenderer::Render(View const &view) {
@@ -44,13 +53,25 @@ namespace Rendering {
 				widthUsed = ctx.GetWidth();
 				delete[] wallRenderableTop;
 				delete[] wallRenderableBottom;
-				wallRenderableTop = new int[widthUsed];
-				wallRenderableBottom = new int[widthUsed];
+				delete[] floorRenderableTop;
+				delete[] floorRenderableBottom;
+				delete[] ceilRenderableTop;
+				delete[] ceilRenderableBottom;
+				wallRenderableTop     = new int[widthUsed];
+				wallRenderableBottom  = new int[widthUsed];
+				floorRenderableTop    = new int[widthUsed];
+				floorRenderableBottom = new int[widthUsed];
+				ceilRenderableTop     = new int[widthUsed];
+				ceilRenderableBottom  = new int[widthUsed];
 			}
 
 			for(auto x = 0u; x < ctx.GetWidth(); ++x) {
 				wallRenderableTop[x] = 0;
 				wallRenderableBottom[x] = ctx.GetHeight() - 1;
+				floorRenderableTop[x] = 0;
+				floorRenderableBottom[x] = ctx.GetHeight() - 1;
+				ceilRenderableTop[x] = 0;
+				ceilRenderableBottom[x] = ctx.GetHeight() - 1;
 			}
 			
 
@@ -60,8 +81,21 @@ namespace Rendering {
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int portalDepth) {
 			if(portalDepth == 0 || minX > maxX || view.sector == nullptr)
 				return;
+			else if(portalDepth > 0)
+				--portalDepth;
 			ASSERT(maxX < (int)widthUsed);
+
+			struct RoomRenderDefer {
+				View view;
+				int minX, maxX;
+			};
+			auto deferList = std::vector<RoomRenderDefer>{};
+			deferList.reserve(4);
+
 			auto &sec = *view.sector;
+
+			auto ceilHeight  = sec.ceilHeight - view.eye.z;
+			auto floorHeight = sec.floorHeight - view.eye.z;
 
 			for(auto wi = 0u; wi < sec.GetNumWalls(); ++wi) {
 				auto &wall = *sec.GetWall(wi);
@@ -98,9 +132,6 @@ namespace Rendering {
 
 				auto wallScalarStart = vFOVMult * ScreenHeight / wallStartVS.y;
 				auto wallScalarEnd   = vFOVMult * ScreenHeight / wallEndVS.y;
-
-				auto ceilHeight  = sec.ceilHeight - view.eye.z;
-				auto floorHeight = sec.floorHeight - view.eye.z;
 
 				//in pixels
 				auto wallTopStart    = ScreenHeight/2 - ceilHeight * wallScalarStart;
@@ -152,6 +183,13 @@ namespace Rendering {
 					if(x < minX || x > maxX) {
 						continue;
 					}
+
+					//this is the same for both types of wall, portal and non-
+					ceilRenderableTop[x]     = wallRenderableTop[x];
+					ceilRenderableBottom[x]  = static_cast<int>(Maths::max(wallTop, wallRenderableTop[x])) - 1;
+
+					floorRenderableTop[x]    = static_cast<int>(Maths::min(wallBottom, wallRenderableBottom[x])) + 1;
+					floorRenderableBottom[x] = wallRenderableBottom[x];
 
 					if(isPortal && !(portalTop > wallBottom) && !(portalBottom < wallTop)) {
 						if(wallTop < portalTop)
@@ -220,8 +258,27 @@ namespace Rendering {
 				if(wasPortalDrawn) {
 					auto v2 = view;
 					v2.sector = toSector;
-					RenderRoom(v2, Maths::max(static_cast<int>(wallStartSS.x.val), minX), Maths::min(static_cast<int>(wallEndSS.x.val), maxX));
+					deferList.emplace_back(
+						RoomRenderDefer{
+							v2,
+							Maths::max(static_cast<int>(wallStartSS.x.val), minX),
+							Maths::min(static_cast<int>(wallEndSS.x.val), maxX)
+						}
+					);
 				}
+			}
+
+			DrawHorizontalPlanes(
+				minX, maxX,
+				ceilHeight, floorHeight,
+				nullptr, //floorTex
+				nullptr, //ceilTex
+				1 //lightlevel
+				,Rendering::Color{0, 0, 128, 255}
+				,Rendering::Color{0, 0,  64, 255}
+			);
+			for(auto &dl : deferList) {
+				RenderRoom(dl.view, dl.minX, dl.maxX, portalDepth);
 			}
 		}
 
@@ -245,6 +302,69 @@ namespace Rendering {
 
 			ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
 			return true;
+		}
+		
+		void MapRenderer::DrawHorizontalPlanes(
+			int minX, int maxX,
+			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
+			Rendering::Texture *floorTex,
+			Rendering::Texture *ceilTex,
+			float lightlevel,
+			Rendering::Color tmpceil,
+			Rendering::Color tmpfloor
+		) {
+			auto const ScreenHeight = ctx.GetHeight();
+		
+			auto y = 0;
+			if(ceilTex || true) {//override for now
+				for(; y < ScreenHeight/2; ++y) {
+					auto stripStarted = 0u;
+					auto stripActive = false;
+					for(auto x = minX; x <= maxX; ++x) {
+						if(ceilRenderableBottom[x] >= y && y >= ceilRenderableTop[x]) {
+							if(stripActive == false) {
+								stripActive = true;
+								stripStarted = x;
+							}
+						} else if(stripActive) {
+							ctx.DrawHLine(stripStarted, x - 1, y, tmpceil);
+							stripActive = false;
+						}
+					}
+					if(stripActive) {
+						ctx.DrawHLine(stripStarted, maxX, y, tmpceil);
+					}
+				}
+			} else {
+				y = ScreenHeight / 2;
+			}
+			if(floorTex || true) { //override for now
+				for(; y < ScreenHeight; ++y) {
+					auto stripStarted = 0u;
+					auto stripActive = false;
+					for(auto x = minX; x <= maxX; ++x) {
+						if(floorRenderableBottom[x] >= y && y >= floorRenderableTop[x]) {
+							if(stripActive == false) {
+								stripActive = true;
+								stripStarted = x;
+							}
+						} else if(stripActive) {
+							ctx.DrawHLine(stripStarted, x - 1, y, tmpfloor);
+							stripActive = false;
+						}
+					}
+					if(stripActive) {
+						ctx.DrawHLine(stripStarted, maxX, y, tmpfloor);
+					}
+				}
+			} else {
+				y = ScreenHeight / 2;
+			}
+
+			for(auto x = minX; x <= maxX; ++x) {
+				ceilRenderableTop[x] = ceilRenderableBottom[x];
+				floorRenderableBottom[x] = floorRenderableTop[x];
+			}
 		}
 
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end) {

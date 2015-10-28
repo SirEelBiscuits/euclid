@@ -81,7 +81,7 @@ function Game.Update(dt)
 			pos.y = pos.y - math.cos(math.rad(-angle)) * dt *10
 		end
 
-		if Game.Input[1].key == 1073741886 then -- F5
+		if Game.Input[1].key == 1073741893 then -- F12
 			Game.OpenMap(dofile("testmap.lua"))
 		end
 
