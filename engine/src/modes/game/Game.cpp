@@ -212,6 +212,9 @@ namespace Modes {
 		case Types::InputLoopStop:
 			StopLoop();
 			break;
+		case Types::DebugRenderingStart:
+			ctx.StartDebugRendering();
+			break;
 		default:
 			break;
 		}

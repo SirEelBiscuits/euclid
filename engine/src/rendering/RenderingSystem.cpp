@@ -3,7 +3,8 @@
 #include "lib/Maths.h"
 
 #ifdef EUCLID_DEBUG
-#	define DEBUG_RENDERING()
+#	include "system/Events.h"
+#	define DEBUG_RENDERING() do {if(debugRendering) { debugRendering &= !System::Input::ReturnOnKeyInput(); FlipBuffers(); } } while(false)
 #else
 #	define DEBUG_RENDERING()
 #endif

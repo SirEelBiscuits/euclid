@@ -111,6 +111,8 @@ namespace Rendering {
 		btStorageType GetHFOVMult() const { return hFOVMult; };
 		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = 1/tan(fovAngle * PI / 180); } //todo magic numbers and move to .cpp
 
+		void StartDebugRendering() { debugRendering = true; }
+
 		//////////
 		// DATA //
 		//////////
@@ -126,6 +128,8 @@ namespace Rendering {
 	private:
 		//used to redirect bad writes to
 		Color Dummy;
+
+		bool debugRendering{false};
 	};
 
 	//This is to be implemented in platform-specific code

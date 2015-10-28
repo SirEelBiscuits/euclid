@@ -7,6 +7,19 @@ namespace System {
 
 	namespace Input {
 
+		bool ReturnOnKeyInput() {
+			SDL_Event e;
+			while(true) {
+				while(SDL_PollEvent(&e)) {
+					switch(e.type) {
+					case SDL_KEYDOWN:
+						return e.key.keysym.sym == SDLK_ESCAPE;
+					}
+				}
+				SDL_Delay(0);
+			}
+		}
+
 		Event Transform(SDL_Event e) {
 			Event ret;
 
@@ -29,8 +42,9 @@ namespace System {
 		}
 
 		static int const DEBUG_START_RECORD_KEY = SDLK_F10;
-		static int const DEBUG_STOP_RECORD_KEY = SDLK_F11;
-		static int const DEBUG_LOOP_RECORD_KEY = SDLK_F12;
+		static int const DEBUG_STOP_RECORD_KEY  = SDLK_F11;
+		static int const DEBUG_LOOP_RECORD_KEY  = SDLK_F12;
+		static int const DEBUG_RENDERING_KEY    = SDLK_F9;
 
 		std::vector<Event> GetEvents() {
 			std::vector<Event> events;
@@ -49,6 +63,9 @@ namespace System {
 						break;
 					case DEBUG_LOOP_RECORD_KEY:
 						EventCallback(Events::Types::InputLoopMarkEnd, nullptr, nullptr);
+						break;
+					case DEBUG_RENDERING_KEY:
+						EventCallback(Events::Types::DebugRenderingStart, nullptr, nullptr);
 						break;
 					default:;
 					}

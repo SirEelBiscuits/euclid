@@ -28,6 +28,9 @@ namespace System {
 			EventType type{EventType::None};
 		};
 
+		//Implemented in platform code
+		bool ReturnOnKeyInput();
+
 		//implemented in platform code
 		std::vector<Event> GetEvents();
 	}
@@ -39,6 +42,7 @@ namespace System {
 			InputLoopStart,
 			InputLoopMarkEnd,
 			InputLoopStop,
+			DebugRenderingStart,
 		};
 		void SetHandlers(std::function<void(Types, void*, void*)> callback);
 	}
