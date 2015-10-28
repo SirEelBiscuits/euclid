@@ -46,13 +46,21 @@ std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg) {
 	if(Gargamel::ArgumentValues[(int)CLArgs::Editor].isArgumentPresent)
 		cfg.SetValue(stringFromCLArgs(CLArgs::RenderScale), 1);
 
+	auto width = cfg.GetValue<int>(stringFromCLArgs(CLArgs::Width));
+	auto height = cfg.GetValue<int>(stringFromCLArgs(CLArgs::Height));
+
 	auto ctx = Rendering::GetContext(
-		cfg.GetValue<int>(stringFromCLArgs(CLArgs::Width)),
-		cfg.GetValue<int>(stringFromCLArgs(CLArgs::Height)),
+		width,
+		height,
 		cfg.GetValue<int>(stringFromCLArgs(CLArgs::RenderScale)),
 		cfg.GetValue<bool>(stringFromCLArgs(CLArgs::Fullscreen)),
 		"Euclid Game Engine"
 	);
+
+	auto vFOV = cfg.GetValue<float>(stringFromCLArgs(CLArgs::FOV));
+	auto hFOV = std::atan(std::tan(vFOV * PI / 180) * (float)width / height) * 180 / PI;
+	ctx->SetvFov(vFOV);
+	ctx->SethFov(hFOV);
 
 	return ctx;
 }
@@ -70,6 +78,9 @@ void OverrideConfigWithCommandLineArguments(System::Config &cfg) {
 
 	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::StartScript)) || Gargamel::ArgumentValues[(int)CLArgs::StartScript].isArgumentPresent)
 		cfg.SetValue(stringFromCLArgs(CLArgs::StartScript), Gargamel::ArgumentValues[(int)CLArgs::StartScript].argumentValue);
+
+	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::FOV)) || Gargamel::ArgumentValues[(int)CLArgs::FOV].isArgumentPresent)
+		cfg.SetValue(stringFromCLArgs(CLArgs::FOV), Gargamel::ArgumentValues[(int)CLArgs::FOV].floatValue());
 
 	if(!cfg.IsValueSet(stringFromCLArgs(CLArgs::Fullscreen)))
 		cfg.SetValue(stringFromCLArgs(CLArgs::Fullscreen), false);

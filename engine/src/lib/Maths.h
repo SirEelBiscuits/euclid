@@ -13,6 +13,8 @@ POST_STD_LIB
 #define SAFISH_INVERT(in) (TypeMagic::invert(in))
 #define INVERSE_TYPE(in) decltype(SAFISH_INVERT(in))
 
+#define PI 3.141592653f
+
 namespace Maths {
 	template<typename T, typename S>
 	constexpr auto min(T a, S b) {

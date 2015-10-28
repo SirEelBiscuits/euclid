@@ -13,6 +13,7 @@ enum class CLArgs {
 	RenderScale,
 	Editor,
 	StartScript,
+	FOV,
 };
 
 char const* stringFromCLArgs(CLArgs in) {
@@ -27,17 +28,20 @@ char const* stringFromCLArgs(CLArgs in) {
 		return "renderscale";
 	case CLArgs::StartScript:
 		return "startscript";
+	case CLArgs::FOV:
+		return "FOV";
 	default:;
 	}
 	return nullptr;
 }
 
 Gargamel::ArgumentList Arguments {
-	GGM_DESCRIBE_ARG        (CLArgs::Help,        'h', "help",         NoArgument,                   "Display this help test"),
-	GGM_DESCRIBE_ARG        (CLArgs::Fullscreen,  'f', "fullscreen",   NoArgument,                   "Render in fullscreen mode"),
-	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Width,            "width",        RequiredArgument, "1024",     "Width to render"),
-	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Height,           "height",       RequiredArgument, "768",      "Height to render"),
-	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::RenderScale,      "render-scale", RequiredArgument, "4",        "Scale down the render"),
-	GGM_DESCRIBE_ARG        (CLArgs::Editor,      'e', "editor",       NoArgument,                   "Launch the editor"),
-	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::StartScript,      "start-script", RequiredArgument, "test.lua", "The script to launch"),
+	GGM_DESCRIBE_ARG        (CLArgs::Help,        'h',  "help",         NoArgument,                   "Display this help test"),
+	GGM_DESCRIBE_ARG        (CLArgs::Fullscreen,  'f',  "fullscreen",   NoArgument,                   "Render in fullscreen mode"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Width,             "width",        RequiredArgument, "1024",     "Width to render"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Height,            "height",       RequiredArgument, "768",      "Height to render"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::RenderScale,       "render-scale", RequiredArgument, "4",        "Scale down the render"),
+	GGM_DESCRIBE_ARG        (CLArgs::Editor,      'e',  "editor",       NoArgument,                   "Launch the editor"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::StartScript,       "start-script", RequiredArgument, "test.lua", "The script to launch"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::FOV,               "fov",          RequiredArgument, "45",       "The vertical FOV to use"),
 };
