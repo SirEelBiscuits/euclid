@@ -101,6 +101,15 @@ function Game.Update(dt)
 	return not Game.quit
 end
 
+function Game.SaveState()
+	angleBackup = angle
+	posBackup = {x = pos.x, y = pos.y, z = pos.z}
+end
+
+function Game.LoadState()
+	angle = angleBackup
+	pos = {x = posBackup.x, y = posBackup.y, z = posBackup.z}
+end
 
 function Game.PostRender()
 	local w = 50
