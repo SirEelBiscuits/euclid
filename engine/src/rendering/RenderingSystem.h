@@ -95,7 +95,6 @@ namespace Rendering {
 			src represents the subtexture to be stretched over the region dest on screen.
 		 */
 		void DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult);
-		void DrawRectf(ScreenRect dest, Texture const *tex, UVRectf src, float colorMult);
 
 		/**
 			Draw texture to screen rectangle, respecting the texture alpha.
@@ -103,7 +102,6 @@ namespace Rendering {
 			src represents the subtexture to be stretched over the region dest on screen.
 		*/
 		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, float colorMult);
-		void DrawRectAlphaf(ScreenRect dest, Texture const *tex, UVRectf src, float colorMult);
 		
 		btStorageType GetVFOV() const { return vFOV; }
 		btStorageType GetVFOVMult() const { return vFOVMult; };

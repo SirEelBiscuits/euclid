@@ -64,6 +64,7 @@ function Game.Update(dt)
 	if #Game.Input > 0 and Game.Input[1].eventType == InputEventType.KeyDown then
 		if Game.Input[1].key == 1073741893 then -- F12
 			Game.OpenMap(dofile("testmap.lua"))
+			print("reloaded map")
 		end
 
 		if Game.Input[1].key == 27 then -- Escape

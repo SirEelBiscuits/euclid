@@ -100,6 +100,20 @@ namespace Rendering {
 			auto deferList = std::vector<RoomRenderDefer>{};
 			deferList.reserve(4);
 
+			struct CurtainRenderDefer{
+				int                 x;
+				btStorageType       curtainTop;
+				btStorageType       curtainBottom;
+				Mesi::Scalar        u;
+				btStorageType       vStart;
+				btStorageType       vEnd;
+				int                 viewSlotTop;
+				int                 viewSlotBottom;
+				Rendering::Texture *tex;
+				btStorageType       invDist;
+			};
+			auto curtainDeferList = std::vector<CurtainRenderDefer>();
+
 			auto &sec = *view.sector;
 
 			auto ceilHeight  = sec.ceilHeight - view.eye.z;
@@ -184,7 +198,7 @@ namespace Rendering {
 				unsigned const shiftMult = 1<<shift;
 
 				//treat the wall-space coordinate as 0-1, so one screen pixel is 1 / (width in pixels)
-				auto d              = 1.0f / ((int)wallEndSS.x.val - (int)wallStartSS.x.val + 1);
+				auto d              = Mesi::Scalar(1) / ((int)wallEndSS.x.val - (int)wallStartSS.x.val/* + 1*/);
 				auto dWallTop       = d * (wallTopEnd - wallTopStart); //todo fixed point?
 				auto wallTop        = wallTopStart - dWallTop;
 				auto dWallBottom    = d * (wallBottomEnd - wallBottomStart);
@@ -204,21 +218,22 @@ namespace Rendering {
 
 				const int gap = 1 << 3;
 
-				for(auto x = static_cast<int>(wallStartSS.x.val); x < static_cast<int>(wallEndSS.x.val); ++x) {
+				for(auto x = static_cast<int>(wallStartSS.x.val); x < static_cast<int>(wallEndSS.x.val) && x <= maxX; ++x) {
 					wallTop += dWallTop;
 					wallBottom += dWallBottom;
 					portalTop += dPortalTop;
 					portalBottom += dPortalBottom;
 
-					if((x - static_cast<int>(wallStartSS.x.val) & gap - 1) == 0) {
-						auto alpha = d * (x + gap - wallStartSS.x.val);
+					if( (x - static_cast<int>(wallStartSS.x.val) & gap - 1) == 0 ) {
+						auto alpha = d * (x + gap - (int)wallStartSS.x.val);
 						auto uNext = ((1 - alpha) * uStart * TwoOverStartDist + uEnd.val * alpha * TwoOverEndDist)
 							/ ((1 - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
 
 						dU = (uNext - uCache) / gap;
+						uAcc = uCache;
 						uCache = uNext;
-					}
-					uAcc += dU;
+					} else 
+						uAcc += dU;
 
 					if(x < minX || x > maxX) {
 						continue;
@@ -256,6 +271,21 @@ namespace Rendering {
 						//	1
 						//	, Rendering::Color{0, 128, 0, 255}
 						//);
+						if(wall.mainTex.tex != nullptr) {
+							curtainDeferList.emplace_back(CurtainRenderDefer{
+									x,
+									Maths::max(portalTop, wallTop),
+									Maths::min(portalBottom, wallBottom),
+									wall.mainTex.uvStart.x + uAcc,
+									wall.mainTex.uvStart.y,
+									vEndMain,
+									wallRenderableTop[x],
+									wallRenderableBottom[x],
+									wall.mainTex.tex,
+									1
+								}
+							);
+						}
 						wasPortalDrawn = true;
 
 						if(wallBottom > portalBottom)
@@ -302,7 +332,7 @@ namespace Rendering {
 						RoomRenderDefer{
 							v2,
 							Maths::max(static_cast<int>(wallStartSS.x.val), minX),
-							Maths::min(static_cast<int>(wallEndSS.x.val), maxX)
+							Maths::min(static_cast<int>(wallEndSS.x.val - 1), maxX) //wallEndSS is an exclusive bound, because reasons
 						}
 					);
 				}
@@ -345,7 +375,7 @@ namespace Rendering {
 				ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
 			} else {
 				auto const ppm = Rendering::Texture::PixelsPerMeter;
-				auto srcR = Rendering::UVRectf(std::round(u * ppm), std::round(vStart * ppm), 1, std::round(vEnd * ppm));
+				auto srcR = Rendering::UVRect(std::round(u * ppm), std::round(vStart * ppm), 1, std::round(vEnd * ppm));
 
 				if(wallBottom > viewSlotBottom) {
 					auto height = wallBottom - wallTop;
@@ -365,9 +395,9 @@ namespace Rendering {
 
 				Rendering::ScreenRect dstR(x, wallTop, 1, (wallBottom - wallTop) + 1);
 				if(useAlpha)
-					ctx.DrawRectAlphaf(dstR, tex, srcR, colorScale);
+					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale);
 				else
-					ctx.DrawRectf(dstR, tex, srcR, colorScale);
+					ctx.DrawRect(dstR, tex, srcR, colorScale);
 			}
 			return true;
 		}
@@ -437,8 +467,8 @@ namespace Rendering {
 								stripStarted, x - 1,
 								y,
 								ceilTex,
-								{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
-								{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+								{left.x.val * Rendering::Texture::PixelsPerMeter, left.y.val * Rendering::Texture::PixelsPerMeter},
+								{right.x.val * Rendering::Texture::PixelsPerMeter,right.y.val * Rendering::Texture::PixelsPerMeter},
 								1
 							);
 							stripActive = false;
@@ -451,8 +481,8 @@ namespace Rendering {
 							stripStarted, maxX,
 							y,
 							ceilTex,
-							{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
-							{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
+							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
 							1
 						);
 					}
@@ -477,8 +507,8 @@ namespace Rendering {
 								stripStarted, x - 1,
 								y,
 								floorTex,
-								{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
-								{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+								{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
+								{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
 								1
 							);
 							stripActive = false;
@@ -491,8 +521,8 @@ namespace Rendering {
 							stripStarted, maxX,
 							y,
 							floorTex,
-							{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
-							{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
+							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
 							1
 						);
 					}

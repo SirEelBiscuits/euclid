@@ -29,5 +29,4 @@ namespace Rendering {
 
 	using ScreenRect = Rect<ScreenVec2>;
 	using UVRect = Rect<UVVec2>;
-	using UVRectf = Rect<UVVec2f>;
 }

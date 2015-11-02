@@ -9,10 +9,10 @@ return {
 	sectors = {
 		{
 			walls = { 
-				{ start = 1, mainTex = {tex = "wall.png"}, portal = 2 },
+				{ start = 1, portal = 2 },
 				{ start = 2, mainTex = {tex = "wall.png"} },
-				{ start = 3, wallTex = {tex = "wall.png"} },
-				{ start = 4, wallTex = {tex = "wall.png"} },
+				{ start = 3 },
+				{ start = 4 },
 			},
 			floorHeight = 0,
 			ceilHeight = 2.25,
@@ -28,6 +28,9 @@ return {
 				{start = 2},
 				{start = 5},
 			},
+
+			floorTex = {tex = "floor.png"},
+			ceilTex  = {tex = "ceil.png"},
 
 			floorHeight = 1,
 			ceilHeight = 2.0,

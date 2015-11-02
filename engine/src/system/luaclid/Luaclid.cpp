@@ -434,7 +434,7 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRect(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+							ctx->DrawRect(dest, tex, Rendering::UVRect{{0, 0}, {(btStorageType)tex->w, (btStorageType)tex->h}}, 1);
 						}
 					)	
 				);
@@ -444,7 +444,7 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRectAlpha(dest, tex, Rendering::ScreenRect{{0, 0}, {(int)tex->w, (int)tex->h}}, 1);
+							ctx->DrawRectAlpha(dest, tex, Rendering::UVRect{{0, 0}, {(btStorageType)tex->w, (btStorageType)tex->h}}, 1);
 						}
 					)	
 				);
