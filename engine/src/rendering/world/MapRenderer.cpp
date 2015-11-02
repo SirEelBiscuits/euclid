@@ -24,7 +24,7 @@ namespace Rendering {
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
-		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS);
+		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, Mesi::Scalar &uStart, Mesi::Scalar &uEnd);
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
@@ -107,8 +107,17 @@ namespace Rendering {
 				auto vFOVMult = ctx.GetVFOVMult();
 				auto hFOVMult = ctx.GetHFOVMult();
 
-				if(!ClipToView(hFOVMult, wallStartVS, wallEndVS))
+				auto uStart     = Mesi::Scalar(0);
+				auto uEnd       = Mesi::Scalar(1);
+				auto vEndMain   = wall.mainTex.uvStart.y + (ceilHeight - floorHeight).val;
+				auto vEndTop    = 0.f;
+				auto vEndBottom = 0.f;
+
+				if(!ClipToView(hFOVMult, wallStartVS, wallEndVS, uStart, uEnd))
 					continue;
+
+				uStart *= wall.length.val;
+				uEnd   *= wall.length.val;
 
 				auto isPortal = wall.portal != nullptr;
 				auto toSector = wall.portal;
@@ -156,6 +165,9 @@ namespace Rendering {
 					nWallTopEnd      = ScreenHeight/2 - nCeilHeight * wallScalarEnd;
 					nWallBottomStart = ScreenHeight/2 - nFloorHeight * wallScalarStart;
 					nWallBottomEnd   = ScreenHeight/2 - nFloorHeight * wallScalarEnd;
+
+					vEndTop    = wall.topTex.uvStart.y + ceilHeight.val - nCeilHeight.val;
+					vEndBottom = wall.bottomTex.uvStart.y + floorHeight.val - nFloorHeight.val;
 				}
 
 				//initialise for inner loop
@@ -174,11 +186,31 @@ namespace Rendering {
 				auto dPortalBottom  = d * (nWallBottomEnd - nWallBottomStart);
 				auto portalBottom   = nWallBottomStart - dPortalBottom;
 
+				auto dU = d * (uEnd - uStart);
+				auto uAcc = uStart - dU;
+
+				auto TwoOverStartDist = Mesi::Scalar(2) / wallStartSS.y;
+				auto TwoOverEndDist   = Mesi::Scalar(2) / wallEndSS.y;
+
+				auto uCache = uStart;
+
+				const int gap = 1 << 3;
+
 				for(auto x = static_cast<int>(wallStartSS.x.val); x < static_cast<int>(wallEndSS.x.val); ++x) {
 					wallTop += dWallTop;
 					wallBottom += dWallBottom;
 					portalTop += dPortalTop;
 					portalBottom += dPortalBottom;
+
+					if((x - static_cast<int>(wallStartSS.x.val) & gap - 1) == 0) {
+						auto alpha = d * (x + gap - wallStartSS.x.val);
+						auto uNext = ((1 - alpha) * uStart * TwoOverStartDist + uEnd.val * alpha * TwoOverEndDist)
+							/ ((1 - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
+
+						dU = (uNext - uCache) / gap;
+						uCache = uNext;
+					}
+					uAcc += dU;
 
 					if(x < minX || x > maxX) {
 						continue;
@@ -197,10 +229,10 @@ namespace Rendering {
 								ctx,
 								x,
 								(int)wallTop, (int)portalTop-1,
-								0,
-								0, 0,
+								wall.topTex.uvStart.x + uAcc,
+								wall.topTex.uvStart.y, vEndTop,
 								wallRenderableTop[x], wallRenderableBottom[x],
-								nullptr,
+								wall.topTex.tex,
 								1
 								, Rendering::Color{64, 0, 0, 255}
 							);
@@ -223,10 +255,10 @@ namespace Rendering {
 								ctx,
 								x,
 								(int)portalBottom + 1, (int)wallBottom,
-								0,
-								0, 0,
+								wall.bottomTex.uvStart.x + uAcc,
+								wall.bottomTex.uvStart.y, vEndBottom,
 								wallRenderableTop[x], wallRenderableBottom[x],
-								nullptr,
+								wall.bottomTex.tex,
 								1
 								, Rendering::Color{128, 0, 0, 255}
 							);
@@ -242,10 +274,10 @@ namespace Rendering {
 							ctx,
 							x,
 							(int)wallTop, (int)wallBottom,
-							0, //U
-							0, 0, //V0,Vmax
+							wall.mainTex.uvStart.x + uAcc,
+							wall.mainTex.uvStart.y, vEndMain,
 							wallRenderableTop[x], wallRenderableBottom[x],
-							nullptr, //texToUse
+							wall.mainTex.tex,
 							1 //invDist
 							, Rendering::Color{255, 0, 0, 255}
 						);
@@ -297,10 +329,37 @@ namespace Rendering {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
 				return false;
 
-			wallTop = Maths::max(wallTop, viewSlotTop);
-			wallBottom = Maths::min(wallBottom, viewSlotBottom);
+			if(tex == nullptr) {
+				wallTop = Maths::max(wallTop, viewSlotTop);
+				wallBottom = Maths::min(wallBottom, viewSlotBottom);
 
-			ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
+				ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
+			} else {
+				auto const ppm = Rendering::Texture::PixelsPerMeter;
+				auto srcR = Rendering::UVRectf(std::round(u * ppm), std::round(vStart * ppm), 1, std::round(vEnd * ppm));
+
+				if(wallBottom > viewSlotBottom) {
+					auto height = wallBottom - wallTop;
+					wallBottom = viewSlotBottom;
+					auto newHeight = wallBottom - wallTop;
+					srcR.size.y = /*(int)*/(srcR.size.y * (float) newHeight/height);
+				}
+
+				if(wallTop < viewSlotTop) {
+					auto height = wallBottom - wallTop;
+					wallTop = viewSlotTop;
+					auto newHeight = wallBottom - wallTop;
+					auto oldSrcH = srcR.size.y;
+					srcR.size.y = /*(int)*/(srcR.size.y * (float) newHeight/height);
+					srcR.pos.y += oldSrcH - srcR.size.y;
+				}
+
+				Rendering::ScreenRect dstR(x, wallTop, 1, (wallBottom - wallTop) + 1);
+				if(useAlpha)
+					ctx.DrawRectAlphaf(dstR, tex, srcR, colorScale);
+				else
+					ctx.DrawRectf(dstR, tex, srcR, colorScale);
+			}
 			return true;
 		}
 		
@@ -313,7 +372,7 @@ namespace Rendering {
 			Rendering::Color tmpceil,
 			Rendering::Color tmpfloor
 		) {
-			auto const ScreenHeight = ctx.GetHeight();
+			auto const ScreenHeight = (int)ctx.GetHeight();
 		
 			auto y = 0;
 			if(ceilTex || true) {//override for now
@@ -367,7 +426,7 @@ namespace Rendering {
 			}
 		}
 
-		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end) {
+		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end, Mesi::Scalar &uStart, Mesi::Scalar &uEnd) {
 			if(start.y < 0_m && end.y < 0_m)
 				return false;
 
@@ -406,7 +465,7 @@ namespace Rendering {
 			PositionVec2 const right((1_m / hFOVMult) * 1.01f , 1_m); //width multiplier is a hack
 
 			auto q           = end - start;
-			//auto qu          = uEnd - uStart;
+			auto qu          = uEnd - uStart;
 			auto denominator = (q ^ right);
 			auto t           = MesiType<btStorageType, 0, 0, 0>(0.f);
 			if(denominator.val != 0.f) {
@@ -414,16 +473,16 @@ namespace Rendering {
 				if( t.val > 0 && t.val < 1) {
 					if((right ^ start).val >= 0 ) {
 						end = start + t * q;
-						//uEnd = uStart + t * qu;
+						uEnd = uStart + t * qu;
 
 						//q and qu become invalid when end or start change value
 						q = end - start;
-						//qu = uEnd - uStart;
+						qu = uEnd - uStart;
 					} else {
 						start = start + t * q;
-						//uStart = uStart + t * qu;
+						uStart = uStart + t * qu;
 						q = end - start;
-						//qu = uEnd - uStart;
+						qu = uEnd - uStart;
 					}
 				} else if((right ^ start).val < 0 && (right ^ end).val < 0) {
 					return false;
@@ -436,10 +495,10 @@ namespace Rendering {
 				if( t.val > 0 && t.val < 1) {
 					if((left ^ start).val > 0 ) {
 						start = start + t * q;
-						//uStart = uStart + t * qu;
+						uStart = uStart + t * qu;
 					} else {
 						end = start + t * q;
-						//uEnd = uStart + t * qu;
+						uEnd = uStart + t * qu;
 					}
 				} else if((left ^ start).val > 0 && (left ^ end).val > 0) {
 					return false;

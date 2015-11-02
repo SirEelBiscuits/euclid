@@ -42,22 +42,26 @@ namespace Rendering {
 	}
 	
 	void Context::DrawLine(ScreenVec2 start, ScreenVec2 end, Color c) {
-		// Bresenham's algorithm, see:
-		// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
 		if(start.x == end.x)
-			DrawVLine(start.x,
-				Maths::clamp(start.y, 0, (int)GetWidth()-1),
-				Maths::clamp(end.y, 0, (int)GetHeight()-1),
-				c
-			);
+			if(start.x < 0 || start.x >= Width)
+				return;
+			else
+				DrawVLine(start.x,
+					Maths::clamp(start.y, 0, (int)GetWidth()-1),
+					Maths::clamp(end.y, 0, (int)GetHeight()-1),
+					c
+				);
 		if(start.y == end.y)
-			DrawHLine(
-				Maths::clamp(start.x, 0, (int)GetWidth()-1),
-				Maths::clamp(end.x, 0, (int)GetWidth()-1),
-				start.y,
-				c
-			);
+			if(start.y < 0 || start.y >= Height)
+				return;
+			else
+				DrawHLine(
+					Maths::clamp(start.x, 0, (int)GetWidth()-1),
+					Maths::clamp(end.x, 0, (int)GetWidth()-1),
+					start.y,
+					c
+				);
 
 		if(start.x > end.x)
 			std::swap(start, end);
@@ -94,6 +98,9 @@ namespace Rendering {
 			end.x = start.x + (int)std::round(m * (end.x - start.x));
 			end.y = Height - 1;
 		}
+
+		// Bresenham's algorithm, see:
+		// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
 		ScreenPixel_slow(start) = c;
 		ScreenPixel_slow(end) = c;
@@ -261,6 +268,52 @@ namespace Rendering {
 				c.b = (c.b * m) >> bitShift;
 				ScreenPixel(x, y) = c;
 			}
+
+			DEBUG_RENDERING();
+		}
+	}
+
+	void Context::DrawRectf(ScreenRect dest, Texture const *tex, UVRectf src, float colorMult) {
+		//todo: use actual fixed point type?
+		auto const bitShift = 16u;
+		auto const bitmult = 1 << bitShift;
+
+		auto const dx = (int)(bitmult * src.size.x / dest.size.x);
+		auto const dy = (int)(bitmult * src.size.y / dest.size.y);
+		auto const xTarget = dest.pos.x + dest.size.x;
+		auto const yTarget = dest.pos.y + dest.size.y;
+		auto ax = (int)(bitmult * src.pos.x);
+
+		auto const m = static_cast<unsigned>(bitmult * colorMult);
+
+		//handle dest.pos starting beyond the left of the screen
+		auto x = 0;
+		if(dest.pos.x < 0) {
+			ax -= dest.pos.x * dx;
+		} else {
+			x = dest.pos.x;
+		}
+
+		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+			//handle dest.pos starting beyond the top of the screen
+			auto ay = (int)(bitmult * src.pos.y);
+			auto y = 0;
+			if(dest.pos.y < 0) {
+				ay -= dest.pos.y * dx;
+			} else {
+				y = dest.pos.y;
+			}
+
+			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+				//todo: is this actually faster than float multiplication..?
+				Color c = tex->pixel(ax >> bitShift, ay >> bitShift);
+				c.r = (c.r * m) >> bitShift;
+				c.g = (c.g * m) >> bitShift;
+				c.b = (c.b * m) >> bitShift;
+				ScreenPixel(x, y) = c;
+			}
+
+			DEBUG_RENDERING();
 		}
 	}
 
@@ -305,6 +358,54 @@ namespace Rendering {
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
 				ScreenPixel(x, y) = c;
 			}
+
+			DEBUG_RENDERING();
+		}
+	}
+
+	void Context::DrawRectAlphaf(ScreenRect dest, Texture const * tex, UVRectf src, float colorMult) {
+		//todo: use actual fixed point type?
+		auto const bitShift = 16u;
+		auto const bitmult = 1 << bitShift;
+
+		auto const dx = (int)(bitmult * src.size.x / dest.size.x);
+		auto const dy = (int)(bitmult * src.size.y / dest.size.y);
+		auto const xTarget = dest.pos.x + dest.size.x;
+		auto const yTarget = dest.pos.y + dest.size.y;
+		auto ax = (int)(bitmult * src.pos.x);
+
+		auto const m = static_cast<unsigned>(bitmult * colorMult);
+
+		//handle dest.pos starting beyond the left of the screen
+		auto x = 0;
+		if(dest.pos.x < 0) {
+			ax -= dest.pos.x * dx;
+		} else {
+			x = dest.pos.x;
+		}
+
+		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+			//handle dest.pos starting beyond the top of the screen
+			auto ay = (int)(bitmult * src.pos.y);
+			auto y = 0;
+			if(dest.pos.y < 0) {
+				ay -= dest.pos.y * dx;
+			} else {
+				y = dest.pos.y;
+			}
+
+			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+				//todo - get rid of the floating point maths
+				Color dst = ScreenPixel(x, y);
+				Color c = tex->pixel(ax>>bitShift, ay>>bitShift);
+				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
+				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
+				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
+				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				ScreenPixel(x, y) = c;
+			}
+
+			DEBUG_RENDERING();
 		}
 	}
 }

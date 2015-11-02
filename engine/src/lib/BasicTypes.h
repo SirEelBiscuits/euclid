@@ -15,6 +15,7 @@ using PositionVec2  = Vector<Mesi::Meters, 2, btStorageType>;
 using PositionVec3  = Vector<Mesi::Meters, 3, btStorageType>;
 using ScreenVec2    = Vector<int, 2>;
 using UVVec2        = Vector<int, 2>;
+using UVVec2f       = Vector<float, 2>;
 using TransformMat2 = Matrix<btStorageType, 2, 2>;
 
 PositionVec2 AsVec2(PositionVec3 const &vec);
