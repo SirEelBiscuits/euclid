@@ -81,10 +81,7 @@ public:
 	}
 
 	static constexpr Matrix Zero() {
-		Matrix ret;
-		ret.x = BaseType(0);
-		ret.y = BaseType(0);
-		return ret;
+		return Matrix();
 	}
 };
 
@@ -260,6 +257,14 @@ public:
 		auto det = GetDeterminant();
 		Transpose();
 		operator/=(det);
+	}
+
+	auto Inverse() {
+		auto det = GetDeterminant();
+		auto ret = *this;
+		ret.Transpose();
+		ret /= det;
+		return ret;
 	}
 
 	X_TO_POWER_TYPE(BaseType(0), 2) GetDeterminant() const {

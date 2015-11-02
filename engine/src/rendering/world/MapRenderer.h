@@ -38,6 +38,7 @@ namespace Rendering {
 			void RenderRoom(View const &view, int minX, int maxX, int portalDepth = -1);
 
 			void DrawHorizontalPlanes(
+				View view,
 				int minX, int maxX,                                ///< x slot to render to, inclusive
 				Mesi::Meters ceilHeight, Mesi::Meters floorHeight, ///< height of floor and ceiling to draw
 				Rendering::Texture *floorTex,
@@ -54,12 +55,14 @@ namespace Rendering {
 			Rendering::Context &ctx;
 
 			unsigned widthUsed;
+			unsigned heightUsed;
 			int *wallRenderableTop;
 			int *wallRenderableBottom;
 			int *floorRenderableTop;
 			int *floorRenderableBottom;
 			int *ceilRenderableTop;
 			int *ceilRenderableBottom;
+			btStorageType *distances;
 
 		};
 	}

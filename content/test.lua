@@ -30,6 +30,10 @@ Game.Input={}
 
 tex = Draw.GetTexture("ceil.png")
 
+inputState = {x = 0, y = 0, a = 0}
+speed = 1
+turnSpeed = 30
+
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
 	Game.timesecs = (Game.timesecs or 0) + dt
@@ -58,29 +62,6 @@ function Game.Update(dt)
 
 	
 	if #Game.Input > 0 and Game.Input[1].eventType == InputEventType.KeyDown then
-		if Game.Input[1].key == 101 then -- E
-			angle = angle + 140 *dt
-		end
-		if Game.Input[1].key == 113 then -- Q
-			angle = angle - 140 *dt
-		end
-		if Game.Input[1].key == 97 then -- A
-			pos.x = pos.x + math.sin(math.rad(90-angle)) * dt *10
-			pos.y = pos.y - math.cos(math.rad(90-angle)) * dt *10
-		end
-		if Game.Input[1].key == 100 then -- D
-			pos.x = pos.x - math.sin(math.rad(90-angle)) * dt *10
-			pos.y = pos.y + math.cos(math.rad(90-angle)) * dt *10
-		end
-		if Game.Input[1].key == 115 then -- S
-			pos.x = pos.x - math.sin(math.rad(-angle)) * dt *10
-			pos.y = pos.y + math.cos(math.rad(-angle)) * dt *10
-		end
-		if Game.Input[1].key == 119 then -- W
-			pos.x = pos.x + math.sin(math.rad(-angle)) * dt *10
-			pos.y = pos.y - math.cos(math.rad(-angle)) * dt *10
-		end
-
 		if Game.Input[1].key == 1073741893 then -- F12
 			Game.OpenMap(dofile("testmap.lua"))
 		end
@@ -89,6 +70,57 @@ function Game.Update(dt)
 			Game.quit = true;
 		end
 	end
+
+	for i, input in ipairs(Game.Input) do
+		if input.keyRepeat == false then
+			if input.key == 119 then --W
+				if input.eventType == InputEventType.KeyDown then
+					inputState.y = inputState.y + 1
+				else
+					inputState.y = inputState.y - 1
+				end
+			end
+			if input.key == 115 then --S
+				if input.eventType == InputEventType.KeyDown then
+					inputState.y = inputState.y - 1
+				else
+					inputState.y = inputState.y + 1
+				end
+			end
+			if input.key == 97 then --A
+				if input.eventType == InputEventType.KeyDown then
+					inputState.x = inputState.x + 1
+				else
+					inputState.x = inputState.x - 1
+				end
+			end
+			if input.key == 100 then --D
+				if input.eventType == InputEventType.KeyDown then
+					inputState.x = inputState.x - 1
+				else
+					inputState.x = inputState.x + 1
+				end
+			end
+			if input.key == 113 then --Q
+				if input.eventType == InputEventType.KeyDown then
+					inputState.a = inputState.a - 1
+				else
+					inputState.a = inputState.a + 1
+				end
+			end
+			if input.key == 101 then --E
+				if input.eventType == InputEventType.KeyDown then
+					inputState.a = inputState.a + 1
+				else
+					inputState.a = inputState.a - 1
+				end
+			end
+		end
+	end
+
+	angle = angle + inputState.a * dt * turnSpeed
+	pos.x = pos.x + (inputState.x * math.cos(math.rad(-angle)) + inputState.y * math.sin(math.rad(-angle))) * dt * speed 
+	pos.y = pos.y + (inputState.x * math.sin(math.rad(-angle)) - inputState.y * math.cos(math.rad(-angle))) * dt * speed
 
 
 	if angle > 360 then

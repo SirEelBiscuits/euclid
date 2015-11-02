@@ -227,6 +227,8 @@ namespace Rendering {
 			ScreenPixel(x, y) = tex->pixel((uvCur.x >> shift), (uvCur.y >> shift)) * colorMult;
 			uvCur += deltaUV;
 		}
+
+		DEBUG_RENDERING();
 	}
 
 	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult) {

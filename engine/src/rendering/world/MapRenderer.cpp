@@ -29,12 +29,14 @@ namespace Rendering {
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
 			, widthUsed(ctx.GetWidth())
+			, heightUsed(ctx.GetHeight())
 			, wallRenderableTop(new int[widthUsed])
 			, wallRenderableBottom(new int[widthUsed])
 			, floorRenderableTop(new int[widthUsed])
 			, floorRenderableBottom(new int[widthUsed])
 			, ceilRenderableTop(new int[widthUsed])
 			, ceilRenderableBottom(new int[widthUsed])
+			, distances(new btStorageType[heightUsed])
 		{
 		
 		}
@@ -46,6 +48,7 @@ namespace Rendering {
 			delete[] floorRenderableBottom;
 			delete[] ceilRenderableTop;
 			delete[] ceilRenderableBottom;
+			delete[] distances;
 		}
 
 		void MapRenderer::Render(View const &view) {
@@ -64,6 +67,11 @@ namespace Rendering {
 				ceilRenderableTop     = new int[widthUsed];
 				ceilRenderableBottom  = new int[widthUsed];
 			}
+			if(ctx.GetHeight() > heightUsed) {
+				heightUsed = ctx.GetHeight();
+				delete[] distances;
+				distances = new btStorageType[heightUsed];
+			}
 
 			for(auto x = 0u; x < ctx.GetWidth(); ++x) {
 				wallRenderableTop[x] = 0;
@@ -73,7 +81,7 @@ namespace Rendering {
 				ceilRenderableTop[x] = 0;
 				ceilRenderableBottom[x] = ctx.GetHeight() - 1;
 			}
-			
+			//distances doesn't get zeroed here
 
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
 		}
@@ -301,10 +309,11 @@ namespace Rendering {
 			}
 
 			DrawHorizontalPlanes(
+				view, 
 				minX, maxX,
 				ceilHeight, floorHeight,
-				nullptr, //floorTex
-				nullptr, //ceilTex
+				sec.floor.tex,
+				sec.ceiling.tex,
 				1 //lightlevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
@@ -342,7 +351,7 @@ namespace Rendering {
 					auto height = wallBottom - wallTop;
 					wallBottom = viewSlotBottom;
 					auto newHeight = wallBottom - wallTop;
-					srcR.size.y = /*(int)*/(srcR.size.y * (float) newHeight/height);
+					srcR.size.y = srcR.size.y * (float) newHeight/height;
 				}
 
 				if(wallTop < viewSlotTop) {
@@ -350,7 +359,7 @@ namespace Rendering {
 					wallTop = viewSlotTop;
 					auto newHeight = wallBottom - wallTop;
 					auto oldSrcH = srcR.size.y;
-					srcR.size.y = /*(int)*/(srcR.size.y * (float) newHeight/height);
+					srcR.size.y = srcR.size.y * (float) newHeight/height;
 					srcR.pos.y += oldSrcH - srcR.size.y;
 				}
 
@@ -364,6 +373,7 @@ namespace Rendering {
 		}
 		
 		void MapRenderer::DrawHorizontalPlanes(
+			View view,
 			int minX, int maxX,
 			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
 			Rendering::Texture *floorTex,
@@ -373,9 +383,44 @@ namespace Rendering {
 			Rendering::Color tmpfloor
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
+			for(auto y = 0u; y < ScreenHeight; ++y)
+				distances[y] = 0;
+
+			auto vfovm = ctx.GetVFOVMult();
+
+			//todo: is it really worth doing this double loop?
+			for(auto x = minX; x <= maxX; ++x) {
+				for(auto y = ceilRenderableTop[x]; y <= floorRenderableBottom[x]; ++y) {
+					if(distances[y] == 0) {
+						auto p = y - ScreenHeight / 2.f;
+						auto pp = -p / (ScreenHeight * vfovm);
+						if(p < 0)
+							distances[y] = ceilHeight.val/pp;
+						else
+							distances[y] = floorHeight.val/pp;
+					}
+				}
+			}
+
 		
+			auto reverseT = view.forward.Inverse();
+			auto f = [
+				forwardVec = reverseT * PositionVec2(0_m, 1_m),
+				rightVec   = reverseT * PositionVec2(1_m, 0_m),
+				halfWidth = ctx.GetWidth() / 2,
+				halfHeight = ScreenHeight / 2,
+				hfovm = ctx.GetHFOVMult(),
+				pos = AsVec2(view.eye)
+			] (float x, float distance) {
+				x -= halfWidth;
+				x /= halfWidth;
+				x /= hfovm;
+				x *= distance;
+				return -pos + forwardVec * distance + rightVec * x;
+			};
+
 			auto y = 0;
-			if(ceilTex || true) {//override for now
+			if(ceilTex) {
 				for(; y < ScreenHeight/2; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
@@ -386,18 +431,36 @@ namespace Rendering {
 								stripStarted = x;
 							}
 						} else if(stripActive) {
-							ctx.DrawHLine(stripStarted, x - 1, y, tmpceil);
+							auto left = f(stripStarted, distances[y]);
+							auto right = f(x - 1, distances[y]);
+							ctx.DrawHLine(
+								stripStarted, x - 1,
+								y,
+								ceilTex,
+								{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
+								{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+								1
+							);
 							stripActive = false;
 						}
 					}
 					if(stripActive) {
-						ctx.DrawHLine(stripStarted, maxX, y, tmpceil);
+						auto left = f(stripStarted, distances[y]);
+						auto right = f(maxX, distances[y]);
+						ctx.DrawHLine(
+							stripStarted, maxX,
+							y,
+							ceilTex,
+							{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
+							{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+							1
+						);
 					}
 				}
 			} else {
 				y = ScreenHeight / 2;
 			}
-			if(floorTex || true) { //override for now
+			if(floorTex) {
 				for(; y < ScreenHeight; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
@@ -408,12 +471,30 @@ namespace Rendering {
 								stripStarted = x;
 							}
 						} else if(stripActive) {
-							ctx.DrawHLine(stripStarted, x - 1, y, tmpfloor);
+							auto left = f(stripStarted, distances[y]);
+							auto right = f(x - 1, distances[y]);
+							ctx.DrawHLine(
+								stripStarted, x - 1,
+								y,
+								floorTex,
+								{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
+								{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+								1
+							);
 							stripActive = false;
 						}
 					}
 					if(stripActive) {
-						ctx.DrawHLine(stripStarted, maxX, y, tmpfloor);
+						auto left = f(stripStarted, distances[y]);
+						auto right = f(maxX, distances[y]);
+						ctx.DrawHLine(
+							stripStarted, maxX,
+							y,
+							floorTex,
+							{(int)(left.x.val * Rendering::Texture::PixelsPerMeter), (int)(left.y.val * Rendering::Texture::PixelsPerMeter)},
+							{(int)(right.x.val * Rendering::Texture::PixelsPerMeter), (int)(right.y.val * Rendering::Texture::PixelsPerMeter)},
+							1
+						);
 					}
 				}
 			} else {
