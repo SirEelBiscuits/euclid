@@ -109,8 +109,8 @@ namespace Rendering {
 				auto &wall = *sec.GetWall(wi);
 				auto &nextWall = *sec.GetWall((wi+1) % sec.GetNumWalls());
 
-				auto wallStartVS = view.forward * (AsVec2(view.eye) - *nextWall.start);
-				auto wallEndVS   = view.forward * (AsVec2(view.eye) - *wall.start);
+				auto wallStartVS = view.forward * (*nextWall.start - AsVec2(view.eye));
+				auto wallEndVS   = view.forward * (*wall.start - AsVec2(view.eye));
 
 				auto vFOVMult = ctx.GetVFOVMult();
 				auto hFOVMult = ctx.GetHFOVMult();
@@ -416,7 +416,7 @@ namespace Rendering {
 				x /= halfWidth;
 				x /= hfovm;
 				x *= distance;
-				return -pos + forwardVec * distance + rightVec * x;
+				return pos + forwardVec * distance + rightVec * x;
 			};
 
 			auto y = 0;

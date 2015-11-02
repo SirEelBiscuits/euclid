@@ -10,7 +10,7 @@ TransformMat2 RotationMatrix(btStorageType angle) {
 	auto c = std::cos(angle);
 	auto s = std::sin(angle);
 	return TransformMat2(
-			c, s,
-			-s, c
+			c, -s,
+			s, c
 		);
 }

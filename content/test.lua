@@ -56,8 +56,8 @@ function Game.Update(dt)
 		reloaded = false
 		Game.OpenMap(dofile("testmap.lua"))
 		Describe(Game.GetMap().GetSector)
-		angle = 135
-		pos = {x = 0, y = 0.5, z = 1.8}
+		angle = 0
+		pos = {x = 0, y = 0, z = 1.8}
 	end
 
 	
@@ -89,38 +89,38 @@ function Game.Update(dt)
 			end
 			if input.key == 97 then --A
 				if input.eventType == InputEventType.KeyDown then
-					inputState.x = inputState.x + 1
-				else
 					inputState.x = inputState.x - 1
+				else
+					inputState.x = inputState.x + 1
 				end
 			end
 			if input.key == 100 then --D
 				if input.eventType == InputEventType.KeyDown then
-					inputState.x = inputState.x - 1
-				else
 					inputState.x = inputState.x + 1
+				else
+					inputState.x = inputState.x - 1
 				end
 			end
 			if input.key == 113 then --Q
 				if input.eventType == InputEventType.KeyDown then
-					inputState.a = inputState.a - 1
-				else
 					inputState.a = inputState.a + 1
+				else
+					inputState.a = inputState.a - 1
 				end
 			end
 			if input.key == 101 then --E
 				if input.eventType == InputEventType.KeyDown then
-					inputState.a = inputState.a + 1
-				else
 					inputState.a = inputState.a - 1
+				else
+					inputState.a = inputState.a + 1
 				end
 			end
 		end
 	end
 
 	angle = angle + inputState.a * dt * turnSpeed
-	pos.x = pos.x + (inputState.x * math.cos(math.rad(-angle)) + inputState.y * math.sin(math.rad(-angle))) * dt * speed 
-	pos.y = pos.y + (inputState.x * math.sin(math.rad(-angle)) - inputState.y * math.cos(math.rad(-angle))) * dt * speed
+	pos.x = pos.x + (inputState.x * math.cos(math.rad(angle)) - inputState.y * math.sin(math.rad(angle))) * dt * speed 
+	pos.y = pos.y + (inputState.x * math.sin(math.rad(angle)) + inputState.y * math.cos(math.rad(angle))) * dt * speed
 
 
 	if angle > 360 then
@@ -149,8 +149,8 @@ function Game.PostRender()
 	Draw.Rect({x = 1, y = 1, w = w - 1, h = h - 1}, {})
 	local startpoint = {x = w / 2 - pos.x * w / 4, y = h / 2 + pos.y * h / 4}
 	local endpoint = {}
-	endpoint.x = startpoint.x - math.sin(math.rad(-angle)) * (w / 3)
-	endpoint.y = startpoint.y - math.cos(math.rad(-angle)) * (h / 3)
+	endpoint.x = startpoint.x + math.sin(math.rad(angle)) * (w / 3)
+	endpoint.y = startpoint.y + math.cos(math.rad(angle)) * (h / 3)
 	Draw.Line(startpoint, endpoint, {g = 255})
 end
 
