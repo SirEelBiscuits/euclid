@@ -62,8 +62,7 @@ namespace Rendering {
 			int *floorRenderableBottom;
 			int *ceilRenderableTop;
 			int *ceilRenderableBottom;
-			btStorageType *distances;
-
+			Mesi::Meters *distances;
 		};
 	}
 }

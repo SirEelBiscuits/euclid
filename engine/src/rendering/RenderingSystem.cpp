@@ -4,7 +4,13 @@
 
 #ifdef EUCLID_DEBUG
 #	include "system/Events.h"
-#	define DEBUG_RENDERING() do {if(debugRendering) { debugRendering &= !System::Input::ReturnOnKeyInput(); FlipBuffers(); } } while(false)
+#	define DEBUG_RENDERING() \
+	do { \
+		if(debugRendering) { \
+			FlipBuffers();\
+			debugRendering &= !System::Input::ReturnOnKeyInput();\
+		} \
+	 } while(false)
 #else
 #	define DEBUG_RENDERING()
 #endif

@@ -26,6 +26,8 @@ namespace Rendering {
 
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, Mesi::Scalar &uStart, Mesi::Scalar &uEnd);
 
+		btStorageType DepthMultFromDistance(Mesi::Meters distance);
+
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
 			, widthUsed(ctx.GetWidth())
@@ -36,7 +38,7 @@ namespace Rendering {
 			, floorRenderableBottom(new int[widthUsed])
 			, ceilRenderableTop(new int[widthUsed])
 			, ceilRenderableBottom(new int[widthUsed])
-			, distances(new btStorageType[heightUsed])
+			, distances(new Mesi::Meters[heightUsed])
 		{
 		
 		}
@@ -70,7 +72,7 @@ namespace Rendering {
 			if(ctx.GetHeight() > heightUsed) {
 				heightUsed = ctx.GetHeight();
 				delete[] distances;
-				distances = new btStorageType[heightUsed];
+				distances = new Mesi::Meters[heightUsed];
 			}
 
 			for(auto x = 0u; x < ctx.GetWidth(); ++x) {
@@ -218,6 +220,10 @@ namespace Rendering {
 
 				const int gap = 1 << 3;
 
+				auto dist = wallStartSS.y;
+				auto dDist = d * (wallEndSS.y - wallStartSS.y);
+				auto distCache = dist;
+
 				for(auto x = static_cast<int>(wallStartSS.x.val); x < static_cast<int>(wallEndSS.x.val) && x <= maxX; ++x) {
 					wallTop += dWallTop;
 					wallBottom += dWallBottom;
@@ -225,15 +231,30 @@ namespace Rendering {
 					portalBottom += dPortalBottom;
 
 					if( (x - static_cast<int>(wallStartSS.x.val) & gap - 1) == 0 ) {
-						auto alpha = d * (x + gap - (int)wallStartSS.x.val);
-						auto uNext = ((1 - alpha) * uStart * TwoOverStartDist + uEnd.val * alpha * TwoOverEndDist)
+						// if x + gap results in alpha > 1, we get weird lighting artefacts
+						auto gapToUse = 
+							x + gap >= static_cast<int>(wallEndSS.x.val)
+							? static_cast<int>(wallEndSS.x.val) - x
+							: gap;
+						auto alpha = d * (x + gapToUse - (int)wallStartSS.x.val);
+						auto uNext = ((1 - alpha) * uStart * TwoOverStartDist + uEnd * alpha * TwoOverEndDist)
 							/ ((1 - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
 
-						dU = (uNext - uCache) / gap;
+						dU = (uNext - uCache) / gapToUse;
 						uAcc = uCache;
 						uCache = uNext;
-					} else 
+
+						auto distNext = ((1 - alpha) * wallStartSS.y * TwoOverStartDist + wallEndSS.y * alpha * TwoOverEndDist)
+							/ ((1 - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
+						dDist = (distNext - distCache) / (btStorageType)gapToUse;
+						dist = distCache;
+						distCache = distNext;
+					} else {
 						uAcc += dU;
+						dist += dDist;
+					}
+
+					auto depthShadeVal = DepthMultFromDistance(dist);
 
 					if(x < minX || x > maxX) {
 						continue;
@@ -256,7 +277,7 @@ namespace Rendering {
 								wall.topTex.uvStart.y, vEndTop,
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.topTex.tex,
-								1
+								depthShadeVal
 								, Rendering::Color{64, 0, 0, 255}
 							);
 
@@ -271,7 +292,7 @@ namespace Rendering {
 									wallRenderableTop[x],
 									wallRenderableBottom[x],
 									wall.mainTex.tex,
-									1
+									depthShadeVal
 								}
 							);
 						}
@@ -286,7 +307,7 @@ namespace Rendering {
 								wall.bottomTex.uvStart.y, vEndBottom,
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.bottomTex.tex,
-								1
+								depthShadeVal
 								, Rendering::Color{128, 0, 0, 255}
 							);
 
@@ -305,7 +326,7 @@ namespace Rendering {
 							wall.mainTex.uvStart.y, vEndMain,
 							wallRenderableTop[x], wallRenderableBottom[x],
 							wall.mainTex.tex,
-							1 //invDist
+							depthShadeVal
 							, Rendering::Color{255, 0, 0, 255}
 						);
 
@@ -377,7 +398,7 @@ namespace Rendering {
 				wallTop = Maths::max(wallTop, viewSlotTop);
 				wallBottom = Maths::min(wallBottom, viewSlotBottom);
 
-				ctx.DrawVLine(x, wallTop, wallBottom, tmpc);
+				ctx.DrawVLine(x, wallTop, wallBottom, tmpc * colorScale);
 			} else {
 				auto const ppm = Rendering::Texture::PixelsPerMeter;
 				auto srcR = Rendering::UVRect(std::round(u * ppm), std::round(vStart * ppm), 1, std::round(vEnd * ppm));
@@ -419,20 +440,20 @@ namespace Rendering {
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
 			for(auto y = 0u; y < ScreenHeight; ++y)
-				distances[y] = 0;
+				distances[y] = 0_m;
 
 			auto vfovm = ctx.GetVFOVMult();
 
 			//todo: is it really worth doing this double loop?
 			for(auto x = minX; x <= maxX; ++x) {
 				for(auto y = ceilRenderableTop[x]; y <= floorRenderableBottom[x]; ++y) {
-					if(distances[y] == 0) {
+					if(distances[y] == 0_m) {
 						auto p = y - ScreenHeight / 2.f;
 						auto pp = -p / (ScreenHeight * vfovm);
 						if(p < 0)
-							distances[y] = ceilHeight.val/pp;
+							distances[y] = ceilHeight/pp;
 						else
-							distances[y] = floorHeight.val/pp;
+							distances[y] = floorHeight/pp;
 					}
 				}
 			}
@@ -446,12 +467,12 @@ namespace Rendering {
 				halfHeight = ScreenHeight / 2,
 				hfovm = ctx.GetHFOVMult(),
 				pos = AsVec2(view.eye)
-			] (float x, float distance) {
+			] (float x, Mesi::Meters distance) {
 				x -= halfWidth;
 				x /= halfWidth;
 				x /= hfovm;
-				x *= distance;
-				return pos + forwardVec * distance + rightVec * x;
+				x *= distance.val;
+				return pos + forwardVec * distance.val + rightVec * x;
 			};
 
 			auto y = 0;
@@ -459,6 +480,7 @@ namespace Rendering {
 				for(; y < ScreenHeight/2; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
+					auto depthMult = DepthMultFromDistance(distances[y]);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(ceilRenderableBottom[x] >= y && y >= ceilRenderableTop[x]) {
 							if(stripActive == false) {
@@ -474,7 +496,7 @@ namespace Rendering {
 								ceilTex,
 								{left.x.val * Rendering::Texture::PixelsPerMeter, left.y.val * Rendering::Texture::PixelsPerMeter},
 								{right.x.val * Rendering::Texture::PixelsPerMeter,right.y.val * Rendering::Texture::PixelsPerMeter},
-								1
+								depthMult
 							);
 							stripActive = false;
 						}
@@ -488,7 +510,7 @@ namespace Rendering {
 							ceilTex,
 							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
 							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
-							1
+							depthMult
 						);
 					}
 				}
@@ -499,6 +521,7 @@ namespace Rendering {
 				for(; y < ScreenHeight; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
+					auto depthMult = DepthMultFromDistance(distances[y]);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(floorRenderableBottom[x] >= y && y >= floorRenderableTop[x]) {
 							if(stripActive == false) {
@@ -514,7 +537,7 @@ namespace Rendering {
 								floorTex,
 								{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
 								{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
-								1
+								depthMult
 							);
 							stripActive = false;
 						}
@@ -528,7 +551,7 @@ namespace Rendering {
 							floorTex,
 							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
 							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
-							1
+							depthMult
 						);
 					}
 				}
@@ -635,6 +658,10 @@ namespace Rendering {
 			}
 
 		return true;
+		}
+
+		btStorageType DepthMultFromDistance(Mesi::Meters distance) {
+			return Maths::clamp(.5f / distance.val, 0.005f, 0.9f * (0.995f) + 0.005f);
 		}
 	}
 }

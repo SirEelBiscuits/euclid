@@ -33,6 +33,7 @@ struct MesiType {
 	T val;
 
 	constexpr MesiType()
+		: val{}
 	{}
 
 	constexpr explicit MesiType(T const in)
