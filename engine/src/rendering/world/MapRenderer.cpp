@@ -260,17 +260,6 @@ namespace Rendering {
 								, Rendering::Color{64, 0, 0, 255}
 							);
 
-						//DrawWallSlice(
-						//	ctx,
-						//	x,
-						//	(int)portalTop, (int)portalBottom,
-						//	0,
-						//	0, 0,
-						//	wallRenderableTop[x], wallRenderableBottom[x],
-						//	nullptr,
-						//	1
-						//	, Rendering::Color{0, 128, 0, 255}
-						//);
 						if(wall.mainTex.tex != nullptr) {
 							curtainDeferList.emplace_back(CurtainRenderDefer{
 									x,
@@ -351,6 +340,22 @@ namespace Rendering {
 			for(auto &dl : deferList) {
 				RenderRoom(dl.view, dl.minX, dl.maxX, portalDepth);
 			}
+			for(auto &dl : curtainDeferList)
+				DrawWallSlice(
+					ctx,
+					dl.x,
+					dl.curtainTop,
+					dl.curtainBottom,
+					dl.u,
+					dl.vStart,
+					dl.vEnd,
+					dl.viewSlotTop,
+					dl.viewSlotBottom,
+					dl.tex,
+					dl.invDist,
+					Rendering::Color{0, 0, 128, 128},
+					true
+				);
 		}
 
 		bool DrawWallSlice(

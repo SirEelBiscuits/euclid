@@ -9,7 +9,7 @@ return {
 	sectors = {
 		{
 			walls = { 
-				{ start = 1, portal = 2 },
+				{ start = 1, portal = 2, mainTex = {tex = "curtain.png"} },
 				{ start = 2, mainTex = {tex = "wall.png"} },
 				{ start = 3 },
 				{ start = 4 },
