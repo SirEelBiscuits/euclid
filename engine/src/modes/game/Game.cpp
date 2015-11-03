@@ -64,6 +64,13 @@ namespace Modes {
 		}
 
 		lua_getglobal(lua, "Game");
+
+		for(auto &i : input) {
+			controls.HandleInput(i);
+		}
+		controls.PushInputInfo(lua);
+		lua_setfield(lua, -2, "Controls");
+
 		if(lua_istable(lua, -1)) {
 			luaX_push(lua, luaX_emptytable{(int)input.size(), 0});
 
@@ -172,6 +179,29 @@ namespace Modes {
 				)
 			);
 			lua_setfield(lua, -2, "SetView");
+		}
+		//LoadControls
+		{
+			auto closure = [](lua_State *s) {
+				auto controls = static_cast<System::Controls::Config*>(lua_touserdata(s, lua_upvalueindex(1)));
+				controls->ClearControls();
+				controls->LoadControls(s);
+				return 0;
+			};
+			lua_pushlightuserdata(lua, &controls);
+			lua_pushcclosure(lua, closure, 1);
+			lua_setfield(lua, -2, "LoadControls");
+		}
+		//AddControls
+		{
+			auto closure = [](lua_State *s) {
+				auto controls = static_cast<System::Controls::Config*>(lua_touserdata(s, lua_upvalueindex(1)));
+				controls->LoadControls(s);
+				return 0;
+			};
+			lua_pushlightuserdata(lua, &controls);
+			lua_pushcclosure(lua, closure, 1);
+			lua_setfield(lua, -2, "AddControls");
 		}
 		lua_pop(lua, 1);
 		ASSERT(lua_gettop(lua) == top);

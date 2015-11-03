@@ -47,7 +47,7 @@ InputEventType = MakeEnum({
 	MouseDown = 3,
 	MouseUp = 4,
 	},
-	"EventType"
+	"InputEventType"
 )
 
 local function char(c)

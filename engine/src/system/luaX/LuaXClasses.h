@@ -25,6 +25,8 @@ struct luaX_State {
 
 /* helper type to push an empty table, or set one through other functions*/
 struct luaX_emptytable {
+	luaX_emptytable() : narr(0), nrec(0) {};
+	luaX_emptytable(int narr, int nrec) : narr(narr), nrec(nrec) {}
 	int narr;
 	int nrec;
 };

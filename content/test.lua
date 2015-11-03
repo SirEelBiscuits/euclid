@@ -44,8 +44,7 @@ function Game.Update(dt)
 	Game.calls = (Game.calls or 0) + 1
 
 	if(#Game.Input > 0) then
-		print(Game.Input[1].key)
-	else
+		--print(Game.Input[1].key)
 	end
 
 	if(Game.timesecs > 1) then
@@ -59,69 +58,24 @@ function Game.Update(dt)
 		reloaded = false
 		Game.OpenMap(dofile("testmap.lua"))
 		Describe(Game.GetMap().GetSector)
+
+		Game.LoadControls(dofile("controls.lua"))
 	end
 	
-	if #Game.Input > 0 and Game.Input[1].eventType == InputEventType.KeyDown then
-		if Game.Input[1].key == 1073741893 then -- F12
-			Game.OpenMap(dofile("testmap.lua"))
-			print("reloaded map")
-		end
-
-		if Game.Input[1].key == 27 then -- Escape
-			Game.quit = true;
-		end
+	if Game.Controls.ReloadMap.pressed then
+		Game.OpenMap(dofile("testmap.lua"))
+		print("reloaded map")
 	end
 
-	for i, input in ipairs(Game.Input) do
-		if input.keyRepeat == false then
-			if input.key == 119 then --W
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.y = State.inputState.y + 1
-				else
-					State.inputState.y = State.inputState.y - 1
-				end
-			end
-			if input.key == 115 then --S
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.y = State.inputState.y - 1
-				else
-					State.inputState.y = State.inputState.y + 1
-				end
-			end
-			if input.key == 97 then --A
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.x = State.inputState.x - 1
-				else
-					State.inputState.x = State.inputState.x + 1
-				end
-			end
-			if input.key == 100 then --D
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.x = State.inputState.x + 1
-				else
-					State.inputState.x = State.inputState.x - 1
-				end
-			end
-			if input.key == 113 then --Q
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.a = State.inputState.a + 1
-				else
-					State.inputState.a = State.inputState.a - 1
-				end
-			end
-			if input.key == 101 then --E
-				if input.eventType == InputEventType.KeyDown then
-					State.inputState.a = State.inputState.a - 1
-				else
-					State.inputState.a = State.inputState.a + 1
-				end
-			end
-		end
+	if Game.Controls.Quit.pressed then
+		Game.quit = true
 	end
 
-	State.angle = State.angle + State.inputState.a * dt * State.turnSpeed
-	State.pos.x = State.pos.x + (State.inputState.x * math.cos(math.rad(State.angle)) - State.inputState.y * math.sin(math.rad(State.angle))) * dt * State.speed 
-	State.pos.y = State.pos.y + (State.inputState.x * math.sin(math.rad(State.angle)) + State.inputState.y * math.cos(math.rad(State.angle))) * dt * State.speed
+	State.angle = State.angle + Game.Controls.Turn * dt * State.turnSpeed
+	State.pos.x = State.pos.x + 
+		(Game.Controls.Right * math.cos(math.rad(State.angle)) - Game.Controls.Forward * math.sin(math.rad(State.angle))) * dt * State.speed 
+	State.pos.y = State.pos.y + 
+		(Game.Controls.Right * math.sin(math.rad(State.angle)) + Game.Controls.Forward * math.cos(math.rad(State.angle))) * dt * State.speed
 
 
 	if State.angle > 360 then

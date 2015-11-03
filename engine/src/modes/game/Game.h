@@ -12,6 +12,8 @@ POST_STD_LIB
 
 #include "rendering/world/MapRenderer.h"
 
+#include "system/luaclid/controls/Controls.h"
+
 namespace System { namespace Events { enum class Types; } }
 namespace World { class Map; }
 
@@ -55,5 +57,8 @@ namespace Modes {
 		InputRecordState inputRecordState{InputRecordState::Normal};
 		std::vector<std::vector<System::Input::Event>> inputqueue{};
 		unsigned inputqueuePosition{0u};
+
+		//controls configs
+		System::Controls::Config controls;
 	};
 }
