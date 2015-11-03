@@ -65,6 +65,20 @@ local function isArray(t)
 	return true
 end
 
+function deepCopy(obj)
+	local objType = type(obj)
+	local copy
+	if objType == "table" then
+		copy = {}
+		for k,v in next, obj, nil do
+			copy[k] = deepCopy(v)
+		end
+	else
+		copy = obj
+	end
+	return copy
+end
+
 local function serializeInner (o, indent)
   local ret = ""
   indent = indent or ""

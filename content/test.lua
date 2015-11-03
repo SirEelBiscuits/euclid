@@ -24,15 +24,19 @@ Game.quit = false
 
 reloaded = true
 
-inputKey = 0
 Game.oldCalls = 0
 Game.Input={}
 
 tex = Draw.GetTexture("ceil.png")
 
-inputState = {x = 0, y = 0, a = 0}
-speed = 1
-turnSpeed = 30
+State = {}
+State.inputState = {x = 0, y = 0, a = 0}
+State.speed = 1
+State.turnSpeed = 30
+State.angle = 0
+State.pos = {x = 0, y = 0, z = 1.8}
+
+SaveState = deepCopy(State)
 
 function Game.Update(dt)
 	Game.timerunning = (Game.timerunning or 0) + dt
@@ -41,7 +45,6 @@ function Game.Update(dt)
 
 	if(#Game.Input > 0) then
 		print(Game.Input[1].key)
-		inputKey = Game.Input[1].key
 	else
 	end
 
@@ -56,10 +59,7 @@ function Game.Update(dt)
 		reloaded = false
 		Game.OpenMap(dofile("testmap.lua"))
 		Describe(Game.GetMap().GetSector)
-		angle = 0
-		pos = {x = 0, y = 0, z = 1.8}
 	end
-
 	
 	if #Game.Input > 0 and Game.Input[1].eventType == InputEventType.KeyDown then
 		if Game.Input[1].key == 1073741893 then -- F12
@@ -76,82 +76,80 @@ function Game.Update(dt)
 		if input.keyRepeat == false then
 			if input.key == 119 then --W
 				if input.eventType == InputEventType.KeyDown then
-					inputState.y = inputState.y + 1
+					State.inputState.y = State.inputState.y + 1
 				else
-					inputState.y = inputState.y - 1
+					State.inputState.y = State.inputState.y - 1
 				end
 			end
 			if input.key == 115 then --S
 				if input.eventType == InputEventType.KeyDown then
-					inputState.y = inputState.y - 1
+					State.inputState.y = State.inputState.y - 1
 				else
-					inputState.y = inputState.y + 1
+					State.inputState.y = State.inputState.y + 1
 				end
 			end
 			if input.key == 97 then --A
 				if input.eventType == InputEventType.KeyDown then
-					inputState.x = inputState.x - 1
+					State.inputState.x = State.inputState.x - 1
 				else
-					inputState.x = inputState.x + 1
+					State.inputState.x = State.inputState.x + 1
 				end
 			end
 			if input.key == 100 then --D
 				if input.eventType == InputEventType.KeyDown then
-					inputState.x = inputState.x + 1
+					State.inputState.x = State.inputState.x + 1
 				else
-					inputState.x = inputState.x - 1
+					State.inputState.x = State.inputState.x - 1
 				end
 			end
 			if input.key == 113 then --Q
 				if input.eventType == InputEventType.KeyDown then
-					inputState.a = inputState.a + 1
+					State.inputState.a = State.inputState.a + 1
 				else
-					inputState.a = inputState.a - 1
+					State.inputState.a = State.inputState.a - 1
 				end
 			end
 			if input.key == 101 then --E
 				if input.eventType == InputEventType.KeyDown then
-					inputState.a = inputState.a - 1
+					State.inputState.a = State.inputState.a - 1
 				else
-					inputState.a = inputState.a + 1
+					State.inputState.a = State.inputState.a + 1
 				end
 			end
 		end
 	end
 
-	angle = angle + inputState.a * dt * turnSpeed
-	pos.x = pos.x + (inputState.x * math.cos(math.rad(angle)) - inputState.y * math.sin(math.rad(angle))) * dt * speed 
-	pos.y = pos.y + (inputState.x * math.sin(math.rad(angle)) + inputState.y * math.cos(math.rad(angle))) * dt * speed
+	State.angle = State.angle + State.inputState.a * dt * State.turnSpeed
+	State.pos.x = State.pos.x + (State.inputState.x * math.cos(math.rad(State.angle)) - State.inputState.y * math.sin(math.rad(State.angle))) * dt * State.speed 
+	State.pos.y = State.pos.y + (State.inputState.x * math.sin(math.rad(State.angle)) + State.inputState.y * math.cos(math.rad(State.angle))) * dt * State.speed
 
 
-	if angle > 360 then
-		angle = angle - 360
+	if State.angle > 360 then
+		State.angle = State.angle - 360
 	end
 
-	Game.SetView(pos, angle, Game.GetMap():GetSector(0))
+	Game.SetView(State.pos, State.angle, Game.GetMap():GetSector(0))
 
 	-- keep running forever!
 	return not Game.quit
 end
 
 function Game.SaveState()
-	angleBackup = angle
-	posBackup = {x = pos.x, y = pos.y, z = pos.z}
+	SaveState = deepCopy(State)
 end
 
 function Game.LoadState()
-	angle = angleBackup
-	pos = {x = posBackup.x, y = posBackup.y, z = posBackup.z}
+	State = deepCopy(SaveState or {})
 end
 
 function Game.PostRender()
 	local w = 50
 	local h = 50
 	Draw.Rect({x = 1, y = 1, w = w - 1, h = h - 1}, {})
-	local startpoint = {x = w / 2 - pos.x * w / 4, y = h / 2 + pos.y * h / 4}
+	local startpoint = {x = w / 2 - State.pos.x * w / 4, y = h / 2 + State.pos.y * h / 4}
 	local endpoint = {}
-	endpoint.x = startpoint.x + math.sin(math.rad(angle)) * (w / 3)
-	endpoint.y = startpoint.y + math.cos(math.rad(angle)) * (h / 3)
+	endpoint.x = startpoint.x + math.sin(math.rad(State.angle)) * (w / 3)
+	endpoint.y = startpoint.y + math.cos(math.rad(State.angle)) * (h / 3)
 	Draw.Line(startpoint, endpoint, {g = 255})
 end
 
