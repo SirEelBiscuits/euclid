@@ -212,6 +212,24 @@ namespace Rendering {
 		DrawRect(Rendering::ScreenRect(topLeft, topRight - topLeft), c);
 	}
 
+	void Context::DrawText(ScreenVec2 topLeft, Texture * tex, char const * text) {
+		auto const size = ScreenVec2(tex->w / 32, tex->h / 8);
+		auto curPos = topLeft;
+		for(auto curChar = text; *curChar != 0; ++curChar) {
+			switch(*curChar) {
+			case '\n':
+				topLeft.y += size.y;
+				curPos = topLeft;
+				break;
+			default:
+				auto dstR = ScreenRect(curPos, size);
+				auto srcR = UVRect(UVVec2(*curChar % 32 * size.x,*curChar / 32 * size.y), UVVec2(size.x, size.y));
+				DrawRectAlpha(dstR, tex, srcR, 1);
+				curPos.x += size.x;
+			}
+		}
+	}
+
 	void Context::DrawHLine(
 		unsigned xLeft, unsigned xRight,
 		unsigned y,

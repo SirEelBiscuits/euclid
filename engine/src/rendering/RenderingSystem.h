@@ -77,6 +77,13 @@ namespace Rendering {
 		*/
 		void DrawRect(ScreenVec2 topLeft, ScreenVec2 bottomRight, Color c);
 
+		/**
+			Draw text using a bitmapped texture. The size the text appears is your problem
+
+			todo: make a function which returns the size of a string when rendered
+		*/
+		void DrawText(ScreenVec2 topLeft, Texture *tex, char const* text);
+
 		////////////
 		//textures
 

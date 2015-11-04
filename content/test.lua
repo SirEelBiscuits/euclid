@@ -28,6 +28,7 @@ Game.oldCalls = 0
 Game.Input={}
 
 tex = Draw.GetTexture("ceil.png")
+text = Draw.GetTexture("Mecha.png")
 
 State = {}
 State.inputState = {x = 0, y = 0, a = 0}
@@ -60,6 +61,8 @@ function Game.Update(dt)
 		Describe(Game.GetMap().GetSector)
 
 		Game.LoadControls(dofile("controls.lua"))
+
+		--text = Game.GetTexture("Mecha.bmp")
 	end
 	
 	if Game.Controls.ReloadMap.pressed then
@@ -105,6 +108,8 @@ function Game.PostRender()
 	endpoint.x = startpoint.x + math.sin(math.rad(State.angle)) * (w / 3)
 	endpoint.y = startpoint.y + math.cos(math.rad(State.angle)) * (h / 3)
 	Draw.Line(startpoint, endpoint, {g = 255})
+
+	Draw.Text({x = 0, y = 0}, text, "Test text for the win\nwith newlines!")
 end
 
 function Game.Quit()

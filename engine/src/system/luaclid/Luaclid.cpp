@@ -436,7 +436,7 @@ namespace System {
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
 							ctx->DrawRect(dest, tex, Rendering::UVRect{{0, 0}, {(btStorageType)tex->w, (btStorageType)tex->h}}, 1);
 						}
-					)	
+					)
 				);
 				lua_setfield(lua, -2, "RectTextured");
 
@@ -475,15 +475,25 @@ namespace System {
 					static_cast<std::function<Rendering::Texture*(std::string)>>(
 						[](std::string filename){
 							return Rendering::TextureStore::GetTexture(filename.c_str()).get();
-						}		
+						}
 					)
 				);
 				lua_setfield(lua, -2, "GetTexture");
 
+				//Draw.Text
+				luaX_push(lua,
+					static_cast<std::function<void(ScreenVec2, Rendering::Texture*, std::string)>>(
+						[ctx](ScreenVec2 topLeft, Rendering::Texture *tex, std::string text) {
+							ctx->DrawText(topLeft, tex, text.c_str());
+						}
+					)
+				);
+				lua_setfield(lua, -2, "Text");
+
 				lua_pop(lua, 1);
 			}
 
-			//ASSERT(lua_gettop(lua) == x);
+			ASSERT(lua_gettop(lua) == x);
 		}
 	}
 }
