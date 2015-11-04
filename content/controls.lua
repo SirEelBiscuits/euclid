@@ -22,10 +22,11 @@ return {
 		NegKey = "a",
 	},
 	{
-		ControlType = "axis",
+		ControlType = "mouse",
 		Name = "Turn",
-		PosKey = "q",
-		NegKey = "e"
+		axis = "x",
+		relative = true,
+		scale = -0.1
 	},
 	{
 		ControlType = "button",

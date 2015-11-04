@@ -6,6 +6,9 @@ namespace System {
 	static std::function<void(Events::Types, void*, void*)> EventCallback;
 
 	namespace Input {
+		void SetMouseShowing(bool show) {
+			SDL_SetRelativeMouseMode(show? SDL_FALSE : SDL_TRUE);
+		}
 
 		bool ReturnOnKeyInput() {
 			SDL_Event e;
@@ -36,6 +39,15 @@ namespace System {
 				ret.repeat = false;
 				ret.button = e.button.button;
 				break;
+			case SDL_MOUSEMOTION:
+				ret.type = EventType::MouseMove;
+				ret.mouseMovX = e.motion.x;
+				ret.mouseMovY = e.motion.y;
+				ret.mouseMovXRel = e.motion.xrel;
+				ret.mouseMovYRel = e.motion.yrel;
+				break;
+			default:
+				ASSERT(false);
 			}
 
 			return ret;
@@ -82,6 +94,7 @@ namespace System {
 				//FALLTHROUGH
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
+				case SDL_MOUSEMOTION:
 					events.emplace_back(Transform(e));
 					break;
 
@@ -101,7 +114,6 @@ namespace System {
 				case SDL_JOYBUTTONUP:
 				case SDL_MULTIGESTURE:
 					//input we'll want later
-				case SDL_MOUSEMOTION:
 				case SDL_MOUSEWHEEL:
 					break;
 

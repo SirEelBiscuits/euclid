@@ -23,10 +23,12 @@ Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
 template<>
 void luaX_push<Rendering::Color>(lua_State *lua, Rendering::Color c) {
 	luaX_push(lua, luaX_emptytable{0, 4});
-	luaX_setlocal(lua, "r", (int)c.r);
-	luaX_setlocal(lua, "g", (int)c.g);
-	luaX_setlocal(lua, "b", (int)c.b);
-	luaX_setlocal(lua, "a", (int)c.a);
+	luaX_settable(lua,
+		"r", (int)c.r,
+		"g", (int)c.g,
+		"b", (int)c.b,
+		"a", (int)c.a
+	);
 }
 
 template<>
@@ -42,8 +44,10 @@ ScreenVec2 luaX_return<ScreenVec2>(lua_State *lua) {
 template<>
 void luaX_push<ScreenVec2>(lua_State *lua, ScreenVec2 v) {
 	luaX_push(lua, luaX_emptytable{0, 2});
-	luaX_setlocal(lua, "x", v.x);
-	luaX_setlocal(lua, "y", v.y);
+	luaX_settable(lua,
+		"x", v.x,
+		"y", v.y
+	);
 }
 
 template<>
@@ -60,9 +64,11 @@ PositionVec3 luaX_return<PositionVec3>(lua_State *lua) {
 template<>
 void luaX_push<PositionVec3>(lua_State *lua, PositionVec3 v) {
 	luaX_push(lua, luaX_emptytable{0, 2});
-	luaX_setlocal(lua, "x", v.x.val);
-	luaX_setlocal(lua, "y", v.y.val);
-	luaX_setlocal(lua, "z", v.z.val);
+	luaX_settable(lua,
+		"x", v.x.val,
+		"y", v.y.val,
+		"z", v.z.val
+	);
 }
 
 template<>
@@ -80,10 +86,12 @@ Rendering::ScreenRect luaX_return<Rendering::ScreenRect>(lua_State *lua) {
 template<>
 void luaX_push<Rendering::ScreenRect>(lua_State *lua, Rendering::ScreenRect r) {
 	luaX_push(lua, luaX_emptytable{0, 2});
-	luaX_setlocal(lua, "x", r.pos.x);
-	luaX_setlocal(lua, "y", r.pos.y);
-	luaX_setlocal(lua, "w", r.size.x);
-	luaX_setlocal(lua, "h", r.size.y);
+	luaX_settable(lua,
+		"x", r.pos.x,
+		"y", r.pos.y,
+		"w", r.size.x,
+		"h", r.size.y
+	);
 }
 
 template<>
@@ -100,10 +108,12 @@ Rendering::World::View luaX_return<Rendering::World::View>(lua_State *lua) {
 template<>
 void luaX_push<Rendering::World::View>(lua_State *lua, Rendering::World::View v) {
 	luaX_push(lua, luaX_emptytable(0, 3));
-	luaX_setlocal(lua, "eye", v.eye);
-	luaX_setlocal(lua, "sector", const_cast<World::Sector*>(v.sector));
 	btStorageType angle = std::acos(v.forward.data[0][0]); //whatever
-	luaX_setlocal(lua, "angle", angle);
+	luaX_settable(lua,
+		"eye", v.eye,
+		"sector", const_cast<World::Sector*>(v.sector),
+		"angle", angle
+	);
 }
 
 namespace System {
@@ -540,6 +550,15 @@ namespace System {
 					}
 				);
 				lua_setfield(lua, -2, "StoreMap");
+
+				//Game.ShowMouse
+				lua_pushcfunction(lua,
+					[](lua_State *s) {
+						System::Input::SetMouseShowing(luaX_return<bool>(s));
+						return 0;
+					}
+				);
+				lua_setfield(lua, -2, "ShowMouse");
 
 				lua_pop(lua, 1);
 			}

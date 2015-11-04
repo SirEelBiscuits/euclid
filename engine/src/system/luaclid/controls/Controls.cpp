@@ -4,6 +4,8 @@ PRE_STD_LIB
 #include <string>
 POST_STD_LIB
 
+#include "lib/Maths.h"
+
 namespace System {
 	namespace Controls {
 		void Config::HandleInput(Input::Event e) {
@@ -132,6 +134,66 @@ namespace System {
 					inputList.emplace_back(std::make_unique<Axis>(Name, PosKey, NegKey));
 				}
 
+				else if(controlType.compare("mouse") == 0) {
+					pushedItems += luaX_getlocal(lua, "Name");
+					if(lua_type(lua, -1) != LUA_TSTRING) {
+						lua_pop(lua, pushedItems);
+						continue;
+					}
+					auto name = luaX_return<std::string>(lua);
+					--pushedItems;
+
+					AxisDirection axis;
+					pushedItems += luaX_getlocal(lua, "axis");
+					if(lua_type(lua, -1) != LUA_TSTRING) {
+						lua_pop(lua, pushedItems);
+						continue;
+					}
+					auto axisString = luaX_return<std::string>(lua);
+					--pushedItems;
+					if(axisString.compare("x") == 0)
+						axis = AxisDirection::x;
+					else if(axisString.compare("y") == 0)
+						axis = AxisDirection::y;
+					else {
+						lua_pop(lua, pushedItems);
+						continue;
+					}
+
+					pushedItems += luaX_getlocal(lua, "relative");
+					if(lua_type(lua, -1) != LUA_TBOOLEAN) {
+						lua_pop(lua, pushedItems);
+						continue;
+					}
+					auto relative = luaX_return<bool>(lua);
+					--pushedItems;
+
+					pushedItems += luaX_getlocal(lua, "scale");
+					auto scale = 1.f;
+					if(lua_type(lua, -1) == LUA_TNUMBER) {
+						scale = luaX_return<float>(lua);
+						--pushedItems;
+					} else {
+						lua_pop(lua, 1);
+						--pushedItems;
+					}
+
+					pushedItems += luaX_getlocal(lua, "maxMagnitude");
+					auto maxMag = FLT_MAX;
+					if(lua_type(lua, -1) == LUA_TNUMBER) {
+						maxMag = luaX_return<float>(lua);
+						--pushedItems;
+					} else {
+						lua_pop(lua, 1);
+						--pushedItems;
+					}
+
+					if(relative)
+						inputList.emplace_back(std::make_unique<MouseAxisRel>(name, axis, scale, maxMag));
+					else
+						inputList.emplace_back(std::make_unique<MouseAxis>(name, axis, scale, maxMag));
+				}
+
 				lua_pop(lua, pushedItems);
 				ASSERT(lua_gettop(lua) == top);
 				++id;
@@ -223,6 +285,67 @@ namespace System {
 		void Axis::SetValue(lua_State *lua) {
 			lua_pushnumber(lua, state);
 			lua_setfield(lua, -2, name.c_str());
+		}
+
+		MouseAxis::MouseAxis(std::string name, AxisDirection axis, float scale, float maxMagnitude)
+			: name(name)
+			, axis(axis)
+			, scale(scale)
+			, maxMagnitude(maxMagnitude)
+			, state(0)
+		{}
+
+		void MouseAxis::HandleEvent(Input::Event e) {
+			if(e.type != System::Input::EventType::MouseMove)
+				return;
+
+			switch(axis) {
+			case AxisDirection::x:
+				state = e.mouseMovX;
+				break;
+			case AxisDirection::y:
+				state = e.mouseMovY;
+				break;
+			default:
+				ASSERT(false); //well, you never know
+			}
+		}
+
+		void MouseAxis::SetValue(lua_State *lua) {
+			lua_pushnumber(lua, state);
+			lua_setfield(lua, -2, name.c_str());
+		}
+
+		MouseAxisRel::MouseAxisRel(std::string name, AxisDirection axis, float scale, float maxMagnitude)
+			: name(name)
+			, axis(axis)
+			, scale(scale)
+			, maxMagnitude(maxMagnitude)
+			, state(0)
+		{}
+
+		void MouseAxisRel::HandleEvent(Input::Event e) {
+			if(e.type != System::Input::EventType::MouseMove)
+				return;
+
+			switch(axis) {
+			case AxisDirection::x:
+				state += e.mouseMovXRel * scale;
+				break;
+			case AxisDirection::y:
+				state += e.mouseMovYRel * scale;
+				break;
+			default:
+				ASSERT(false); //well, you never know
+			}
+		}
+
+		void MouseAxisRel::SetValue(lua_State *lua) {
+			state = Maths::clamp(state, -maxMagnitude, maxMagnitude);
+			lua_pushnumber(lua, state);
+			lua_setfield(lua, -2, name.c_str());
+
+			state = 0;
 		}
 	}
 }

@@ -45,6 +45,35 @@ namespace System {
 			int state;
 		};
 
+		enum class AxisDirection {x,y};
+		class MouseAxis : public IInput {
+		public:
+			MouseAxis(std::string name, AxisDirection axis, float scale, float maxMagnitude);
+			virtual void HandleEvent(Input::Event event) override;
+			virtual void SetValue(lua_State *lua) override;
+
+		private:
+			std::string name;
+			AxisDirection axis;
+			float scale;
+			float maxMagnitude;
+			float state;
+		};
+
+		class MouseAxisRel : public IInput {
+		public:
+			MouseAxisRel(std::string name, AxisDirection axis, float scale, float maxMagnitude);
+			virtual void HandleEvent(Input::Event event) override;
+			virtual void SetValue(lua_State *lua) override;
+
+		private:
+			std::string name;
+			AxisDirection axis;
+			float scale;
+			float maxMagnitude;
+			float state;
+		};
+
 		class Config {
 		public:
 			void HandleInput(Input::Event e);

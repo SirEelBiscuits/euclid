@@ -15,7 +15,8 @@ namespace System {
 			KeyDown,
 			KeyUp,
 			MouseDown,
-			MouseUp
+			MouseUp,
+			MouseMove,
 		};
 
 		struct Event {
@@ -26,7 +27,11 @@ namespace System {
 
 			bool repeat{false};
 			EventType type{EventType::None};
+			int mouseMovX, mouseMovY, mouseMovXRel, mouseMovYRel;
 		};
+
+		//Implemented in platform code
+		void SetMouseShowing(bool show);
 
 		//Implemented in platform code
 		bool ReturnOnKeyInput();

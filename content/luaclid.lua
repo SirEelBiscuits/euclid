@@ -46,6 +46,7 @@ InputEventType = MakeEnum({
 	KeyUp = 2,
 	MouseDown = 3,
 	MouseUp = 4,
+	MouseMove = 5,
 	},
 	"InputEventType"
 )
@@ -122,7 +123,28 @@ function serialise(o)
   return "return " .. serializeInner(o, "  ") .. "\n"
 end
 
+function Describe(t, indent)
+	indent = indent or ""
+	print(indent..type(t)..":")
+	if type(t) == "table" then
+		local k,v
+		for k,v in pairs(t) do
+			print("  " .. k .. "=")
+			Describe(v, indent .. "  ")
+		end
+
+		local mt = getmetatable(t)
+		if mt ~= nil then
+			print(indent .. "metatable:")
+			Describe(mt, indent .. "  ")
+		end
+	else
+		print(t)
+	end
+end
+
 Game = {}
 Draw = {}
+Game.Input={}
 
 print("luaclid.lua loaded")

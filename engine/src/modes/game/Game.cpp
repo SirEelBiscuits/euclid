@@ -17,6 +17,7 @@ namespace Modes {
 		, mapRenderer(ctx)
 	{
 		System::Luaclid::SetUp(lua, ctx, cfg);
+		SetUpAdditionalLuaStuff();
 	}
 
 	Game::~Game() {
@@ -30,7 +31,6 @@ namespace Modes {
 			}
 		);
 
-		SetUpAdditionalLuaStuff();
 	}
 
 	bool Game::Update() {
@@ -82,7 +82,11 @@ namespace Modes {
 				luaX_settable(lua,
 					"key",       input[i].key,
 					"keyRepeat", input[i].repeat,
-					"eventType", (int)input[i].type
+					"eventType", (int)input[i].type,
+					"mouseMovX", input[i].mouseMovX,
+					"mouseMovY", input[i].mouseMovY,
+					"mouseMovXRel", input[i].mouseMovXRel,
+					"mouseMovYRel", input[i].mouseMovYRel
 				);
 
 				lua_seti(lua, -2, i + offset);
