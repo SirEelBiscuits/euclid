@@ -6,6 +6,7 @@
 #include "system/Files.h"
 
 #include "Rendering/RenderingSystem.h"
+#include "rendering/world/MapRenderer.h"
 
 template<>
 Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
@@ -83,6 +84,26 @@ void luaX_push<Rendering::ScreenRect>(lua_State *lua, Rendering::ScreenRect r) {
 	luaX_setlocal(lua, "y", r.pos.y);
 	luaX_setlocal(lua, "w", r.size.x);
 	luaX_setlocal(lua, "h", r.size.y);
+}
+
+template<>
+Rendering::World::View luaX_return<Rendering::World::View>(lua_State *lua) {
+	Rendering::World::View ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.eye = luaX_returnlocal<PositionVec3>(lua, "eye");
+	ret.forward = RotationMatrix(luaX_returnlocal<btStorageType>(lua, "angle"));
+	ret.sector =  luaX_returnlocal<World::Sector*>(lua, "sector");
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+void luaX_push<Rendering::World::View>(lua_State *lua, Rendering::World::View v) {
+	luaX_push(lua, luaX_emptytable(0, 3));
+	luaX_setlocal(lua, "eye", v.eye);
+	luaX_setlocal(lua, "sector", const_cast<World::Sector*>(v.sector));
+	btStorageType angle = std::acos(v.forward.data[0][0]); //whatever
+	luaX_setlocal(lua, "angle", angle);
 }
 
 namespace System {
@@ -336,9 +357,9 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void GamePostRender(lua_State *lua) {
+		void GameRender(lua_State *lua) {
 			auto x = lua_gettop(lua);
-			auto pushed = luaX_getglobal(lua, "Game", "PostRender");
+			auto pushed = luaX_getglobal(lua, "Game", "Render");
 			if(2 == pushed && lua_isfunction(lua, -1)) {
 				if(LUA_OK == luaX_pcall(lua, 0, 0))
 					--pushed;
@@ -360,7 +381,9 @@ namespace System {
 			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
 				, "width", &Rendering::Texture::w
 				, "height", &Rendering::Texture::h);
-			auto luaMap = luaX_registerClass<World::Map>(lua);
+			auto luaMap = luaX_registerClass<World::Map>(lua
+				, "GetNumSectors", &World::Map::GetNumSectors	
+			);
 
 			luaPosVec2.push();
 			luaX_registerClassMemberSpecial(lua,
@@ -489,6 +512,34 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "Text");
+
+				lua_pop(lua, 1);
+			}
+
+			{
+				luaX_getglobal(lua, "Game");
+			
+				//Game.OpenMap
+				lua_pushcfunction(lua, 
+					(
+						[]
+						(lua_State *s) {
+							luaX_push(s, LoadMap(s));
+							return 1;
+						}
+					)
+				);
+				lua_setfield(lua, -2, "OpenMap");
+
+				//Game.StoreMap
+				lua_pushcfunction(lua,
+					[](lua_State *s) {
+						auto m = luaX_return<World::Map*>(s);
+						StoreMap(s, *m);
+						return 1;
+					}
+				);
+				lua_setfield(lua, -2, "StoreMap");
 
 				lua_pop(lua, 1);
 			}

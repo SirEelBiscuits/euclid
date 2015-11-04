@@ -1,6 +1,6 @@
 function Game.Initialise()
+	curMap = Game.OpenMap(dofile("testmap.lua"))
 	print("Initialised")
-	local map = dofile("testmap.lua")
 end
 
 function Describe(t)
@@ -39,26 +39,19 @@ State.pos = {x = 0, y = 0, z = 1.8}
 
 SaveState = deepCopy(State)
 
+FPS = 0
+
+
 function Game.Update(dt)
-	Game.timerunning = (Game.timerunning or 0) + dt
-	Game.timesecs = (Game.timesecs or 0) + dt
-	Game.calls = (Game.calls or 0) + 1
+
+	FPS = (FPS + 1/dt) / 2
 
 	if(#Game.Input > 0) then
 		--print(Game.Input[1].key)
 	end
 
-	if(Game.timesecs > 1) then
-		print(Game.calls .. " calls per second")
-		Game.oldCalls = Game.calls
-		Game.calls = 0
-		Game.timesecs = Game.timesecs - 1
-	end
-
 	if(reloaded) then
 		reloaded = false
-		Game.OpenMap(dofile("testmap.lua"))
-		Describe(Game.GetMap().GetSector)
 
 		Game.LoadControls(dofile("controls.lua"))
 
@@ -66,7 +59,7 @@ function Game.Update(dt)
 	end
 	
 	if Game.Controls.ReloadMap.pressed then
-		Game.OpenMap(dofile("testmap.lua"))
+		curMap = Game.OpenMap(dofile("testmap.lua"))
 		print("reloaded map")
 	end
 
@@ -85,8 +78,6 @@ function Game.Update(dt)
 		State.angle = State.angle - 360
 	end
 
-	Game.SetView(State.pos, State.angle, Game.GetMap():GetSector(0))
-
 	-- keep running forever!
 	return not Game.quit
 end
@@ -99,7 +90,9 @@ function Game.LoadState()
 	State = deepCopy(SaveState or {})
 end
 
-function Game.PostRender()
+function Game.Render()
+	Draw.Map({eye = State.pos, angle = math.rad(State.angle), sector = curMap:GetSector(0)})
+
 	local w = 50
 	local h = 50
 	Draw.Rect({x = 1, y = 1, w = w - 1, h = h - 1}, {})
@@ -109,7 +102,8 @@ function Game.PostRender()
 	endpoint.y = startpoint.y + math.cos(math.rad(State.angle)) * (h / 3)
 	Draw.Line(startpoint, endpoint, {g = 255})
 
-	Draw.Text({x = 0, y = 0}, text, "Test text for the win\nwith newlines!")
+	local s = tostring(math.floor(FPS))
+	Draw.Text({x = Draw.GetWidth() - s:len() * 8 - 2, y = 0}, text, s )
 end
 
 function Game.Quit()

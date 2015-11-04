@@ -24,11 +24,48 @@ void luaX_push(lua_State *s, T *value) {
 		luaX_push(s, *flxr->second);
 		lua_getfield(s, -1, "fromData");
 		lua_insert(s, -2); //needs a self argument
-		lua_pushlightuserdata(s, value);
+		lua_pushlightuserdata(s, (void*)value);
 		lua_pcall(s, 2, 1, 0);
 	} else {
 		lua_pushlightuserdata(s, value);
 	}
+	ASSERT(lua_gettop(s) == t + 1);
+}
+
+template<typename T>
+void luaX_push(lua_State *s, std::unique_ptr<T> value) {
+	auto t = lua_gettop(s);
+
+	using ptrT = std::unique_ptr<T>;
+
+	auto p = static_cast<ptrT*>(lua_newuserdata(s, sizeof(ptrT)));
+
+	new(p) ptrT;
+	*p = std::move(value);
+	luaX_push(s, luaX_emptytable());
+	auto f = 
+		[]
+		(lua_State *lua) {
+		auto t = lua_gettop(lua);
+			auto s = lua_typename(lua, -1);
+			auto p = static_cast<ptrT*>(lua_touserdata(lua, -1));
+			p->reset();
+			return 0;
+		};
+	lua_pushcfunction(s, f);
+
+	lua_setfield(s, -2, "__gc");
+	lua_setmetatable(s, -2);
+
+	//The above pushes the unique_ptr, but that's not actually useful to lua.
+	// We need to also push the regular pointer (in the vein of luaX_push(lua_State*, T*))
+	// and if we give it a reference to the unique_ptr, when it and its copies die, the unique object dies too.
+	// hopefully
+
+	luaX_push(s, p->get());
+	lua_insert(s, -2);
+	lua_setfield(s, -2, "__unqptr");
+
 	ASSERT(lua_gettop(s) == t + 1);
 }
 

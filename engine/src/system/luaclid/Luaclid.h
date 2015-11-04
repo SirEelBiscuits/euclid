@@ -34,6 +34,6 @@ namespace System {
 		void GameSaveState(lua_State *lua);
 		void GameLoadState(lua_State *lua);
 
-		void GamePostRender(lua_State *lua);
+		void GameRender(lua_State *lua);
 	}
 }
