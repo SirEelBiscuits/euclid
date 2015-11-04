@@ -3,7 +3,7 @@
 result=`find . -regex ".*\.\(cpp\|h\|lua\)"`
 
 
-filtered=`echo "$result" | grep -v extern`
+filtered=`echo "$result" | grep -v extern | grep -v tools`
 
 num_files=`echo "$filtered" | wc -l`
 echo "There are $num_files files"
