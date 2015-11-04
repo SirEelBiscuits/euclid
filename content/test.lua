@@ -30,7 +30,8 @@ function Game.Quit()
 end
 
 function Game.Update(dt)
-	Game.FPS = (Game.FPS + 1/dt) / 2
+	local n = math.log(Game.FPS > 0 and Game.FPS or 1)
+	Game.FPS = (n * Game.FPS + 1/dt) / (n + 1)
 
 	if Game.Controls.ReloadMap.pressed then
 		curMap = Game.OpenMap(dofile("testmap.lua"))
@@ -48,8 +49,11 @@ function Game.Update(dt)
 		(Game.Controls.Right * math.sin(math.rad(State.angle)) + Game.Controls.Forward * math.cos(math.rad(State.angle))) * dt * State.speed
 
 
-	if State.angle > 360 then
+	if State.angle > 180 then
 		State.angle = State.angle - 360
+	end
+	if State.angle < -180 then
+		State.angle = State.angle + 360
 	end
 
 	-- keep running forever!

@@ -20,10 +20,19 @@ void OverrideConfigWithCommandLineArguments(System::Config &cfg);
 std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg);
 
 int Main(int argc, char* argv[]) {
+	std::string configName = "";
+	if(argc > 1 && argv[1][0] != '-') {
+		configName = argv[1];
+		configName += ".cfg";
+	}
+
 	Gargamel::SetArguments(Arguments, 0);
 	Gargamel::Process(argc, argv);
 
-	System::Config cfg("config.cfg");
+	if(Gargamel::ArgumentValues[(int)CLArgs::Config].isArgumentPresent || configName.length() == 0)
+		configName = Gargamel::ArgumentValues[(int)CLArgs::Config].argumentValue.c_str();
+
+	System::Config cfg(configName.c_str());
 	OverrideConfigWithCommandLineArguments(cfg);
 
 	auto ctx = Initialise(cfg);
