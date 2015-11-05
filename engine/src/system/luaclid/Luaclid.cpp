@@ -413,7 +413,7 @@ namespace System {
 			luaX_registerClassMemberSpecial(lua
 				, "floorHeight", &World::Sector::floorHeight);
 			luaX_registerClassGetterSpecial(lua
-				, "ceilHeight", &World::Sector::centroid);
+				, "centroid", &World::Sector::centroid);
 			lua_pop(lua, 1);
 
 			luaMap.push();

@@ -65,6 +65,27 @@ function Editor.DefaultState:Update(dt)
 	if Game.Controls.OpenMap.pressed then
 		Editor.TypingState:Enter(openMap)
 	end
+
+	if Game.Controls.Preview.pressed then
+		Editor.PreviewState:Enter()
+	end
+
+	if Game.Controls.Save.pressed then
+		print("saving")
+		Editor.curMapData = Game.StoreMap(Editor.curMap)
+		Editor.TypingState:Enter(
+		function (filename)
+			Editor.curMapData = Game.StoreMap(Editor.curMap)
+			local str = serialise(Editor.curMapData)
+			local file = io.open(filename, "w")
+			io.output(file)
+			io.write(str)
+			io.close(file)
+
+			Editor.State = Editor.DefaultState
+		end
+		)
+	end
 end
 
 function Editor.DefaultState.Render()
@@ -94,7 +115,6 @@ function Editor.TypingState:Update(dt)
 			elseif v.key < 32 then
 				local res, err = pcall(self.callback, self.typedString)
 				if res then
-					Editor.DefaultState:Enter()
 				else
 					self.err = err
 					self.failed = true
@@ -126,5 +146,47 @@ function openMap(filename)
 	Editor.curMap     = Game.OpenMap(Editor.curMapData)
 	Editor.DebugText  = Editor.curMap:GetNumSectors()
 	print("done")
+	Editor.DefaultState:Enter()
+end
+
+Editor.PreviewState = {}
+
+function Editor.PreviewState:Enter()
+	Game.ShowMouse(false)
+	Editor.State = self
+	print("entering preview state")
+
+	self.eye = {x = 0, y = 0, z = 1.65}
+	self.angle = 0
+	self.sector = Editor.curMap:GetSector(0)
+end
+
+function Editor.PreviewState:Update(dt)
+	if Game.Controls.Quit.pressed then
+		Editor.DefaultState:Enter()
+		Game.ShowMouse(true)
+	end
+
+	if Game.Controls.RaiseCeiling.pressed then
+		self.sector:get_ceilHeight():set_val(self.sector:get_ceilHeight():get_val() + 0.1)
+	end
+
+	if Game.Controls.LowerCeiling.pressed then
+		self.sector:get_ceilHeight():set_val(self.sector:get_ceilHeight():get_val() - 0.1)
+	end
+
+	if Game.Controls.RaiseFloor.pressed then
+		self.sector:get_floorHeight():set_val(self.sector:get_floorHeight():get_val() + 0.1)
+	end
+
+	if Game.Controls.LowerFloor.pressed then
+		self.sector:get_floorHeight():set_val(self.sector:get_floorHeight():get_val() - 0.1)
+	end
+
+	self.angle = self.angle + Game.Controls.Turn
+end
+
+function Editor.PreviewState:Render()
+	Draw.Map({eye = self.eye, angle = math.rad(self.angle), sector = self.sector})
 end
 

@@ -20,7 +20,6 @@ return {
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
 
-			onEnter = function() printf("sector entered") end,
 		},
 		{
 			walls = {

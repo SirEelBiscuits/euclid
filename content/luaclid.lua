@@ -130,7 +130,7 @@ function Describe(t, indent)
 		local k,v
 		for k,v in pairs(t) do
 			print("  " .. k .. "=")
-			Describe(v, indent .. "  ")
+			print(v, indent .. "  ")
 		end
 
 		local mt = getmetatable(t)
