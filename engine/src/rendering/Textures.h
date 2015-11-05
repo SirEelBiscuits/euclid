@@ -36,6 +36,7 @@ namespace Rendering {
 
 		Color & pixel(unsigned x, unsigned y);
 		Color const & pixel(unsigned x, unsigned y) const;
+		Color pixel_bilinear(Fix16 x, Fix16 y) const;
 
 		static unsigned PixelsPerMeter;
 	private:
@@ -44,7 +45,7 @@ namespace Rendering {
 
 	struct TextureInfo {
 		Texture *tex  {nullptr};
-		UVVec2 uvStart{0,0};
+		UVVec2 uvStart{0_fp,0_fp};
 	};
 
 	namespace TextureStore {

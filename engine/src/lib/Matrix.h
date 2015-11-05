@@ -328,8 +328,8 @@ template<
 	Matrix<BaseType, 1, 2, DownCastType> left,
 	ScalarType const &right
 ) {
-	left.x *= right;
-	left.y *= right;
+	left.x *= (DownCastType)right;
+	left.y *= (DownCastType)right;
 	return left;
 }
 

@@ -7,6 +7,10 @@
 #	define EUCLID_DEBUG
 #endif
 
+#if false
+# define BILINEAR_FILTERING
+#endif
+
 //Set of macros to suppress bad warnings from /Wall
 #ifdef _MSC_VER
 #	define PREAMBLE \

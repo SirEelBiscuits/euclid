@@ -58,6 +58,9 @@
     <ClCompile Include="src\system\luaclid\controls\Controls.cpp">
       <Filter>src\system\luaclid\controls</Filter>
     </ClCompile>
+    <ClCompile Include="src\lib\FixedPoint.cpp">
+      <Filter>src\lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
@@ -140,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="src\system\luaclid\controls\Controls.h">
       <Filter>src\system\luaclid\controls</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\FixedPoint.h">
+      <Filter>src\lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,6 @@ namespace Rendering {
 	struct Rect {
 		Rect() : pos(), size() {}
 		Rect(StorageType pos, StorageType size) : pos(pos), size(size) {}
-		Rect(int x, int y, int w, int h) : pos(x, y), size(w, h) {}
 
 		StorageType pos;
 		StorageType size;

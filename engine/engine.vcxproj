@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\lib\BasicTypes.cpp" />
+    <ClCompile Include="src\lib\FixedPoint.cpp" />
     <ClCompile Include="src\lib\Maths.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\modes\editor\Editor.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="src\world\Map.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\lib\FixedPoint.h" />
     <ClInclude Include="src\modes\editor\Editor.h" />
     <ClInclude Include="src\rendering\RenderingPrimitives.h" />
     <ClInclude Include="src\rendering\Textures.h" />

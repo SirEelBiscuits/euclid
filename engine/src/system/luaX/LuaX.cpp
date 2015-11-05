@@ -1,5 +1,7 @@
 #include "../LuaX.h"
 
+#include "lib/BasicTypes.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 // LuaXClasses
 
@@ -53,6 +55,13 @@ bool luaX_return<bool>(lua_State *s) {
 }
 
 template<>
+Fix16 luaX_return<Fix16>(lua_State *s) {
+	auto ret = static_cast<Fix16>(static_cast<float>(lua_tonumber(s, -1)));
+	lua_pop(s, 1);
+	return ret;
+}
+
+template<>
 std::string luaX_return<std::string>(lua_State *s) {
 	auto ccp = lua_tostring(s, -1);
 	if(nullptr == ccp)
@@ -85,6 +94,11 @@ void luaX_push<double>(lua_State *s, double value) {
 template<>
 void luaX_push<bool>(lua_State *s, bool value) {
 	lua_pushboolean(s, value);
+}
+
+template<>
+void luaX_push<Fix16>(lua_State *s, Fix16 value) {
+	lua_pushnumber(s, static_cast<lua_Number>(static_cast<float>(value)));
 }
 
 template<>
