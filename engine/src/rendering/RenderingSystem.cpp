@@ -202,7 +202,7 @@ namespace Rendering {
 		}
 
 		auto left = rect.pos.x;
-		auto right = Maths::min(Height, static_cast<unsigned>(left + rect.size.x));
+		auto right = Maths::min(Width, static_cast<unsigned>(left + rect.size.x));
 		unsigned bottom = rect.pos.y + rect.size.y;
 		for(unsigned y = rect.pos.y; y < bottom && y < Height; ++y)
 			DrawHLine(left, right, y, c);
@@ -213,6 +213,8 @@ namespace Rendering {
 	}
 
 	void Context::DrawText(ScreenVec2 topLeft, Texture * tex, char const * text) {
+		if(tex == nullptr)
+			return;
 		auto const size = ScreenVec2((int)tex->w / 32, (int)tex->h / 8);
 		auto curPos = topLeft;
 		for(auto curChar = text; *curChar != 0; ++curChar) {
