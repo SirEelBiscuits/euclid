@@ -16,22 +16,22 @@ public:
 	constexpr explicit FixedPoint(int64_t in);
 	constexpr explicit FixedPoint(uint8_t in);
 	constexpr explicit FixedPoint(uint16_t in);
-	constexpr explicit FixedPoint(uint32_t in);
+	/*constexpr*/ explicit FixedPoint(uint32_t in);
 	constexpr explicit FixedPoint(uint64_t in);
 	constexpr explicit FixedPoint(float in);
 
 	enum FixedRaw{RAW};
 	constexpr FixedPoint(FixedRaw, int32_t in);
 	
-	explicit operator int8_t();
-	explicit operator int16_t();
-	explicit operator int32_t();
-	explicit operator int64_t();
-	explicit operator uint8_t();
-	explicit operator uint16_t();
-	explicit operator uint32_t();
-	explicit operator uint64_t();
-	explicit operator float();
+	explicit operator int8_t() const;
+	explicit operator int16_t() const;
+	explicit operator int32_t() const;
+	explicit operator int64_t() const;
+	explicit operator uint8_t() const;
+	explicit operator uint16_t() const;
+	explicit operator uint32_t() const;
+	explicit operator uint64_t() const;
+	explicit operator float() const;
 
 	FixedPoint &operator+=(FixedPoint other);
 	FixedPoint &operator-=(FixedPoint other);
@@ -55,7 +55,7 @@ constexpr FixedPoint operator* (FixedPoint left, FixedPoint right);
 constexpr FixedPoint operator/ (FixedPoint left, FixedPoint right);
 /*constexpr*/ bool       operator< (FixedPoint left, FixedPoint right);
 constexpr bool       operator> (FixedPoint left, FixedPoint right);
-constexpr bool       operator==(FixedPoint left, FixedPoint right);
+/*constexpr*/ bool       operator==(FixedPoint left, FixedPoint right);
 constexpr bool       operator<=(FixedPoint left, FixedPoint right);
 constexpr bool       operator>=(FixedPoint left, FixedPoint right);
 constexpr bool       operator!=(FixedPoint left, FixedPoint right);

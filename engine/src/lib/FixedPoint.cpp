@@ -36,7 +36,7 @@ constexpr FixedPoint::FixedPoint(uint16_t in)
 	: store((int32_t)in << shift)
 {}
 
-constexpr FixedPoint::FixedPoint(uint32_t in) 
+/*constexpr*/ FixedPoint::FixedPoint(uint32_t in) 
 	: store(in << shift)
 {}
 
@@ -52,39 +52,39 @@ constexpr FixedPoint::FixedPoint(FixedRaw, int32_t in)
 	: store(in)
 {}
 
-FixedPoint::operator int8_t() {
+FixedPoint::operator int8_t() const {
 	return static_cast<int8_t>(store >> shift);
 }
 
-FixedPoint::operator int16_t() {
+FixedPoint::operator int16_t() const {
 	return static_cast<int16_t>(store >> shift);
 }
 
-FixedPoint::operator int32_t() {
+FixedPoint::operator int32_t() const {
 	return store >> shift;
 }
 
-FixedPoint::operator int64_t() {
+FixedPoint::operator int64_t() const {
 	return static_cast<int64_t>(store >> shift);
 }
 
-FixedPoint::operator uint8_t() {
+FixedPoint::operator uint8_t() const {
 	return static_cast<uint8_t>(store >> shift);
 }
 
-FixedPoint::operator uint16_t() {
+FixedPoint::operator uint16_t() const {
 	return static_cast<uint16_t>(store >> shift);
 }
 
-FixedPoint::operator uint32_t() {
+FixedPoint::operator uint32_t() const {
 	return store >> shift;
 }
 
-FixedPoint::operator uint64_t() {
+FixedPoint::operator uint64_t() const {
 	return static_cast<uint64_t>(store >> shift);
 }
 
-FixedPoint::operator float() {
+FixedPoint::operator float() const {
 	return store / shiftMultF;
 }
 
@@ -132,8 +132,10 @@ constexpr FixedPoint operator* (FixedPoint left, FixedPoint right) {
 constexpr FixedPoint operator/ (FixedPoint left, FixedPoint right) {
 	return FixedPoint(FixedPoint::RAW,
 		static_cast<int32_t>(
-			static_cast<int64_t>(left._getStore()) << (FixedPoint::shift*2) 
-				/ static_cast<int64_t>(right._getStore()) >> FixedPoint::shift
+			(
+				(static_cast<int64_t>(left._getStore()) << (FixedPoint::shift*2)) 
+					/ static_cast<int64_t>(right._getStore())
+			) >> FixedPoint::shift
 		)
 	);
 }
@@ -146,7 +148,7 @@ constexpr bool operator> (FixedPoint left, FixedPoint right) {
 	return left._getStore() > right._getStore();
 }
 
-constexpr bool operator==(FixedPoint left, FixedPoint right) {
+/*constexpr*/ bool operator==(FixedPoint left, FixedPoint right) {
 	return left._getStore() == right._getStore();
 }
 

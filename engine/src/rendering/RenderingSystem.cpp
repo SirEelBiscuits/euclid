@@ -213,7 +213,7 @@ namespace Rendering {
 	}
 
 	void Context::DrawText(ScreenVec2 topLeft, Texture * tex, char const * text) {
-		auto const size = ScreenVec2(tex->w / 32, tex->h / 8);
+		auto const size = ScreenVec2((int)tex->w / 32, (int)tex->h / 8);
 		auto curPos = topLeft;
 		for(auto curChar = text; *curChar != 0; ++curChar) {
 			switch(*curChar) {
@@ -223,7 +223,16 @@ namespace Rendering {
 				break;
 			default:
 				auto dstR = ScreenRect(curPos, size);
-				auto srcR = UVRect(UVVec2(*curChar % 32 * size.x,*curChar / 32 * size.y), UVVec2(size.x, size.y));
+				auto srcR = UVRect(
+					UVVec2(
+						Fix16(*curChar % 32 * size.x),
+						Fix16(*curChar / 32 * size.y)
+					),
+					UVVec2(
+						Fix16(size.x),
+						Fix16(size.y)
+					)
+				);
 				DrawRectAlpha(dstR, tex, srcR, 1);
 				curPos.x += size.x;
 			}
@@ -237,20 +246,15 @@ namespace Rendering {
 		UVVec2 start, UVVec2 end,
 		btStorageType colorMult
 	) {
-		//todo: use fixed point type?
-		auto const shift = 16u;
-		auto const shiftMult = (float)(1 << shift);
-
-		auto xLen = static_cast<float>(xRight - xLeft);
-		auto deltaUV = ScreenVec2{
-			static_cast<int>((1 << shift) * ((end.x - start.x) / xLen)),
-			static_cast<int>((1 << shift) * ((end.y - start.y) / xLen))
-		};
+		auto xLen = static_cast<Fix16>(xRight - xLeft);
+		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
 	
-		auto tmp = start * (1 << shift);
-		auto uvCur = ScreenVec2{(int)tmp.x, (int)tmp.y};
+		auto uvCur = start;
 		for(auto x = xLeft; x <= xRight; ++x) {
-			ScreenPixel(x, y) = tex->pixel_bilinear(static_cast<Fix16>(uvCur.x / shiftMult), static_cast<Fix16>(uvCur.y / shiftMult)) * colorMult;
+			ScreenPixel(x, y) = tex->pixel_bilinear(
+				uvCur.x,
+				uvCur.y
+			) * colorMult;
 			uvCur += deltaUV;
 		}
 
@@ -262,35 +266,35 @@ namespace Rendering {
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
 
-		auto const dx = (int)(bitmult * src.size.x / dest.size.x);
-		auto const dy = (int)(bitmult * src.size.y / dest.size.y);
+		auto const dx = src.size.x / Fix16(dest.size.x);
+		auto const dy = src.size.y / Fix16(dest.size.y);
 		auto const xTarget = dest.pos.x + dest.size.x;
 		auto const yTarget = dest.pos.y + dest.size.y;
-		auto ax = (int)(bitmult * src.pos.x);
+		auto ax = src.pos.x;
 
 		auto const m = static_cast<unsigned>(bitmult * colorMult);
 
 		//handle dest.pos starting beyond the left of the screen
 		auto x = 0;
 		if(dest.pos.x < 0) {
-			ax -= dest.pos.x * dx;
+			ax -= Fix16(dest.pos.x) * dx;
 		} else {
 			x = dest.pos.x;
 		}
 
 		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
 			//handle dest.pos starting beyond the top of the screen
-			auto ay = (int)(bitmult * src.pos.y);
+			auto ay = src.pos.y;
 			auto y = 0;
 			if(dest.pos.y < 0) {
-				ay -= dest.pos.y * dx;
+				ay -= Fix16(dest.pos.y) * dy;
 			} else {
 				y = dest.pos.y;
 			}
 
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo: is this actually faster than float multiplication..?
-				Color c = tex->pixel_bilinear(Fix16(Fix16::RAW, ax), Fix16(Fix16::RAW, ay));
+				Color c = tex->pixel_bilinear(ax, ay);
 				c.r = (c.r * m) >> bitShift;
 				c.g = (c.g * m) >> bitShift;
 				c.b = (c.b * m) >> bitShift;
@@ -306,28 +310,28 @@ namespace Rendering {
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
 
-		auto const dx = (int)(bitmult * src.size.x / dest.size.x);
-		auto const dy = (int)(bitmult * src.size.y / dest.size.y);
+		auto const dx = src.size.x / Fix16(dest.size.x);
+		auto const dy = src.size.y / Fix16(dest.size.y);
 		auto const xTarget = dest.pos.x + dest.size.x;
 		auto const yTarget = dest.pos.y + dest.size.y;
-		auto ax = (int)(bitmult * src.pos.x);
+		auto ax = src.pos.x;
 
 		auto const m = static_cast<unsigned>(bitmult * colorMult);
 
 		//handle dest.pos starting beyond the left of the screen
 		auto x = 0;
 		if(dest.pos.x < 0) {
-			ax -= dest.pos.x * dx;
+			ax -= Fix16(dest.pos.x) * dx;
 		} else {
 			x = dest.pos.x;
 		}
 
 		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
 			//handle dest.pos starting beyond the top of the screen
-			auto ay = (int)(bitmult * src.pos.y);
+			auto ay = src.pos.y;
 			auto y = 0;
 			if(dest.pos.y < 0) {
-				ay -= dest.pos.y * dx;
+				ay -= Fix16(dest.pos.y) * dx;
 			} else {
 				y = dest.pos.y;
 			}
@@ -335,7 +339,7 @@ namespace Rendering {
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
 				Color dst = ScreenPixel(x, y);
-				Color c = tex->pixel_bilinear(static_cast<Fix16>(ax / (float)bitmult), static_cast<Fix16>(ay / (float)bitmult));
+				Color c = tex->pixel_bilinear(ax, ay);
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;

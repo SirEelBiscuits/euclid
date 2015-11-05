@@ -46,7 +46,7 @@ namespace Rendering {
 
 	struct TextureInfo {
 		Texture *tex  {nullptr};
-		UVVec2 uvStart{0,0};
+		UVVec2 uvStart{0_fp,0_fp};
 	};
 
 	namespace TextureStore {

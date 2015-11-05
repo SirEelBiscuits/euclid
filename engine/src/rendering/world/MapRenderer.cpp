@@ -15,8 +15,8 @@ namespace Rendering {
 			Rendering::Context &ctx,
 			int x,                                    ///< screen x position
 			int wallTop, int wallBottom,              ///< screen top and bottom positions
-			btStorageType u,                          ///< texture u start
-			btStorageType vStart, btStorageType vEnd, ///< texture v start and end
+			Fix16 u,                                  ///< texture u start
+			Fix16 vStart, Fix16 vEnd,                 ///< texture v start and end
 			int viewSlotTop, int viewSlotBottom,      ///< viewslot, will be used to clip the render
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
@@ -24,7 +24,7 @@ namespace Rendering {
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
-		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, Mesi::Scalar &uStart, Mesi::Scalar &uEnd);
+		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, float &uStart, float &uEnd);
 
 		btStorageType DepthMultFromDistance(Mesi::Meters distance);
 
@@ -106,9 +106,9 @@ namespace Rendering {
 				int                 x;
 				btStorageType       curtainTop;
 				btStorageType       curtainBottom;
-				Mesi::Scalar        u;
-				btStorageType       vStart;
-				btStorageType       vEnd;
+				Fix16               u;
+				Fix16               vStart;
+				Fix16               vEnd;
 				int                 viewSlotTop;
 				int                 viewSlotBottom;
 				Rendering::Texture *tex;
@@ -131,11 +131,11 @@ namespace Rendering {
 				auto vFOVMult = ctx.GetVFOVMult();
 				auto hFOVMult = ctx.GetHFOVMult();
 
-				auto uStart     = Mesi::Scalar(0);
-				auto uEnd       = Mesi::Scalar(1);
-				auto vEndMain   = wall.mainTex.uvStart.y + (ceilHeight - floorHeight).val;
-				auto vEndTop    = 0.f;
-				auto vEndBottom = 0.f;
+				auto uStart     = 0.f;
+				auto uEnd       = 1.f;
+				auto vEndMain   = wall.mainTex.uvStart.y + Fix16((ceilHeight - floorHeight).val);
+				auto vEndTop    = 0_fp;
+				auto vEndBottom = 0_fp;
 
 				if(!ClipToView(hFOVMult, wallStartVS, wallEndVS, uStart, uEnd))
 					continue;
@@ -190,8 +190,8 @@ namespace Rendering {
 					nWallBottomStart = ScreenHeight/2 - nFloorHeight * wallScalarStart;
 					nWallBottomEnd   = ScreenHeight/2 - nFloorHeight * wallScalarEnd;
 
-					vEndTop    = wall.topTex.uvStart.y + ceilHeight.val - nCeilHeight.val;
-					vEndBottom = wall.bottomTex.uvStart.y + floorHeight.val - nFloorHeight.val;
+					vEndTop    = wall.topTex.uvStart.y + Fix16(ceilHeight.val - nCeilHeight.val);
+					vEndBottom = wall.bottomTex.uvStart.y + Fix16(floorHeight.val - nFloorHeight.val);
 				}
 
 				//initialise for inner loop
@@ -201,6 +201,7 @@ namespace Rendering {
 
 				//treat the wall-space coordinate as 0-1, so one screen pixel is 1 / (width in pixels)
 				auto d              = Mesi::Scalar(1) / ((int)wallEndSS.x.val - (int)wallStartSS.x.val/* + 1*/);
+				auto dFix16         = Fix16(d);
 				auto dWallTop       = d * (wallTopEnd - wallTopStart); //todo fixed point?
 				auto wallTop        = wallTopStart - dWallTop;
 				auto dWallBottom    = d * (wallBottomEnd - wallBottomStart);
@@ -210,11 +211,13 @@ namespace Rendering {
 				auto dPortalBottom  = d * (nWallBottomEnd - nWallBottomStart);
 				auto portalBottom   = nWallBottomStart - dPortalBottom;
 
-				auto dU = d * (uEnd - uStart);
-				auto uAcc = uStart - dU;
-
+				auto dU = dFix16 * Fix16(uEnd - uStart);
+				auto uAcc = Fix16(uStart) - dU;
+				
 				auto TwoOverStartDist = Mesi::Scalar(2) / wallStartSS.y;
 				auto TwoOverEndDist   = Mesi::Scalar(2) / wallEndSS.y;
+				auto TwoOverStartDistFix16 = 2_fp / Fix16(wallStartSS.y.val);
+				auto TwoOverEndDistFix16   = 2_fp / Fix16(wallEndSS.y.val);
 
 				auto uCache = uStart;
 
@@ -237,11 +240,11 @@ namespace Rendering {
 							? static_cast<int>(wallEndSS.x.val) - x
 							: gap;
 						auto alpha = d * (x + gapToUse - (int)wallStartSS.x.val);
-						auto uNext = ((1 - alpha) * uStart * TwoOverStartDist + uEnd * alpha * TwoOverEndDist)
-							/ ((1 - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
+						auto uNext = ((1.f - alpha) * uStart * TwoOverStartDist + uEnd * alpha * TwoOverEndDist)
+							/ ((1.f - alpha) * TwoOverStartDist + alpha * TwoOverEndDist);
 
-						dU = (uNext - uCache) / gapToUse;
-						uAcc = uCache;
+						dU = Fix16((uNext - uCache) / gapToUse);
+						uAcc = Fix16(uCache);
 						uCache = uNext;
 
 						auto distNext = ((1 - alpha) * wallStartSS.y * TwoOverStartDist + wallEndSS.y * alpha * TwoOverEndDist)
@@ -383,8 +386,8 @@ namespace Rendering {
 			Rendering::Context &ctx,
 			int x,
 			int wallTop, int wallBottom,
-			btStorageType u,
-			btStorageType vStart, btStorageType vEnd,
+			Fix16 u,
+			Fix16 vStart, Fix16 vEnd,
 			int viewSlotTop, int viewSlotBottom,
 			Rendering::Texture *tex,
 			btStorageType colorScale,
@@ -400,14 +403,14 @@ namespace Rendering {
 
 				ctx.DrawVLine(x, wallTop, wallBottom, tmpc * colorScale);
 			} else {
-				auto const ppm = Rendering::Texture::PixelsPerMeter;
-				auto srcR = Rendering::UVRect(UVVec2{u * ppm, vStart * ppm}, UVVec2{1, vEnd * ppm});
+				auto const ppm = Fix16(Rendering::Texture::PixelsPerMeter);
+				auto srcR = Rendering::UVRect(UVVec2(u * ppm, vStart * ppm), UVVec2(1_fp, vEnd * ppm));
 
 				if(wallBottom > viewSlotBottom) {
 					auto height = wallBottom - wallTop;
 					wallBottom = viewSlotBottom;
 					auto newHeight = wallBottom - wallTop;
-					srcR.size.y = srcR.size.y * (float) newHeight/height;
+					srcR.size.y = srcR.size.y * Fix16((float)newHeight/height);
 				}
 
 				if(wallTop < viewSlotTop) {
@@ -415,7 +418,7 @@ namespace Rendering {
 					wallTop = viewSlotTop;
 					auto newHeight = wallBottom - wallTop;
 					auto oldSrcH = srcR.size.y;
-					srcR.size.y = srcR.size.y * (float) newHeight/height;
+					srcR.size.y = srcR.size.y * Fix16((float)newHeight/height);
 					srcR.pos.y += oldSrcH - srcR.size.y;
 				}
 
@@ -475,6 +478,8 @@ namespace Rendering {
 				return pos + forwardVec * distance.val + rightVec * x;
 			};
 
+			auto ppmFix16 = Fix16(Rendering::Texture::PixelsPerMeter);
+
 			auto y = 0;
 			if(ceilTex) {
 				for(; y < ScreenHeight/2; ++y) {
@@ -490,12 +495,14 @@ namespace Rendering {
 						} else if(stripActive) {
 							auto left = f(stripStarted, distances[y]);
 							auto right = f(x - 1, distances[y]);
+							auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
+							auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 							ctx.DrawHLine(
 								stripStarted, x - 1,
 								y,
 								ceilTex,
-								{left.x.val * Rendering::Texture::PixelsPerMeter, left.y.val * Rendering::Texture::PixelsPerMeter},
-								{right.x.val * Rendering::Texture::PixelsPerMeter,right.y.val * Rendering::Texture::PixelsPerMeter},
+								UVVec2(leftFix16.x, leftFix16.y),
+								UVVec2(rightFix16.x, rightFix16.y),
 								depthMult
 							);
 							stripActive = false;
@@ -504,12 +511,14 @@ namespace Rendering {
 					if(stripActive) {
 						auto left = f(stripStarted, distances[y]);
 						auto right = f(maxX, distances[y]);
+						auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
+						auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 						ctx.DrawHLine(
 							stripStarted, maxX,
 							y,
 							ceilTex,
-							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
-							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
+							UVVec2(leftFix16.x, leftFix16.y),
+							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult
 						);
 					}
@@ -531,12 +540,14 @@ namespace Rendering {
 						} else if(stripActive) {
 							auto left = f(stripStarted, distances[y]);
 							auto right = f(x - 1, distances[y]);
+							auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
+							auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 							ctx.DrawHLine(
 								stripStarted, x - 1,
 								y,
 								floorTex,
-								{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
-								{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
+								UVVec2(leftFix16.x, leftFix16.y),
+								UVVec2(rightFix16.x,rightFix16.y),
 								depthMult
 							);
 							stripActive = false;
@@ -545,12 +556,14 @@ namespace Rendering {
 					if(stripActive) {
 						auto left = f(stripStarted, distances[y]);
 						auto right = f(maxX, distances[y]);
+						auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
+						auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 						ctx.DrawHLine(
 							stripStarted, maxX,
 							y,
 							floorTex,
-							{left.x.val * Rendering::Texture::PixelsPerMeter,  left.y.val * Rendering::Texture::PixelsPerMeter},
-							{right.x.val * Rendering::Texture::PixelsPerMeter, right.y.val * Rendering::Texture::PixelsPerMeter},
+							UVVec2(leftFix16.x, leftFix16.y),
+							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult
 						);
 					}
@@ -565,7 +578,7 @@ namespace Rendering {
 			}
 		}
 
-		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end, Mesi::Scalar &uStart, Mesi::Scalar &uEnd) {
+		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end, float &uStart, float &uEnd) {
 			if(start.y < 0_m && end.y < 0_m)
 				return false;
 

@@ -153,8 +153,8 @@ namespace System {
 			if(lua_type(lua, -1) == LUA_TTABLE) {
 				auto texName = luaX_returnlocal<std::string>(lua, "tex");
 				ret.tex = texName.size() > 0 ? Rendering::TextureStore::GetTexture(texName.c_str()).get() : nullptr;
-				ret.uvStart.x = luaX_returnlocal<int>(lua, "uStart");
-				ret.uvStart.y = luaX_returnlocal<int>(lua, "vStart");
+				ret.uvStart.x = luaX_returnlocal<Fix16>(lua, "uStart");
+				ret.uvStart.y = luaX_returnlocal<Fix16>(lua, "vStart");
 			}
 			lua_pop(lua, 1);
 			return ret;
@@ -467,7 +467,15 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRect(dest, tex, Rendering::UVRect{{0, 0}, {(btStorageType)tex->w, (btStorageType)tex->h}}, 1);
+							ctx->DrawRect(
+								dest,
+								tex,
+								Rendering::UVRect{
+									UVVec2(0_fp, 0_fp),
+									UVVec2(Fix16(tex->w), Fix16(tex->h))
+								},
+								1
+							);
 						}
 					)
 				);
@@ -477,7 +485,15 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRectAlpha(dest, tex, Rendering::UVRect{{0, 0}, {(btStorageType)tex->w, (btStorageType)tex->h}}, 1);
+							ctx->DrawRectAlpha(
+								dest,
+								tex,
+								Rendering::UVRect{
+									UVVec2(0_fp, 0_fp), 
+									UVVec2(Fix16(tex->w), Fix16(tex->h))
+								},
+								1
+							);
 						}
 					)	
 				);
