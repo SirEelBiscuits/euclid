@@ -11,8 +11,6 @@ function Game.Initialise()
 	Game.LoadControls(dofile("editorcontrols.lua"))
 	Game.quit = false
 
-	--openMap("testmap.lua")
-
 	print("initialised")
 end
 
@@ -63,7 +61,12 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.OpenMap.pressed then
-		Editor.TypingState:Enter(openMap)
+		Editor.TypingState:Enter(
+			function(filename)
+				openMap(filename)
+				Editor.DefaultState:Enter()
+			end
+		)
 	end
 
 	if Game.Controls.Preview.pressed then
@@ -75,12 +78,7 @@ function Editor.DefaultState:Update(dt)
 		Editor.curMapData = Game.StoreMap(Editor.curMap)
 		Editor.TypingState:Enter(
 		function (filename)
-			Editor.curMapData = Game.StoreMap(Editor.curMap)
-			local str = serialise(Editor.curMapData)
-			local file = io.open(filename, "w")
-			io.output(file)
-			io.write(str)
-			io.close(file)
+			saveMap(filename)
 
 			Editor.State = Editor.DefaultState
 		end
@@ -146,7 +144,21 @@ function openMap(filename)
 	Editor.curMap     = Game.OpenMap(Editor.curMapData)
 	Editor.DebugText  = Editor.curMap:GetNumSectors()
 	print("done")
-	Editor.DefaultState:Enter()
+end
+
+function saveMap(filename)
+	filename = filename or Editor.curMapName
+	if filename == "" then
+		filename = Editor.curMapName
+	end
+	print("trying to save " .. filename)
+	Editor.curMapData = Game.StoreMap(Editor.curMap)
+	local str = serialise(Editor.curMapData)
+	local file = io.open(filename, "w")
+	io.output(file)
+	io.write(str)
+	io.close(file)
+	print("done")
 end
 
 Editor.PreviewState = {}
