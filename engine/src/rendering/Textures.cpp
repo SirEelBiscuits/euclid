@@ -12,6 +12,34 @@ namespace Rendering {
 		return pixels[(x & wMask) * h + (y & hMask)];
 	}
 
+	Color interp(Color s, Color e, float alpha) {
+		auto ret = Color{
+			(uint8_t)(s.r + (e.r - s.r) * alpha),
+			(uint8_t)(s.g + (e.g - s.g) * alpha),
+			(uint8_t)(s.b + (e.b - s.b) * alpha),
+			(uint8_t)(s.a + (e.a - s.a) * alpha),
+		};
+		ASSERT(
+			(ret.g >= s.g && ret.g <= e.g)
+			|| (ret.g <= s.g && ret.g >= e.g)
+		);
+		return ret;
+	}
+
+	Color Texture::pixel_bilinear(btStorageType x, btStorageType y) const {
+		int xI = (x < 0 ? x - 1 : x), yI = (y < 0 ? y - 1 : y);
+		float xAlpha = x - xI, yAlpha = y - yI;
+		auto p00 = pixel(x, y);
+		auto p10 = pixel(x + 1, y);
+		auto p01 = pixel(x, y + 1);
+		auto p11 = pixel(x + 1, y + 1);
+
+		auto p0x = interp(p00, p10, xAlpha);
+		auto p1x = interp(p01, p11, xAlpha);
+
+		return interp(p0x, p1x, yAlpha);
+	}
+
 	namespace TextureStore {
 		static std::map<std::string, TextureRef> TexLookup;
 

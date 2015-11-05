@@ -36,6 +36,7 @@ namespace Rendering {
 
 		Color & pixel(unsigned x, unsigned y);
 		Color const & pixel(unsigned x, unsigned y) const;
+		Color pixel_bilinear(btStorageType x, btStorageType y) const;
 
 		static unsigned PixelsPerMeter;
 	private:

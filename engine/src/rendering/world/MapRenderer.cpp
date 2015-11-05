@@ -401,7 +401,7 @@ namespace Rendering {
 				ctx.DrawVLine(x, wallTop, wallBottom, tmpc * colorScale);
 			} else {
 				auto const ppm = Rendering::Texture::PixelsPerMeter;
-				auto srcR = Rendering::UVRect(std::round(u * ppm), std::round(vStart * ppm), 1, std::round(vEnd * ppm));
+				auto srcR = Rendering::UVRect(UVVec2{u * ppm, vStart * ppm}, UVVec2{1, vEnd * ppm});
 
 				if(wallBottom > viewSlotBottom) {
 					auto height = wallBottom - wallTop;
@@ -419,7 +419,7 @@ namespace Rendering {
 					srcR.pos.y += oldSrcH - srcR.size.y;
 				}
 
-				Rendering::ScreenRect dstR(x, wallTop, 1, (wallBottom - wallTop) + 1);
+				Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
 				if(useAlpha)
 					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale);
 				else

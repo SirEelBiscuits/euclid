@@ -239,6 +239,7 @@ namespace Rendering {
 	) {
 		//todo: use fixed point type?
 		auto const shift = 16u;
+		auto const shiftMult = (float)(1 << shift);
 
 		auto xLen = static_cast<float>(xRight - xLeft);
 		auto deltaUV = ScreenVec2{
@@ -249,7 +250,7 @@ namespace Rendering {
 		auto tmp = start * (1 << shift);
 		auto uvCur = ScreenVec2{(int)tmp.x, (int)tmp.y};
 		for(auto x = xLeft; x <= xRight; ++x) {
-			ScreenPixel(x, y) = tex->pixel((uvCur.x >> shift), (uvCur.y >> shift)) * colorMult;
+			ScreenPixel(x, y) = tex->pixel_bilinear((uvCur.x / shiftMult), (uvCur.y / shiftMult)) * colorMult;
 			uvCur += deltaUV;
 		}
 
@@ -289,7 +290,7 @@ namespace Rendering {
 
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo: is this actually faster than float multiplication..?
-				Color c = tex->pixel(ax >> bitShift, ay >> bitShift);
+				Color c = tex->pixel_bilinear(ax / (float)bitmult, ay / (float)bitmult);
 				c.r = (c.r * m) >> bitShift;
 				c.g = (c.g * m) >> bitShift;
 				c.b = (c.b * m) >> bitShift;
@@ -334,7 +335,7 @@ namespace Rendering {
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
 				Color dst = ScreenPixel(x, y);
-				Color c = tex->pixel(ax>>bitShift, ay>>bitShift);
+				Color c = tex->pixel_bilinear(ax / (float)bitmult, ay / (float)bitmult);
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
