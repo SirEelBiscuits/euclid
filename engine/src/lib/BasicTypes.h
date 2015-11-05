@@ -11,6 +11,10 @@ using btStorageType = float;
 #include "Mesitype.h"
 #include "Matrix.h"
 
+#include "FixedPoint.h"
+
+using Fix16 = Fixed16x16;
+
 using PositionVec2  = Vector<Mesi::Meters, 2, btStorageType>;
 using PositionVec3  = Vector<Mesi::Meters, 3, btStorageType>;
 using ScreenVec2    = Vector<int, 2>;
