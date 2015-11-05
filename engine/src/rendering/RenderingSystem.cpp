@@ -251,10 +251,17 @@ namespace Rendering {
 	
 		auto uvCur = start;
 		for(auto x = xLeft; x <= xRight; ++x) {
+#ifdef BILINEAR_FILTERING
 			ScreenPixel(x, y) = tex->pixel_bilinear(
 				uvCur.x,
 				uvCur.y
 			) * colorMult;
+#else
+			ScreenPixel(x, y) = tex->pixel(
+				(unsigned)uvCur.x,
+				(unsigned)uvCur.y
+			) * colorMult;
+#endif
 			uvCur += deltaUV;
 		}
 
@@ -272,7 +279,7 @@ namespace Rendering {
 		auto const yTarget = dest.pos.y + dest.size.y;
 		auto ax = src.pos.x;
 
-		auto const m = static_cast<unsigned>(bitmult * colorMult);
+		auto const m = static_cast<Fix16>(colorMult);
 
 		//handle dest.pos starting beyond the left of the screen
 		auto x = 0;
@@ -294,10 +301,14 @@ namespace Rendering {
 
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo: is this actually faster than float multiplication..?
+#ifdef BILINEAR_FILTERING
 				Color c = tex->pixel_bilinear(ax, ay);
-				c.r = (c.r * m) >> bitShift;
-				c.g = (c.g * m) >> bitShift;
-				c.b = (c.b * m) >> bitShift;
+#else
+				Color c = tex->pixel((unsigned)ax, (unsigned)ay);
+#endif
+				c.r = (uint8_t)((Fix16)c.r * m);
+				c.g = (uint8_t)((Fix16)c.g * m);
+				c.b = (uint8_t)((Fix16)c.b * m);
 				ScreenPixel(x, y) = c;
 			}
 
@@ -339,7 +350,11 @@ namespace Rendering {
 			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
 				Color dst = ScreenPixel(x, y);
+#ifdef BILINEAR_FILTERING
 				Color c = tex->pixel_bilinear(ax, ay);
+#else
+				Color c = tex->pixel((unsigned)ax, (unsigned)ay);
+#endif
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
