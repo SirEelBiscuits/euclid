@@ -139,17 +139,6 @@ namespace Modes {
 		}
 		lua_pop(lua, 1);
 
-		lua_getglobal(lua, "Draw");
-		//RenderMap
-		{
-			auto f = [this](Rendering::World::View v) {
-				this->mapRenderer.Render(v);
-			};
-			luaX_push(lua, static_cast<std::function<void(Rendering::World::View)>>(f));
-			lua_setfield(lua, -2, "Map");
-		}
-		lua_pop(lua, 1);
-
 		ASSERT(lua_gettop(lua) == top);
 	}
 

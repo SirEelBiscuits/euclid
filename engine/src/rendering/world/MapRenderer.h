@@ -5,20 +5,16 @@ PREAMBLE
 PRE_STD_LIB
 POST_STD_LIB
 
+#include "rendering/RenderingPrimitives.h"
 #include "lib/BasicTypes.h"
-#include "world/Map.h"
+#include "MapRenderingShared.h"
 
 namespace Rendering {
 	
 	struct Context;
+	class Texture;
 
 	namespace World {
-
-		struct View {
-			PositionVec3            eye    {};
-			::World::Sector const * sector {nullptr};
-			TransformMat2           forward{};
-		};
 
 		class MapRenderer {
 		public:

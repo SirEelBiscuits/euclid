@@ -7,6 +7,7 @@
 
 #include "Rendering/RenderingSystem.h"
 #include "rendering/world/MapRenderer.h"
+#include "rendering/world/TopDownMapRenderer.h"
 
 template<>
 Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
@@ -47,6 +48,44 @@ void luaX_push<ScreenVec2>(lua_State *lua, ScreenVec2 v) {
 	luaX_settable(lua,
 		"x", v.x,
 		"y", v.y
+	);
+}
+
+template<>
+UVVec2 luaX_return<UVVec2>(lua_State *lua) {
+	UVVec2 ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.x = luaX_returnlocal<Fix16>(lua, "x");
+	ret.y = luaX_returnlocal<Fix16>(lua, "y");
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+void luaX_push<UVVec2>(lua_State *lua, UVVec2 v) {
+	luaX_push(lua, luaX_emptytable{0, 2});
+	luaX_settable(lua,
+		"x", v.x,
+		"y", v.y
+	);
+}
+
+template<>
+PositionVec2 luaX_return<PositionVec2>(lua_State *lua) {
+	PositionVec2 ret;
+	ASSERT(lua_type(lua, -1) == LUA_TTABLE);
+	ret.x.val = luaX_returnlocal<btStorageType>(lua, "x");
+	ret.y.val = luaX_returnlocal<btStorageType>(lua, "y");
+	lua_pop(lua, 1);
+	return ret;
+}
+
+template<>
+void luaX_push<PositionVec2>(lua_State *lua, PositionVec2 v) {
+	luaX_push(lua, luaX_emptytable{0, 2});
+	luaX_settable(lua,
+		"x", v.x.val,
+		"y", v.y.val
 	);
 }
 
@@ -129,6 +168,17 @@ void luaX_push<Mesi::Meters>(lua_State *lua, Mesi::Meters value) {
 namespace System {
 	namespace Luaclid {
 
+		struct ExtraSpace {
+			ExtraSpace(Rendering::Context &ctx) 
+				: mapRenderer(std::make_unique<Rendering::World::MapRenderer>(ctx))
+			{}
+			std::unique_ptr<Rendering::World::MapRenderer> mapRenderer{nullptr};
+		};
+
+		ExtraSpace* getExtraSpace(lua_State *s) {
+			return *static_cast<ExtraSpace**>(lua_getextraspace(s));
+		}
+
 		using reloaderType = std::function<void(char const *)>;
 
 		void RegisterTypes(lua_State *lua);
@@ -142,6 +192,10 @@ namespace System {
 			auto ret = luaX_dofile(lua, "luaclid.lua");
 			CRITICAL_ASSERT(ret);
 			System::Events::RegisterFileToWatch("luaclid.lua", reloader);
+
+			//todo type safety, potential memory leak
+			auto es = lua_getextraspace(lua);
+			*(ExtraSpace**)es = new ExtraSpace(ctx);
 
 			RegisterTypes(lua);
 			RegisterFunctions(lua, &ctx, reloader);
@@ -391,40 +445,82 @@ namespace System {
 		void RegisterTypes(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			// we need to pre-declare these classes, as there are some circular references within some of them
-			auto luaPosVec2 = luaX_registerClass<PositionVec2>(lua);
-			auto luaSector = luaX_registerClass<World::Sector>(lua
-					, "ceilHeight", &World::Sector::ceilHeight
-					, "floorHeight", &World::Sector::floorHeight
-				);
-			auto luaWall = luaX_registerClass<World::Wall>(lua
-				,"portal", &World::Wall::portal
-				,"start" , &World::Wall::start);
+			auto luaPosVec = luaX_registerClass<PositionVec2>(lua
+				, "x", &PositionVec2::x
+				, "y", &PositionVec3::y);
 			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
 				, "width", &Rendering::Texture::w
 				, "height", &Rendering::Texture::h);
-			auto luaMap = luaX_registerClass<World::Map>(lua
-				, "GetNumSectors", &World::Map::GetNumSectors	
-			);
+			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua
+				, "tex", &Rendering::TextureInfo::tex
+				, "uvStart", &Rendering::TextureInfo::uvStart);
 
-			luaPosVec2.push();
-			luaX_registerClassMemberSpecial(lua,
-				"x", &PositionVec2::x );
-			luaX_registerClassMemberSpecial(lua,
-				"y", &PositionVec2::y );
-			lua_pop(lua, 1);
-
+			////////////////////////////////////
+			// Wall
+			auto luaWall = luaX_registerClass<World::Wall>(lua
+				, "portal", &World::Wall::portal
+				, "start" , &World::Wall::start);
 			luaWall.push();
-			luaX_registerClassGetterSpecial(lua
-				, "length", &World::Wall::length);
+			luaX_registerClassGetter(lua
+				, "length", &World::Wall::length); // not const, so getter only must be forced
+			luaX_registerClassMemberSpecial(lua
+				, "topTex", &World::Wall::topTex);
+			luaX_registerClassMemberSpecial(lua
+				, "mainTex", &World::Wall::mainTex);
+			luaX_registerClassMemberSpecial(lua
+				, "bottomTex", &World::Wall::bottomTex);
 			lua_pop(lua, 1);
 
+			////////////////////////////////////
+			// Sector
+			auto luaSector = luaX_registerClass<World::Sector>(lua
+					, "ceilHeight",        &World::Sector::ceilHeight
+					, "floorHeight",       &World::Sector::floorHeight
+					, "lightLevel",        &World::Sector::LightLevel
+				// methods below here
+					, "GetNumWalls",       &World::Sector::GetNumWalls
+					, "InsertWallAfter",   &World::Sector::InsertWallAfter
+					, "InsertWallBefore",  &World::Sector::InsertWallBefore
+					, "DeleteWall",        &World::Sector::DeleteWall
+					, "UpdateCentroid",    &World::Sector::UpdateCentroid
+					, "UpdateLineLengths", &World::Sector::UpdateLineLengths
+					, "FixWinding",        &World::Sector::FixWinding
+					, "ReverseWinding",    &World::Sector::ReverseWinding
+				);
 			luaSector.push();
-			luaX_registerClassGetterSpecial(lua
-				, "centroid", &World::Sector::centroid);
+			luaX_registerClassGetter(lua
+				, "centroid", &World::Sector::centroid); // not const, so getter only must be forced
+			luaX_registerClassMemberSpecial(lua
+				, "floor", &World::Sector::floor);
+			luaX_registerClassMemberSpecial(lua
+				, "ceiling", &World::Sector::ceiling);
+
+			// methods below here
+
+			luaX_registerClassMethodNonVoid<World::Sector, World::Wall*, 1, World::IDType>(lua
+				, "GetWall", &World::Sector::GetWall);
 			lua_pop(lua, 1);
 
+			////////////////////////////////////
+			// Map
+			auto luaMap = luaX_registerClass<World::Map>(lua
+				, "GetNumSectors",       &World::Map::GetNumSectors
+				, "GetSectorID",         &World::Map::GetSectorID
+				, "AddNewSector",        &World::Map::AddNewSector
+				, "RemoveSector",        &World::Map::RemoveSector
+				, "GetNumVerts",         &World::Map::GetNumVerts
+				, "GetVertID",           &World::Map::GetVertID 
+				, "AddNewVert",          &World::Map::AddNewVert
+				, "RemoveVert",          &World::Map::RemoveVert
+				, "RegisterAllTextures", &World::Map::RegisterAllTextures
+			);
 			luaMap.push();
-			luaX_registerClassMethodNonVoid<World::Map, World::Sector*, 1, World::IDType>(lua, "GetSector", &World::Map::GetSector);
+			luaX_registerClassMethodNonVoid<World::Map, World::Sector*, 1, World::IDType>(lua
+				, "GetSector", &World::Map::GetSector
+			);
+			luaX_registerClassMethodNonVoid<World::Map, World::Vert*, 1, World::IDType>(lua
+				, "GetVert", &World::Map::GetVert
+			);
 			lua_pop(lua, 1);
 
 			ASSERT(lua_gettop(lua) == x);
@@ -441,7 +537,8 @@ namespace System {
 				//TODO: this cast is ugly but necessary in VS2015. what do?
 				static_cast<std::function<void(std::string)>>(
 					[lua, reloader](std::string filename) {
-						ASSERT(luaX_dofile(lua, filename.c_str()));
+						auto ret = luaX_dofile(lua, filename.c_str());
+						ASSERT(ret);
 						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
 					}
 				)
@@ -505,6 +602,28 @@ namespace System {
 					)	
 				);
 				lua_setfield(lua, -2, "RectTexturedAlpha");
+
+				//Draw.TopDownMap
+				luaX_push(lua,
+					static_cast<std::function<void(::World::Map *, Rendering::World::View, Rendering::Color)>>(
+						[ctx](::World::Map *map, Rendering::World::View view, Rendering::Color c) {
+							Rendering::World::TopDownMapRenderer::Render(*ctx, *map, view, c);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "TopDownMap");
+
+				
+				//Draw.Map
+				luaX_push(lua, 
+					static_cast<std::function<void(Rendering::World::View)>>(
+						[mapRenderer = getExtraSpace(lua)->mapRenderer.get()]
+						(Rendering::World::View v) {
+							mapRenderer->Render(v);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "Map");
 
 				//Draw.GetWidth
 				luaX_push(lua,

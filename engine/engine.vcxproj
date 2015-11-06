@@ -176,6 +176,7 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
     </ClCompile>
+    <ClCompile Include="src\rendering\world\TopDownMapRenderer.cpp" />
     <ClCompile Include="src\system\Config.cpp" />
     <ClCompile Include="src\system\luaclid\controls\Controls.cpp" />
     <ClCompile Include="src\system\luaclid\Luaclid.cpp" />
@@ -188,6 +189,8 @@
     <ClInclude Include="src\rendering\RenderingPrimitives.h" />
     <ClInclude Include="src\rendering\Textures.h" />
     <ClInclude Include="src\rendering\world\MapRenderer.h" />
+    <ClInclude Include="src\rendering\world\MapRenderingShared.h" />
+    <ClInclude Include="src\rendering\world\TopDownMapRenderer.h" />
     <ClInclude Include="src\system\luaclid\controls\Controls.h" />
     <ClInclude Include="src\system\Files.h" />
     <ClInclude Include="src\rendering\RenderList.h" />
