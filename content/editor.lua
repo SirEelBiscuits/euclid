@@ -180,19 +180,19 @@ function Editor.PreviewState:Update(dt)
 	end
 
 	if Game.Controls.RaiseCeiling.pressed then
-		self.sector:get_ceilHeight():set_val(self.sector:get_ceilHeight():get_val() + 0.1)
+		self.sector:set_ceilHeight(self.sector:get_ceilHeight() + 0.1)
 	end
 
 	if Game.Controls.LowerCeiling.pressed then
-		self.sector:get_ceilHeight():set_val(self.sector:get_ceilHeight():get_val() - 0.1)
+		self.sector:set_ceilHeight(self.sector:get_ceilHeight() - 0.1)
 	end
 
 	if Game.Controls.RaiseFloor.pressed then
-		self.sector:get_floorHeight():set_val(self.sector:get_floorHeight():get_val() + 0.1)
+		self.sector:set_floorHeight(self.sector:get_floorHeight() + 0.1)
 	end
 
 	if Game.Controls.LowerFloor.pressed then
-		self.sector:get_floorHeight():set_val(self.sector:get_floorHeight():get_val() - 0.1)
+		self.sector:set_floorHeight(self.sector:get_floorHeight() - 0.1)
 	end
 
 	self.angle = self.angle + Game.Controls.Turn

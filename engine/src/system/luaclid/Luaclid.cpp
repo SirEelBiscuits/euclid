@@ -116,6 +116,16 @@ void luaX_push<Rendering::World::View>(lua_State *lua, Rendering::World::View v)
 	);
 }
 
+template<>
+Mesi::Meters luaX_return<Mesi::Meters>(lua_State *lua) {
+	return Mesi::Meters(luaX_return<btStorageType>(lua));
+}
+
+template<>
+void luaX_push<Mesi::Meters>(lua_State *lua, Mesi::Meters value) {
+	luaX_push(lua, value.val);
+}
+
 namespace System {
 	namespace Luaclid {
 
@@ -381,10 +391,11 @@ namespace System {
 		void RegisterTypes(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			// we need to pre-declare these classes, as there are some circular references within some of them
-			auto luaMeters = luaX_registerClass<Mesi::Meters>(lua
-				,"val", &Mesi::Meters::val);
 			auto luaPosVec2 = luaX_registerClass<PositionVec2>(lua);
-			auto luaSector = luaX_registerClass<World::Sector>(lua);
+			auto luaSector = luaX_registerClass<World::Sector>(lua
+					, "ceilHeight", &World::Sector::ceilHeight
+					, "floorHeight", &World::Sector::floorHeight
+				);
 			auto luaWall = luaX_registerClass<World::Wall>(lua
 				,"portal", &World::Wall::portal
 				,"start" , &World::Wall::start);
@@ -408,10 +419,6 @@ namespace System {
 			lua_pop(lua, 1);
 
 			luaSector.push();
-			luaX_registerClassMemberSpecial(lua
-				, "ceilHeight", &World::Sector::ceilHeight);
-			luaX_registerClassMemberSpecial(lua
-				, "floorHeight", &World::Sector::floorHeight);
 			luaX_registerClassGetterSpecial(lua
 				, "centroid", &World::Sector::centroid);
 			lua_pop(lua, 1);
