@@ -112,7 +112,7 @@
       <AdditionalLibraryDirectories>$(DXSDK_DIR)\lib\x86</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -187,7 +187,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

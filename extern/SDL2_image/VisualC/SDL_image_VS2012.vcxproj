@@ -126,8 +126,8 @@
       <OutputFile>.\Debug/SDL2_image.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"
-xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -201,8 +201,8 @@ xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern
       <OutputFile>.\Release/SDL2_image.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"
-xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
