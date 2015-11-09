@@ -92,8 +92,6 @@ namespace Rendering {
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
 			if(portalDepth == MaxPortalDepth || minX > maxX || view.sector == nullptr)
 				return;
-			else if(MaxPortalDepth >= 0)
-				++portalDepth;
 			ASSERT(maxX < (int)widthUsed);
 
 			struct RoomRenderDefer {
@@ -367,7 +365,7 @@ namespace Rendering {
 				, portalDepth
 			);
 			for(auto &dl : deferList) {
-				RenderRoom(dl.view, dl.minX, dl.maxX, portalDepth);
+				RenderRoom(dl.view, dl.minX, dl.maxX, MaxPortalDepth, portalDepth + 1);
 			}
 			for(auto &dl : curtainDeferList)
 				DrawWallSlice(
@@ -407,7 +405,9 @@ namespace Rendering {
 				wallTop = Maths::max(wallTop, viewSlotTop);
 				wallBottom = Maths::min(wallBottom, viewSlotBottom);
 
-				ctx.DrawVLine(x, wallTop, wallBottom, tmpc * colorScale);
+				auto c = tmpc * colorScale;
+				c.a = stencil;
+				ctx.DrawVLine(x, wallTop, wallBottom, c);
 			} else {
 				auto const ppm = Fix16(Rendering::Texture::PixelsPerMeter);
 				auto srcR = Rendering::UVRect(UVVec2(u * ppm, vStart * ppm), UVVec2(1_fp, vEnd * ppm));

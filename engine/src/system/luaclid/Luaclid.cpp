@@ -667,6 +667,26 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "Text");
 
+				//Draw.GetPixel
+				luaX_push(lua,
+					static_cast<std::function<Rendering::Color(ScreenVec2)>>(
+						[ctx](ScreenVec2 pos) {
+							return ctx->ScreenPixel(pos.x, pos.y);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetPixel");
+
+				//Draw.SetPixel
+				luaX_push(lua,
+					static_cast<std::function<void(ScreenVec2, Rendering::Color)>>(
+						[ctx](ScreenVec2 pos, Rendering::Color c) {
+							ctx->ScreenPixel(pos.x, pos.y) = c;
+						}
+					)
+				);
+				lua_setfield(lua, -2, "SetPixel");
+
 				lua_pop(lua, 1);
 			}
 
