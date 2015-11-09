@@ -578,7 +578,8 @@ namespace System {
 									UVVec2(0_fp, 0_fp),
 									UVVec2(Fix16(tex->w), Fix16(tex->h))
 								},
-								1
+								1,
+								0
 							);
 						}
 					)
@@ -596,7 +597,8 @@ namespace System {
 									UVVec2(0_fp, 0_fp), 
 									UVVec2(Fix16(tex->w), Fix16(tex->h))
 								},
-								1
+								1,
+								0
 							);
 						}
 					)	

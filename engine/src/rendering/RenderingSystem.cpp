@@ -235,7 +235,7 @@ namespace Rendering {
 						Fix16(size.y)
 					)
 				);
-				DrawRectAlpha(dstR, tex, srcR, 1);
+				DrawRectAlpha(dstR, tex, srcR, 1, 0);
 				curPos.x += size.x;
 			}
 		}
@@ -246,7 +246,8 @@ namespace Rendering {
 		unsigned y,
 		Texture const *tex,
 		UVVec2 start, UVVec2 end,
-		btStorageType colorMult
+		btStorageType colorMult,
+		uint8_t stencil
 	) {
 		auto xLen = static_cast<Fix16>(xRight - xLeft);
 		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
@@ -264,13 +265,14 @@ namespace Rendering {
 				(unsigned)uvCur.y
 			) * colorMult;
 #endif
+			ScreenPixel(x, y).a = stencil;
 			uvCur += deltaUV;
 		}
 
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult) {
+	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -311,6 +313,7 @@ namespace Rendering {
 				c.r = (uint8_t)((Fix16)c.r * m);
 				c.g = (uint8_t)((Fix16)c.g * m);
 				c.b = (uint8_t)((Fix16)c.b * m);
+				c.a = stencil;
 				ScreenPixel(x, y) = c;
 			}
 
@@ -318,7 +321,7 @@ namespace Rendering {
 		}
 	}
 
-	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, float colorMult) {
+	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -361,6 +364,7 @@ namespace Rendering {
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				c.a = stencil;
 				ScreenPixel(x, y) = c;
 			}
 

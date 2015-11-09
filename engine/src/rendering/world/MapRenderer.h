@@ -31,7 +31,7 @@ namespace Rendering {
 
 				portalDepth is the recursive depth to go to. negative values indicate infinity
 			*/
-			void RenderRoom(View const &view, int minX, int maxX, int portalDepth = -1);
+			void RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth = -1, int portalDepth = 0);
 
 			void DrawHorizontalPlanes(
 				View view,
@@ -41,7 +41,8 @@ namespace Rendering {
 				Rendering::Texture *ceilTex,
 				float lightlevel,
 				Rendering::Color tmpceil,
-				Rendering::Color tmpfloor
+				Rendering::Color tmpfloor,
+				uint8_t stencil
 			);
 
 			//////////

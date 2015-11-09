@@ -21,6 +21,7 @@ namespace Rendering {
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
 			Rendering::Color tmpc,
+			uint8_t stencil,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
@@ -88,11 +89,11 @@ namespace Rendering {
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
 		}
 
-		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int portalDepth) {
-			if(portalDepth == 0 || minX > maxX || view.sector == nullptr)
+		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
+			if(portalDepth == MaxPortalDepth || minX > maxX || view.sector == nullptr)
 				return;
-			else if(portalDepth > 0)
-				--portalDepth;
+			else if(MaxPortalDepth >= 0)
+				++portalDepth;
 			ASSERT(maxX < (int)widthUsed);
 
 			struct RoomRenderDefer {
@@ -282,6 +283,7 @@ namespace Rendering {
 								wall.topTex.tex,
 								depthShadeVal
 								, Rendering::Color{64, 0, 0, 255}
+								, portalDepth
 							);
 
 						if(wall.mainTex.tex != nullptr) {
@@ -312,6 +314,7 @@ namespace Rendering {
 								wall.bottomTex.tex,
 								depthShadeVal
 								, Rendering::Color{128, 0, 0, 255}
+								, portalDepth
 							);
 
 						wallRenderableTop[x] = static_cast<int>(Maths::min(ScreenHeight-1, 
@@ -331,6 +334,7 @@ namespace Rendering {
 							wall.mainTex.tex,
 							depthShadeVal
 							, Rendering::Color{255, 0, 0, 255}
+							, portalDepth
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -360,6 +364,7 @@ namespace Rendering {
 				1 //lightlevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
+				, portalDepth
 			);
 			for(auto &dl : deferList) {
 				RenderRoom(dl.view, dl.minX, dl.maxX, portalDepth);
@@ -392,6 +397,7 @@ namespace Rendering {
 			Rendering::Texture *tex,
 			btStorageType colorScale,
 			Rendering::Color tmpc,
+			uint8_t stencil,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
@@ -424,9 +430,9 @@ namespace Rendering {
 
 				Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
 				if(useAlpha)
-					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale);
+					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
 				else
-					ctx.DrawRect(dstR, tex, srcR, colorScale);
+					ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
 			}
 			return true;
 		}
@@ -439,7 +445,8 @@ namespace Rendering {
 			Rendering::Texture *ceilTex,
 			float lightlevel,
 			Rendering::Color tmpceil,
-			Rendering::Color tmpfloor
+			Rendering::Color tmpfloor,
+			uint8_t stencil
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
 			for(auto y = 0u; y < ScreenHeight; ++y)
@@ -503,7 +510,8 @@ namespace Rendering {
 								ceilTex,
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x, rightFix16.y),
-								depthMult
+								depthMult,
+								stencil
 							);
 							stripActive = false;
 						}
@@ -519,7 +527,8 @@ namespace Rendering {
 							ceilTex,
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
-							depthMult
+							depthMult,
+							stencil
 						);
 					}
 				}
@@ -548,7 +557,8 @@ namespace Rendering {
 								floorTex,
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x,rightFix16.y),
-								depthMult
+								depthMult,
+								stencil
 							);
 							stripActive = false;
 						}
@@ -564,7 +574,8 @@ namespace Rendering {
 							floorTex,
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
-							depthMult
+							depthMult,
+							stencil
 						);
 					}
 				}

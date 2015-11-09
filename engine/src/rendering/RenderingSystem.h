@@ -94,21 +94,21 @@ namespace Rendering {
 			start, end, are inclusive texture co-ordinates.
 			colorMult will scale the color coming from the texture
 		*/
-		void DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Texture const *tex, UVVec2 start, UVVec2 end, btStorageType colorMult);
+		void DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Texture const *tex, UVVec2 start, UVVec2 end, btStorageType colorMult, uint8_t stencil);
 		
 		/**
 			Draw texture to screen rectangle
 
 			src represents the subtexture to be stretched over the region dest on screen.
 		 */
-		void DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult);
+		void DrawRect(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil);
 
 		/**
 			Draw texture to screen rectangle, respecting the texture alpha.
 
 			src represents the subtexture to be stretched over the region dest on screen.
 		*/
-		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, float colorMult);
+		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil);
 		
 		btStorageType GetVFOV() const { return vFOV; }
 		btStorageType GetVFOVMult() const { return vFOVMult; };
