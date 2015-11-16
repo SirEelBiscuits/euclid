@@ -1,4 +1,11 @@
-Editor = Editor or { State = {}, TypingState = {}, DefaultState = {}}
+Editor = Editor or { 
+	State = {}, 
+	TypingState = {}, 
+	DefaultState = {},
+	view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 },
+	Selection = {verts = {}, walls = {}, sectors = {}},
+	Cursor = {},
+}
 
 function nullfunc()
 end
@@ -11,6 +18,7 @@ function Game.Initialise()
 	Game.LoadAndWatchFile("editor/DefaultState.lua")
 	Game.LoadAndWatchFile("editor/TypingState.lua")
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
+	Game.LoadAndWatchFile("editor/DragObjectState.lua")
 
 	Editor.State = Editor.DefaultState
 
@@ -71,37 +79,110 @@ function Editor:saveMap(filename)
 	print("done")
 end
 
-function Editor.ScreenFromView(view, vec)
-	local relative = (vec - view.eye) * view.scale
+function Editor:ScreenFromWorld(vec)
+	local relative = (vec - self.view.eye) * self.view.scale
 	relative.y = -relative.y
-	relative = Maths.RotationMatrix(view.angle or 0) * relative
+	relative = Maths.RotationMatrix(self.view.angle or 0) * relative
 	return Maths.Vector:new(
 		relative.x + Draw.GetWidth() / 2,
 		relative.y + Draw.GetHeight() / 2
 	)
 end
 
-function Editor.ViewFromScreen(view, vec)
+function Editor:WorldFromScreen(vec)
 	local relative = Maths.Vector:new(vec.x - Draw.GetWidth() / 2, vec.y - Draw.GetHeight() / 2)
-	relative = Maths.RotationMatrix(-view.angle or 0) * relative
+	relative = Maths.RotationMatrix(-self.view.angle or 0) * relative
 	relative.y = -relative.y
-	return (relative / view.scale) + view.eye
+	return (relative / self.view.scale) + self.view.eye
 end
 
 local function MakeVec(v)
 	return Maths.Vector:new(v.x, v.y, v.z)
 end
 
-function Editor:DrawTopDownMap(view, colors)
+function Editor:DrawTopDownMap(colors)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local nWall = sec.walls[j % #sec.walls + 1]
 			Draw.Line(
-				self.ScreenFromView(view, MakeVec(self.curMapData.verts[wall.start])),
-				self.ScreenFromView(view, MakeVec(self.curMapData.verts[nWall.start])),
+				self:ScreenFromWorld(MakeVec(self.curMapData.verts[wall.start])),
+				self:ScreenFromWorld(MakeVec(self.curMapData.verts[nWall.start])),
 				colors.walls
 			)
 		end
 	end
+
+	for i, vert in ipairs(self.curMapData.verts) do
+		if self.Selection:IsVertSelected(i) then
+			local v = self:ScreenFromWorld(MakeVec(vert))
+			Draw.Rect(
+				{
+					x = v.x - 1,
+					y = v.y - 1,
+					w = 3,
+					h = 3
+				},
+				colors.vertSelection
+			)
+		end
+	end
+end
+
+function Editor:GetClosestVertIdx(vecInScreen)
+	local vec = self:WorldFromScreen(vecInScreen)
+	local minDist = 999999999999999
+	local vertIdx = -1
+	for i, vert in ipairs(self.curMapData.verts) do
+		local diff2D = MakeVec(vert) - vec
+		diff2D.z = 0
+		local lenSq = diff2D:LengthSquared()
+		if lenSq < minDist then
+			minDist = lenSq
+			vertIdx = i
+		end
+	end
+	return vertIdx, minDist
+end
+
+function Editor.Selection:Clear()
+	self.verts = {}
+	self.walls = {}
+	self.sectors = {}
+end
+
+function Editor.Selection:SelectVert(id)
+	self.verts[id] = true
+end
+
+function Editor.Selection:DeselectVert(id)
+	self.verts[id] = nil
+end
+
+function Editor.Selection:IsVertSelected(id)
+	return self.verts[id] or false
+end
+
+function Editor.Selection:SelectWall(id)
+	self.walls[id] = true
+end
+
+function Editor.Selection:DeselectWall(id)
+	self.walls[id] = nil
+end
+
+function Editor.Selection:IsWallSelected(id)
+	return self.walls[id] or false
+end
+
+function Editor.Selection:SelectSector(id)
+	self.sectors[id] = true
+end
+
+function Editor.Selection:DeselectSector(id)
+	self.sectors[id] = nil
+end
+
+function Editor.Selection:IsSectorSelected(id)
+	return self.sectors[id] or false
 end
 

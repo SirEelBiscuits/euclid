@@ -49,8 +49,27 @@ return {
 	{
 		ControlType = "button",
 		Name = "Save",
-		Key = "s"
+		Key = "s",
+		CtrlPressed = true
 	},
+	{
+		Name = "AddSelect",
+		ControlType = "button",
+		MouseButton = "left",
+		ShiftPressed = true
+	},
+	{
+		Name = "ExclusiveSelect",
+		ControlType = "button",
+		MouseButton = "left",
+		ShiftPressed = false
+	},
+	{
+		Name = "DragObject",
+		ControlType = "button",
+		MouseButton = "middle"
+	},
+
 
 	-- Mouse Input
 
@@ -60,11 +79,25 @@ return {
 		axis = "x",
 		relative = false
 	},
+	{
+		Name = "MouseXRel",
+		ControlType = "mouse",
+		axis = "x",
+		relative = true,
+		scale = 1
+	},
 	{ 
 		Name = "MouseY",
 		ControlType = "mouse",
 		axis = "y",
 		relative = false
+	},
+	{ 
+		Name = "MouseYRel",
+		ControlType = "mouse",
+		axis = "y",
+		relative = true,
+		scale = 1
 	},
 	{
 		Name = "LClick",

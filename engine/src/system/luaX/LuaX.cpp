@@ -152,6 +152,7 @@ void luaX_showErrors(lua_State* s, char const *name, int errCode) {
 }
 
 static int traceback(lua_State *s) {
+	printf("%s\n", lua_tostring(s, -1));
 	luaL_traceback(s, s, nullptr, 0);
 	printf("%s\n", lua_tostring(s, -1));
 	return 1;

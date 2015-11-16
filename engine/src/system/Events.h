@@ -35,9 +35,15 @@ namespace System {
 
 		//Implemented in platform code
 		bool ReturnOnKeyInput();
-
+		
 		//implemented in platform code
 		std::vector<Event> GetEvents();
+		
+		//implemented in platform code
+		bool IsShiftDown();
+		
+		//implemented in platform code
+		bool IsCtrlDown();
 	}
 
 	namespace Events {

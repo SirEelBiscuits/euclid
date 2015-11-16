@@ -58,6 +58,11 @@ namespace System {
 		static int const DEBUG_LOOP_RECORD_KEY  = SDLK_F7;
 		static int const DEBUG_RENDERING_KEY    = SDLK_F4;
 
+		static bool LShiftDown = false;
+		static bool RShiftDown = false;
+		static bool LCtrlDown  = false;
+		static bool RCtrlDown  = false;
+
 		std::vector<Event> GetEvents() {
 			std::vector<Event> events;
 			auto done = false;
@@ -92,6 +97,22 @@ namespace System {
 						break;
 #endif
 				//FALLTHROUGH
+					switch(e.key.keysym.sym) {
+					case SDLK_LCTRL:
+						LCtrlDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_RCTRL:
+						RCtrlDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_LSHIFT:
+						LShiftDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_RSHIFT:
+						RShiftDown = e.type == SDL_KEYDOWN;
+						break;
+					default:
+						break;
+					}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 				case SDL_MOUSEMOTION:
@@ -148,6 +169,14 @@ namespace System {
 				}
 			}
 			return events;
+		}
+
+		bool IsShiftDown() { 
+			return LShiftDown || RShiftDown;
+		}
+
+		bool IsCtrlDown() {
+			return LCtrlDown || RCtrlDown;
 		}
 	}
 

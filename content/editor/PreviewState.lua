@@ -8,6 +8,9 @@ function Editor.PreviewState:Enter()
 
 	self.eye = {x = 0, y = 0, z = 1.65}
 	self.angle = 0
+
+	Editor.curMap = Game.OpenMap(Editor.curMapData)
+
 	self.sector = Editor.curMap:GetSector(0)
 end
 

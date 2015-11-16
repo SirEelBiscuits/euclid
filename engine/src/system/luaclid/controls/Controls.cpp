@@ -99,8 +99,35 @@ namespace System {
 						}
 						break;
 					}
+
+					//here we grab the shift/ctrl must be up/down/don't care values
+					Mask mask = Mask::None;
+					pushedItems += luaX_getlocal(lua, "ShiftPressed");
+					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+						if(luaX_return<bool>(lua)) {
+							mask = (Mask)((int)mask | (int)Mask::ShiftDown);
+						} else {
+							mask = (Mask)((int)mask | (int)Mask::ShiftUp);
+						}
+					} else {
+						ASSERT(lua_type(lua, -1) == LUA_TNIL);
+						lua_pop(lua, 1);
+					}
+					--pushedItems;
+					pushedItems += luaX_getlocal(lua, "CtrlPressed");
+					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+						if(luaX_return<bool>(lua)) {
+							mask = (Mask)((int)mask | (int)Mask::CtrlDown);
+						} else {
+							mask = (Mask)((int)mask | (int)Mask::CtrlUp);
+						}
+					} else {
+						ASSERT(lua_type(lua, -1) == LUA_TNIL);
+						lua_pop(lua, 1);
+					}
+					--pushedItems;
 					
-					inputList.emplace_back(std::make_unique<Button>(Name, Key, isMouse));
+					inputList.emplace_back(std::make_unique<Button>(Name, Key, isMouse, mask));
 				}
 
 				else if(controlType.compare("axis") == 0) {
@@ -267,17 +294,29 @@ namespace System {
 			return false;
 		}
 
-		Button::Button(std::string name, int key, bool isMouse)
+		Button::Button(std::string name, int key, bool isMouse, Mask mask)
 			: name(name)
 			, key(key)
 			, state(UnPressed)
 			, newlyPressed(false)
 			, newlyReleased(false)
 			, isMouse(isMouse)
+			, requireShiftDown((int)mask & (int)Mask::ShiftDown)
+			, requireShiftUp  ((int)mask & (int)Mask::ShiftUp)
+			, requireCtrlDown ((int)mask & (int)Mask::CtrlDown)
+			, requireCtrlUp   ((int)mask & (int)Mask::CtrlUp)
 		{}
 
 		void Button::HandleEvent(Input::Event e) {
-			if(e.key != key || isMouseEvent(e) != isMouse || e.repeat)
+			if(
+				e.key != key 
+				|| isMouseEvent(e) != isMouse 
+				|| e.repeat
+				|| (requireShiftDown && !System::Input::IsShiftDown())
+				|| (requireShiftUp   && System::Input::IsShiftDown())
+				|| (requireCtrlDown  && !System::Input::IsCtrlDown())
+				|| (requireCtrlUp    && System::Input::IsCtrlDown())
+			)
 				return;
 
 			switch(e.type) {

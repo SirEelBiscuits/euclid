@@ -18,10 +18,18 @@ namespace System {
 			virtual void HandleEvent(Input::Event event) = 0;
 			virtual void SetValue(lua_State *lua) = 0;
 		};
+		
+		enum class Mask {
+			None      = 0,
+			ShiftUp   = 1 << 0,
+			ShiftDown = 1 << 1,
+			CtrlUp    = 1 << 2,
+			CtrlDown  = 1 << 3,
+		};
 
 		class Button : public IInput {
 		public:
-			Button(std::string name, int key, bool isMouse);
+			Button(std::string name, int key, bool isMouse, Mask mask = Mask::None);
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -32,6 +40,10 @@ namespace System {
 			bool newlyPressed;
 			bool newlyReleased;
 			bool isMouse;
+			bool requireShiftDown{false};
+			bool requireShiftUp  {false};
+			bool requireCtrlDown {false};
+			bool requireCtrlUp   {false};
 		};
 
 		class Axis : public IInput {
