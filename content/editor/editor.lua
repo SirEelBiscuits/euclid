@@ -49,27 +49,61 @@ function Game.Render()
 	end
 end
 
-function openMap(filename)
+function Editor:openMap(filename)
 	print("trying to open " .. filename)
-	Editor.curMapName = filename
-	Editor.curMapData = dofile(filename)
-	Editor.curMap     = Game.OpenMap(Editor.curMapData)
-	Editor.DebugText  = Editor.curMap:GetNumSectors()
+	self.curMapName = filename
+	self.curMapData = dofile(filename)
+	self.curMap     = Game.OpenMap(Editor.curMapData)
+	self.DebugText  = self.curMap:GetNumSectors()
 	print("done")
 end
 
-function saveMap(filename)
-	filename = filename or Editor.curMapName
-	if filename == "" then
-		filename = Editor.curMapName
+function Editor:saveMap(filename)
+	if filename ~= "" then
+		self.curMapName = filename or self.curMapName
 	end
 	print("trying to save " .. filename)
-	Editor.curMapData = Game.StoreMap(Editor.curMap)
 	local str = serialise(Editor.curMapData)
 	local file = io.open(filename, "w")
 	io.output(file)
 	io.write(str)
 	io.close(file)
 	print("done")
+end
+
+function Editor.ScreenFromView(view, vec)
+	local relative = (vec - view.eye) * view.scale
+	relative.y = -relative.y
+	relative = Maths.RotationMatrix(view.angle or 0) * relative
+	return Maths.Vector:new(
+		relative.x + Draw.GetWidth() / 2,
+		relative.y + Draw.GetHeight() / 2
+	)
+end
+
+function Editor.ViewFromScreen(view, vec)
+	local relative = Maths.Vector:new(vec.x - Draw.GetWidth() / 2, vec.y - Draw.GetHeight() / 2)
+	relative = Maths.RotationMatrix(-view.angle or 0) * relative
+	relative.y = -relative.y
+	return (relative / view.scale) + view.eye
+end
+
+local function MakeVec(v)
+	return Maths.Vector:new(v.x, v.y, v.z)
+end
+
+function Editor:DrawTopDownMap(view, colors)
+	for i, sec in ipairs(self.curMapData.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			local idx2 = (j + 1) % #sec.walls
+			if idx2 == 0 then idx2 = #sec.walls end
+			local nWall = sec.walls[idx2]
+			Draw.Line(
+				self.ScreenFromView(view, MakeVec(self.curMapData.verts[wall.start])),
+				self.ScreenFromView(view, MakeVec(self.curMapData.verts[nWall.start])),
+				colors.walls
+			)
+		end
+	end
 end
 

@@ -18,7 +18,7 @@ function Editor.DefaultState:Update(dt)
 	if Game.Controls.OpenMap.pressed then
 		Editor.TypingState:Enter(
 			function(filename)
-				openMap(filename)
+				Editor:openMap(filename)
 				Editor.DefaultState:Enter()
 			end
 		)
@@ -30,12 +30,11 @@ function Editor.DefaultState:Update(dt)
 
 	if Game.Controls.Save.pressed then
 		print("saving")
-		Editor.curMapData = Game.StoreMap(Editor.curMap)
 		Editor.TypingState:Enter(
 		function (filename)
-			saveMap(filename)
+			Editor:saveMap(filename)
 
-			Editor.State = Editor.DefaultState
+			Editor.DefaultStatea:Enter()
 		end
 		)
 	end
@@ -43,7 +42,10 @@ end
 
 function Editor.DefaultState.Render()
 	if Editor.curMap ~= nil then
-		Draw.TopDownMap(Editor.curMap, {eye = {x = 0, y = 0}, angle = 0, sector = Editor.curMap:GetSector(0)}, {g = 255})
+		Editor:DrawTopDownMap(
+			{ eye = Maths.Vector:new(0, 0), angle = 0, scale = 10 },
+			{ walls = {g = 128} }
+		)
 	end
 
 	if Textures.text then

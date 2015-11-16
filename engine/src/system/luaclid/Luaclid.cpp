@@ -189,9 +189,11 @@ namespace System {
 				auto ret = luaX_dofile(lua, filename);
 				ASSERT(ret);
 			};
-			auto ret = luaX_dofile(lua, "luaclid.lua");
-			CRITICAL_ASSERT(ret);
-			System::Events::RegisterFileToWatch("luaclid.lua", reloader);
+			for(auto s : {"luaclid.lua", "luaclid/maths.lua"}) {
+				auto ret = luaX_dofile(lua, s);
+				CRITICAL_ASSERT(ret);
+				System::Events::RegisterFileToWatch(s, reloader);
+			}
 
 			//todo type safety, potential memory leak
 			auto es = lua_getextraspace(lua);
@@ -201,7 +203,7 @@ namespace System {
 			RegisterFunctions(lua, &ctx, reloader);
 
 			auto startscript = cfg.GetValue<std::string>("startscript");
-			ret = luaX_dofile(lua, startscript.c_str());
+			auto ret = luaX_dofile(lua, startscript.c_str());
 			CRITICAL_ASSERT(ret);
 			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
 		}
