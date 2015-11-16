@@ -95,9 +95,7 @@ end
 function Editor:DrawTopDownMap(view, colors)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
-			local idx2 = (j + 1) % #sec.walls
-			if idx2 == 0 then idx2 = #sec.walls end
-			local nWall = sec.walls[idx2]
+			local nWall = sec.walls[j % #sec.walls + 1]
 			Draw.Line(
 				self.ScreenFromView(view, MakeVec(self.curMapData.verts[wall.start])),
 				self.ScreenFromView(view, MakeVec(self.curMapData.verts[nWall.start])),
