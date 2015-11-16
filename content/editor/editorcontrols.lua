@@ -50,6 +50,36 @@ return {
 		ControlType = "button",
 		Name = "Save",
 		Key = "s"
-	}
+	},
+
+	-- Mouse Input
+
+	{
+		Name = "MouseX",
+		ControlType = "mouse",
+		axis = "x",
+		relative = false
+	},
+	{ 
+		Name = "MouseY",
+		ControlType = "mouse",
+		axis = "y",
+		relative = false
+	},
+	{
+		Name = "LClick",
+		ControlType = "button",
+		MouseButton = "left"
+	},
+	{
+		Name = "RClick",
+		ControlType = "button",
+		MouseButton = "right"
+	},
+	{
+		Name = "MClick",
+		ControlType = "button",
+		MouseButton = "middle"
+	},
 }
 

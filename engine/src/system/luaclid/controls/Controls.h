@@ -21,7 +21,7 @@ namespace System {
 
 		class Button : public IInput {
 		public:
-			Button(std::string name, int key);
+			Button(std::string name, int key, bool isMouse);
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -31,6 +31,7 @@ namespace System {
 			enum {Pressed, UnPressed} state;
 			bool newlyPressed;
 			bool newlyReleased;
+			bool isMouse;
 		};
 
 		class Axis : public IInput {
