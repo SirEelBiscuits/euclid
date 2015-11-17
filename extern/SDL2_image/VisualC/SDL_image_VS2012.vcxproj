@@ -119,7 +119,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\Release;$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration);$(SolutionDir)extern\SDL2\VisualC\SDLmain\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -194,7 +194,7 @@ xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\Release;$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration);$(SolutionDir)extern\SDL2\VisualC\SDLmain\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
