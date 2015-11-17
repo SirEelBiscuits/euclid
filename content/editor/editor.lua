@@ -43,6 +43,12 @@ function Game.Update(dt)
 
 	Editor.State:Update(dt)
 
+	if false then
+		if #Game.Input > 0 and not Game.Input[1].keyRepeat then
+			print(Game.Input[1].key)
+		end
+	end
+
 	return not Game.quit
 end
 

@@ -36,7 +36,7 @@ function Editor.DefaultState:Update(dt)
 			function (filename)
 				Editor:SaveMap(filename)
 
-				Editor.DefaultStatea:Enter()
+				Editor.DefaultState:Enter()
 			end
 		)
 	end
@@ -65,6 +65,15 @@ function Editor.DefaultState:Update(dt)
 
 	if Game.Controls.DragObject.isDown then
 		Editor.DragObjectState:Enter()
+	end
+
+	if Game.Controls.DeleteObject.pressed then
+		for i = #Editor.curMapData.verts, 1, -1 do
+			print("checking " .. i)
+			if Editor.Selection:IsVertSelected(i) then
+				Editor.curMapData:DeleteVert(i)
+			end
+		end
 	end
 end
 

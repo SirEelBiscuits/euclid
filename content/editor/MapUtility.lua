@@ -50,4 +50,44 @@ function MapUtility:FixAllSectorWindings()
 	end
 end
 
+function MapUtility:DeleteSector(id)
+	for i, sec in ipairs(self.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			if wall.portal == id then
+				wall.portal = nil
+			end
+		end
+	end
+	table.remove(self.sectors, id)
+end
+
+function MapUtility:DeleteVert(id)
+	print("deleting vert " .. id)
+	local SecUpdateList = {}
+	for i, sec in ipairs(self.sectors) do
+		local WallUpdateList = {}
+		for j, wall in ipairs(sec.walls) do
+			if wall.start == id then
+				table.insert(WallUpdateList, j)
+			end
+			if wall.start >= id then
+				wall.start = wall.start -1
+			end
+		end
+		for j = #WallUpdateList, 1, -1 do
+			table.remove(sec.walls, WallUpdateList[j])
+		end
+
+		if #sec.walls < 3 then
+			table.insert(SecUpdateList, i)
+		end
+	end
+
+	for j = #SecUpdateList, 1, -1 do
+		self:DeleteSector(SecUpdateList[j])
+	end
+
+	table.remove(self.verts, id)
+end
+
 print("Map Utility loaded")
