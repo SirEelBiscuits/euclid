@@ -7,9 +7,6 @@ Editor = Editor or {
 	Cursor = {},
 }
 
-function nullfunc()
-end
-
 function Game.Initialise()
 	Textures = { text = Draw.GetTexture("Mecha.png") }
 
@@ -19,6 +16,9 @@ function Game.Initialise()
 	Game.LoadAndWatchFile("editor/TypingState.lua")
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
 	Game.LoadAndWatchFile("editor/DragObjectState.lua")
+	Game.LoadAndWatchFile("editor/MapUtility.lua")
+
+	MapUtility.__index = MapUtility
 
 	Editor.State = Editor.DefaultState
 
@@ -57,16 +57,20 @@ function Game.Render()
 	end
 end
 
-function Editor:openMap(filename)
+function Editor:OpenMap(filename)
 	print("trying to open " .. filename)
 	self.curMapName = filename
 	self.curMapData = dofile(filename)
+	setmetatable(self.curMapData, MapUtility)
+
+	self.curMapData:FixAllSectorWindings()
+
 	self.curMap     = Game.OpenMap(Editor.curMapData)
 	self.DebugText  = self.curMap:GetNumSectors()
 	print("done")
 end
 
-function Editor:saveMap(filename)
+function Editor:SaveMap(filename)
 	if filename ~= "" then
 		self.curMapName = filename or self.curMapName
 	end
@@ -128,9 +132,9 @@ function Editor:DrawTopDownMap(colors)
 	end
 end
 
-function Editor:GetClosestVertIdx(vecInScreen)
+function Editor:GetClosestVertIdx(vecInScreen, maxDist)
 	local vec = self:WorldFromScreen(vecInScreen)
-	local minDist = 999999999999999
+	local minDist = maxDist or 999999999999999
 	local vertIdx = -1
 	for i, vert in ipairs(self.curMapData.verts) do
 		local diff2D = MakeVec(vert) - vec
@@ -141,7 +145,9 @@ function Editor:GetClosestVertIdx(vecInScreen)
 			vertIdx = i
 		end
 	end
-	return vertIdx, minDist
+	if vertIdx ~= -1 then
+		return vertIdx, minDist
+	end
 end
 
 function Editor.Selection:Clear()

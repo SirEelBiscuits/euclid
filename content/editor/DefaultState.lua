@@ -20,7 +20,7 @@ function Editor.DefaultState:Update(dt)
 	if Game.Controls.OpenMap.pressed then
 		Editor.TypingState:Enter(
 			function(filename)
-				Editor:openMap(filename)
+				Editor:OpenMap(filename)
 				Editor.DefaultState:Enter()
 			end
 		)
@@ -34,7 +34,7 @@ function Editor.DefaultState:Update(dt)
 		print("saving")
 		Editor.TypingState:Enter(
 			function (filename)
-				Editor:saveMap(filename)
+				Editor:SaveMap(filename)
 
 				Editor.DefaultStatea:Enter()
 			end
@@ -42,8 +42,9 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.AddSelect.pressed then
-		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor)
-		if dist < 1 / Editor.view.scale then
+		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
+			1 / Editor.view.scale)
+		if idx ~= nil then
 			if Editor.Selection:IsVertSelected(idx) then
 				Editor.Selection:DeselectVert(idx)
 			else
@@ -55,8 +56,9 @@ function Editor.DefaultState:Update(dt)
 	if Game.Controls.ExclusiveSelect.pressed then
 		Editor.Selection:Clear()
 		
-		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor)
-		if dist < 1 / Editor.view.scale then
+		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
+			1 / Editor.view.scale)
+		if idx ~= nil then
 			Editor.Selection:SelectVert(idx)
 		end
 	end
@@ -103,3 +105,4 @@ function SelectionInfo()
 		Draw.Text({x = 4, y = Draw.GetHeight() - 16}, Textures.text, numSelected .. " verts selected")
 	end
 end
+
