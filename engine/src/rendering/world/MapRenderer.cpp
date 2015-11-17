@@ -381,6 +381,7 @@ namespace Rendering {
 					dl.tex,
 					dl.invDist,
 					Rendering::Color{0, 0, 128, 128},
+					portalDepth,
 					true
 				);
 		}
