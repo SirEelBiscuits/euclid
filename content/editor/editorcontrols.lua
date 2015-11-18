@@ -29,7 +29,7 @@ return {
 	{
 		ControlType = "button",
 		Name = "RaiseCeiling",
-		Key = 127 -- delete key
+		Key = "d"
 	},
 	{
 		ControlType = "button",
@@ -72,7 +72,7 @@ return {
 	{
 		Name = "DeleteObject",
 		ControlType = "button",
-		Key = "d"
+		Key = 127 -- delete key
 	},
 
 

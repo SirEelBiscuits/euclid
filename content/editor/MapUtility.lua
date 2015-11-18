@@ -6,13 +6,57 @@ MapUtility = MapUtility or {}
 	and query map specific information
 ]]--
 
+function MapUtility:SetUpMap(map)
+	self.__index = self
+	setmetatable(map, self)
+	for i, v in ipairs(map.verts) do
+		setmetatable(v, Maths.Vertex)
+	end
+	map:SetCentroids()
+end
+
+-- General
+
 local function Cross2D(left, right)
 	return left.x * right.y - right.x * left.y
 end
 
+-- Verts
+
 function MapUtility:GetVert(id)
 	return Maths.Vector:new(self.verts[id].x, self.verts[id].y)
 end
+
+function MapUtility:DeleteVert(id)
+	print("deleting vert " .. id)
+	local SecUpdateList = {}
+	for i, sec in ipairs(self.sectors) do
+		local WallUpdateList = {}
+		for j, wall in ipairs(sec.walls) do
+			if wall.start == id then
+				table.insert(WallUpdateList, j)
+			end
+			if wall.start >= id then
+				wall.start = wall.start -1
+			end
+		end
+		for j = #WallUpdateList, 1, -1 do
+			table.remove(sec.walls, WallUpdateList[j])
+		end
+
+		if #sec.walls < 3 then
+			table.insert(SecUpdateList, i)
+		end
+	end
+
+	for j = #SecUpdateList, 1, -1 do
+		self:DeleteSector(SecUpdateList[j])
+	end
+
+	table.remove(self.verts, id)
+end
+
+--Sectors
 
 function MapUtility:IsSectorConvex(id)
 	local sec = self.sectors[id]
@@ -61,33 +105,29 @@ function MapUtility:DeleteSector(id)
 	table.remove(self.sectors, id)
 end
 
-function MapUtility:DeleteVert(id)
-	print("deleting vert " .. id)
-	local SecUpdateList = {}
+function MapUtility:IsPointInSector(vec, secID)
+	local sec = self.sectors[secID]
+	for i, wall in ipairs(sec.walls) do 
+		local start = self:GetVert(wall.start)
+		local nextWall = sec.walls[i % #sec.walls + 1]
+		local nextStart = self:GetVert(nextWall.start)
+
+		if Cross2D(nextStart - start, vec - start) < 0 then
+			return false
+		end
+	end
+	return true
+end
+
+function MapUtility:SetCentroids()
 	for i, sec in ipairs(self.sectors) do
-		local WallUpdateList = {}
+		local acc = Maths.Vector:new(0,0)
 		for j, wall in ipairs(sec.walls) do
-			if wall.start == id then
-				table.insert(WallUpdateList, j)
-			end
-			if wall.start >= id then
-				wall.start = wall.start -1
-			end
+			acc = acc + self:GetVert(wall.start)
 		end
-		for j = #WallUpdateList, 1, -1 do
-			table.remove(sec.walls, WallUpdateList[j])
-		end
-
-		if #sec.walls < 3 then
-			table.insert(SecUpdateList, i)
-		end
+		acc = acc / #sec.walls
+		sec.centroid = acc
 	end
-
-	for j = #SecUpdateList, 1, -1 do
-		self:DeleteSector(SecUpdateList[j])
-	end
-
-	table.remove(self.verts, id)
 end
 
 print("Map Utility loaded")

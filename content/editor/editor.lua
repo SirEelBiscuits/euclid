@@ -67,7 +67,7 @@ function Editor:OpenMap(filename)
 	print("trying to open " .. filename)
 	self.curMapName = filename
 	self.curMapData = dofile(filename)
-	setmetatable(self.curMapData, MapUtility)
+	MapUtility:SetUpMap(self.curMapData)
 
 	self.curMapData:FixAllSectorWindings()
 
@@ -122,6 +122,21 @@ function Editor:DrawTopDownMap(colors)
 		end
 	end
 
+	for i, sec in ipairs(self.curMapData.sectors) do
+		if self.Selection:IsSectorSelected(i) then
+			local v = self:ScreenFromWorld(sec.centroid)
+			Draw.Rect(
+				{
+					x = v.x,
+					y = v.y,
+					w = 3,
+					h = 3
+				},
+				colors.sectorSelection
+			)
+		end
+	end
+
 	for i, vert in ipairs(self.curMapData.verts) do
 		if self.Selection:IsVertSelected(i) then
 			local v = self:ScreenFromWorld(MakeVec(vert))
@@ -138,8 +153,7 @@ function Editor:DrawTopDownMap(colors)
 	end
 end
 
-function Editor:GetClosestVertIdx(vecInScreen, maxDist)
-	local vec = self:WorldFromScreen(vecInScreen)
+function Editor:GetClosestVertIdx(vec, maxDist)
 	local minDist = maxDist or 999999999999999
 	local vertIdx = -1
 	for i, vert in ipairs(self.curMapData.verts) do

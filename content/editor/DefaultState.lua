@@ -7,7 +7,7 @@ function Editor.DefaultState:Enter()
 end
 
 function Editor.DefaultState:Update(dt)
-	Editor.Cursor = Maths.Vector:new(Game.Controls.MouseX, Game.Controls.MouseY)
+	Editor.Cursor = Editor:WorldFromScreen(Maths.Vector:new(Game.Controls.MouseX, Game.Controls.MouseY))
 
 	if Game.Controls.reinit.pressed then
 		Game.Initialise()
@@ -50,6 +50,24 @@ function Editor.DefaultState:Update(dt)
 			else
 				Editor.Selection:SelectVert(idx)
 			end
+		else
+			local SecUpdateList = {}
+			local anyDeselected = false
+			for i, sec in ipairs(Editor.curMapData.sectors) do
+				if Editor.curMapData:IsPointInSector(Editor.Cursor, i) then
+					table.insert(SecUpdateList, i)
+					anyDeselected = anyDeselected or not Editor.Selection:IsSectorSelected(i)
+				end
+			end
+			if anyDeselected then
+				for i, v in ipairs(SecUpdateList) do
+					Editor.Selection:SelectSector(v)
+				end
+			else
+				for i, v in ipairs(SecUpdateList) do
+					Editor.Selection:DeselectSector(v)
+				end
+			end
 		end
 	end
 
@@ -60,6 +78,12 @@ function Editor.DefaultState:Update(dt)
 			1 / Editor.view.scale)
 		if idx ~= nil then
 			Editor.Selection:SelectVert(idx)
+		else
+			for i, sec in ipairs(Editor.curMapData.sectors) do
+				if Editor.curMapData:IsPointInSector(Editor.Cursor, i) then
+					Editor.Selection:SelectSector(i)
+				end
+			end
 		end
 	end
 
@@ -83,6 +107,7 @@ function Editor.DefaultState.Render()
 			{ 
 				walls = {g = 128},
 				vertSelection = {g = 255},
+				sectorSelection = {g = 255},
 			}
 		)
 	end
