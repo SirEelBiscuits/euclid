@@ -121,14 +121,18 @@ namespace World {
 
 	Sector * Map::GetSector(IDType ID) {
 		auto cur = sectors.begin();
-		for(auto i = 0u; i < sectors.size() && i < ID; ++i, ++cur);
-		return &*cur;
+		for(auto i = 0u; i < sectors.size(); ++i, ++cur)
+			if(i == ID)
+				return &*cur;
+		return nullptr;
 	}
 
 	Sector const * Map::GetSector(IDType ID) const {
 		auto cur = sectors.cbegin();
-		for(auto i = 0u; i < sectors.size() && i < ID; ++i, ++cur);
-		return &*cur;
+		for(auto i = 0u; i < sectors.size(); ++i, ++cur)
+			if(i == ID)
+				return &*cur;
+		return nullptr;
 	}
 
 	IDType Map::GetSectorID(Sector const * sec) const {

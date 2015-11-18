@@ -228,6 +228,9 @@ namespace System {
 
 		std::unique_ptr<World::Map> LoadMap(lua_State *lua) {
 			auto map = std::make_unique<World::Map>();
+			if(lua_type(lua, -1) != LUA_TTABLE) {
+				return map;
+			}
 			{
 				luaX_getlocal(lua, "verts");
 				auto vertIdx = 1;
