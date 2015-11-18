@@ -12,7 +12,8 @@ return {
 	{
 		ControlType = "button",
 		Name = "OpenMap",
-		Key = "o"
+		Key = "o",
+		CtrlPressed = true
 	},
 	{
 		ControlType = "button",
@@ -73,6 +74,11 @@ return {
 		Name = "DeleteObject",
 		ControlType = "button",
 		Key = 127 -- delete key
+	},
+	{
+		Name = "SplitWall",
+		ControlType = "button",
+		Key = "s"
 	},
 
 

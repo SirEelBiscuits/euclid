@@ -15,12 +15,6 @@ function MapUtility:SetUpMap(map)
 	map:SetCentroids()
 end
 
--- General
-
-local function Cross2D(left, right)
-	return left.x * right.y - right.x * left.y
-end
-
 -- Verts
 
 function MapUtility:GetVert(id)

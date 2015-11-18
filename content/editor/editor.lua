@@ -123,6 +123,19 @@ function Editor:DrawTopDownMap(colors)
 	end
 
 	for i, sec in ipairs(self.curMapData.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			local nWall = sec.walls[j % #sec.walls + 1]
+			if self.Selection:IsWallSelected(i, j) then
+				Draw.Line(
+					self:ScreenFromWorld(MakeVec(self.curMapData.verts[wall.start])),
+					self:ScreenFromWorld(MakeVec(self.curMapData.verts[nWall.start])),
+					colors.wallSelection
+				)
+			end
+		end
+	end
+
+	for i, sec in ipairs(self.curMapData.sectors) do
 		if self.Selection:IsSectorSelected(i) then
 			local v = self:ScreenFromWorld(sec.centroid)
 			Draw.Rect(
@@ -170,6 +183,36 @@ function Editor:GetClosestVertIdx(vec, maxDist)
 	end
 end
 
+function Editor:GetClosestWallIdx(vec, maxDist)
+	local minDist = maxDist or 9999999999999999
+	local secIdx = -1
+	local wallIdx = -1
+	for i, sec in ipairs(self.curMapData.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			local start = self.curMapData:GetVert(wall.start)
+			local wallEnd = self.curMapData:GetVert(self.curMapData.sectors[i].walls[j % #self.curMapData.sectors[i].walls + 1].start) - start
+			local wallLenSq = Dot(wallEnd, wallEnd)
+			local vecRel = vec - start
+
+			local crossProd = Cross2D(wallEnd, vecRel)
+			local dist = crossProd * crossProd / wallLenSq
+
+			if Dot(vecRel, wallEnd) > 0
+				and Dot(vecRel, wallEnd) < wallLenSq
+				and dist < minDist
+			then
+				minDist = dist
+				secIdx = i
+				wallIdx = j
+			end
+		end
+	end
+
+	if secIdx ~= nil then
+		return secIdx, wallIdx, minDist
+	end
+end
+
 function Editor.Selection:Clear()
 	self.verts = {}
 	self.walls = {}
@@ -188,16 +231,17 @@ function Editor.Selection:IsVertSelected(id)
 	return self.verts[id] or false
 end
 
-function Editor.Selection:SelectWall(id)
-	self.walls[id] = true
+function Editor.Selection:SelectWall(secID, wallID)
+	self.walls[secID] = self.walls[secID] or {}
+	self.walls[secID][wallID] = true
 end
 
-function Editor.Selection:DeselectWall(id)
-	self.walls[id] = nil
+function Editor.Selection:DeselectWall(secID, wallID)
+	self.walls[secID][wallID] = nil
 end
 
-function Editor.Selection:IsWallSelected(id)
-	return self.walls[id] or false
+function Editor.Selection:IsWallSelected(secID, wallID)
+	return (self.walls[secID] or false) and self.walls[secID][wallID] or false
 end
 
 function Editor.Selection:SelectSector(id)

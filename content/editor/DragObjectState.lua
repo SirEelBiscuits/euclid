@@ -20,6 +20,18 @@ function Editor.DragObjectState:Enter()
 			end
 		end
 	end
+
+	for i, s in pairs(Editor.Selection.walls) do
+		if s ~= nil then
+			local sec = Editor.curMapData.sectors[i]
+			for j, w in pairs(s) do
+				if w == true then
+					self.vertsToMove[sec.walls[j].start] = true
+					self.vertsToMove[sec.walls[j % #sec.walls + 1].start] = true
+				end
+			end
+		end
+	end
 end
 
 function Editor.DragObjectState:DoMove(x, y)

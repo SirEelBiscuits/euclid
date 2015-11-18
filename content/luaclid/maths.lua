@@ -113,4 +113,12 @@ Maths.Matrix.__sub = Maths.Matrix.Sub
 Maths.Matrix.__mul = Maths.Matrix.Mult
 Maths.Matrix.__div = Maths.Matrix.Div
 
+function Cross2D(left, right)
+	return left.x * right.y - right.x * left.y
+end
+
+function Dot(left, right)
+	return left.x * right.x + left.y * right.y + left.z * right.z
+end
+
 print("luaclid maths loaded")
