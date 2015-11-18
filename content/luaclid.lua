@@ -66,13 +66,13 @@ local function isArray(t)
 	return true
 end
 
-function deepCopy(obj)
+function DeepCopy(obj)
 	local objType = type(obj)
 	local copy
 	if objType == "table" then
 		copy = {}
 		for k,v in next, obj, nil do
-			copy[k] = deepCopy(v)
+			copy[k] = DeepCopy(v)
 		end
 	else
 		copy = obj

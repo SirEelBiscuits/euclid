@@ -50,7 +50,50 @@ function MapUtility:DeleteVert(id)
 	table.remove(self.verts, id)
 end
 
---Sectors
+-- Walls
+
+function MapUtility:SplitWall(secID, wallID)
+	local sec = self.sectors[secID]
+	local wall = sec.walls[wallID]
+	local wallEndID = sec.walls[wallID % #sec.walls + 1].start
+	local wallEnd = self:GetVert(wallEndID)
+
+	local newVertPos = (self:GetVert(wall.start) + wallEnd) / 2
+	table.insert(self.verts, newVertPos)
+	local newWall = { 
+		start = #self.verts, 
+		topTex = DeepCopy(wall.topTex),
+		mainTex = DeepCopy(wall.mainTex),
+		bottomTex = DeepCopy(wall.bottonTex),
+		portal = wall.portal
+	}
+	table.insert(sec.walls, wallID+1, newWall)
+
+	-- now we have to check the wall on the far side of the portal if there is one
+	-- as it will need to be split also
+	
+	local otherSec = self.sectors[wall.portal]
+	if otherSec ~= nil then
+		for i, wall in ipairs(otherSec.walls) do
+			local nWall = self:GetVert(wall.start)
+			if wall.start == wallEndID then
+				local newWall = {
+					start = #self.verts,
+					topTex = DeepCopy(nWall.topTex),
+					mainTex = DeepCopy(nWall.mainTex),
+					bottomTex = DeepCopy(nWall.bottomTex),
+					portal = nWall.portal
+				}
+				table.insert(otherSec.walls, i+1, newWall)
+				break
+			end
+		end
+	end
+
+	return #self.verts
+end
+
+-- Sectors
 
 function MapUtility:IsSectorConvex(id)
 	local sec = self.sectors[id]

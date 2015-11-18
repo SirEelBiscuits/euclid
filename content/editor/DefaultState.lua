@@ -109,12 +109,22 @@ function Editor.DefaultState:Update(dt)
 
 	if Game.Controls.DeleteObject.pressed then
 		for i = #Editor.curMapData.verts, 1, -1 do
-			print("checking " .. i)
 			if Editor.Selection:IsVertSelected(i) then
 				Editor.curMapData:DeleteVert(i)
 			end
 		end
+
+		Editor.Selection:Clear()
 	end
+
+	if Game.Controls.SplitWall.pressed then
+		local walls = Editor.Selection:GetSelectedWalls()
+		if #walls == 1 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
+			Editor.Selection:Clear()
+			Editor.Selection:SelectVert(Editor.curMapData:SplitWall(walls[1].sec, walls[1].wall))
+		end
+	end
+
 end
 
 function Editor.DefaultState.Render()

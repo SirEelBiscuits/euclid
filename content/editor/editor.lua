@@ -235,6 +235,14 @@ function Editor.Selection:IsVertSelected(id)
 	return self.verts[id] or false
 end
 
+function Editor.Selection:GetSelectedVerts()
+	local ret = {}
+	for i in pairs(self.verts) do
+		table.insert(ret, i)
+	end
+	return ret
+end
+
 function Editor.Selection:SelectWall(secID, wallID)
 	self.walls[secID] = self.walls[secID] or {}
 	self.walls[secID][wallID] = true
@@ -246,6 +254,16 @@ end
 
 function Editor.Selection:IsWallSelected(secID, wallID)
 	return (self.walls[secID] or false) and self.walls[secID][wallID] or false
+end
+
+function Editor.Selection:GetSelectedWalls()
+	local ret = {}
+	for i, s in pairs(self.walls) do
+		for j in pairs(s) do
+			table.insert(ret, {sec = i, wall = j})
+		end
+	end
+	return ret
 end
 
 function Editor.Selection:SelectSector(id)
@@ -260,3 +278,10 @@ function Editor.Selection:IsSectorSelected(id)
 	return self.sectors[id] or false
 end
 
+function Editor.Selection:GetSelectedSectors()
+	local ret = {}
+	for i in pairs(self.sectors) do
+		table.insert(ret, i)
+	end
+	return ret
+end
