@@ -111,6 +111,10 @@ local function MakeVec(v)
 end
 
 function Editor:DrawTopDownMap(colors)
+	if self.curMapData == nil then
+		return
+	end
+
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local nWall = sec.walls[j % #sec.walls + 1]
@@ -208,7 +212,7 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 		end
 	end
 
-	if secIdx ~= nil then
+	if secIdx ~= -1 then
 		return secIdx, wallIdx, minDist
 	end
 end
