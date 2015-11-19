@@ -80,7 +80,11 @@ return {
 		ControlType = "button",
 		Key = "s"
 	},
-
+	{
+		Name = "JoinSectors",
+		ControlType = "button",
+		Key = "j"
+	},
 
 	-- Mouse Input
 

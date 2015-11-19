@@ -125,6 +125,35 @@ function Editor.DefaultState:Update(dt)
 		end
 	end
 
+	if Game.Controls.JoinSectors.pressed then
+		local verts = Editor.Selection:GetSelectedVerts()
+		local walls = Editor.Selection:GetSelectedWalls()
+		local sects = Editor.Selection:GetSelectedSectors()
+		if #verts == 2 and #walls == 0 and #sects == 0 then
+			local UpdateList = {}
+			for i, sec in ipairs(Editor.curMapData.sectors) do
+				local vert1found = -1
+				local vert2found = -1
+				for j, wall in ipairs(sec.walls) do
+					if wall.start == verts[1] then
+						vert1found = j
+					end
+					if wall.start == verts[2] then
+						vert2found = j
+					end
+				end
+
+
+				if vert1found ~= -1 and vert2found ~= -1 then
+					table.insert(UpdateList, { sec = i, vert1 = vert1found, vert2 = vert2found })
+				end
+			end
+			for i = #UpdateList, 1, -1 do
+				Editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
+			end
+		end
+	end
+
 end
 
 function Editor.DefaultState.Render()

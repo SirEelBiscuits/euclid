@@ -23,7 +23,7 @@ return {
 		},
 		{
 			walls = {
-				{start = 1},
+				{start = 1, portal = 1},
 				{start = 2},
 				{start = 5},
 			},

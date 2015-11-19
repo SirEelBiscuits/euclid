@@ -118,6 +118,12 @@ function MapUtility:ReverseSectorWinding(id)
 		local rIdx = #walls + 1 - i
 		walls[i], walls[rIdx] = walls[rIdx], walls[i]
 	end
+
+	local vert = walls[#walls].start
+	for i = #walls, 2, -1 do
+		walls[i].start = walls[i-1].start
+	end
+	walls[1].start = vert
 end
 
 function MapUtility:FixAllSectorWindings()
@@ -134,8 +140,13 @@ end
 function MapUtility:DeleteSector(id)
 	for i, sec in ipairs(self.sectors) do
 		for j, wall in ipairs(sec.walls) do
-			if wall.portal == id then
-				wall.portal = nil
+			if wall.portal ~= nil then
+				if wall.portal == id then
+					wall.portal = nil
+				end
+				if wall.portal > id then
+					wall.portal = wall.portal - 1
+				end
 			end
 		end
 	end
@@ -156,15 +167,81 @@ function MapUtility:IsPointInSector(vec, secID)
 	return true
 end
 
+function MapUtility:SetSectorCentroid(sec)
+	local acc = Maths.Vector:new(0,0)
+	for j, wall in ipairs(sec.walls) do
+		acc = acc + self:GetVert(wall.start)
+	end
+	acc = acc / #sec.walls
+	sec.centroid = acc
+end
+
 function MapUtility:SetCentroids()
 	for i, sec in ipairs(self.sectors) do
-		local acc = Maths.Vector:new(0,0)
-		for j, wall in ipairs(sec.walls) do
-			acc = acc + self:GetVert(wall.start)
-		end
-		acc = acc / #sec.walls
-		sec.centroid = acc
+		self:SetSectorCentroid(sec)
 	end
+end
+
+function MapUtility:SplitSector(SecID, wall1ID, wall2ID)
+	if wall1ID == wall2ID then
+		return
+	end
+
+	local oldSec = self.sectors[SecID]
+	local newLeftSec = DeepCopy(oldSec)
+	newLeftSec.walls = {}
+	local leftSecID = #self.sectors + 1
+	local newRightSec = DeepCopy(oldSec)
+	newRightSec.walls = {}
+	local rightSecID = #self.sectors + 2
+
+	local left = wall1ID < wall2ID
+	for i, wall in ipairs(oldSec.walls) do
+		if left then
+			table.insert(newLeftSec.walls, DeepCopy(wall))
+		else
+			table.insert(newRightSec.walls, DeepCopy(wall))
+		end
+		if i == wall1ID or i == wall2ID then
+			left = not left
+			if left then
+				table.insert(newLeftSec.walls, DeepCopy(wall))
+				newRightSec.walls[#newRightSec.walls] = {portal = leftSecID, start = wall.start}
+			else
+				table.insert(newRightSec.walls, DeepCopy(wall))
+				newLeftSec.walls[#newLeftSec.walls] = {portal = rightSecID, start = wall.start}
+			end
+		end
+	end
+
+	-- now we stitch any portals leading in
+	
+	self:SetSectorCentroid(newLeftSec)
+	self:SetSectorCentroid(newRightSec)
+	
+	for i, sec in ipairs(self.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			if wall.portal == SecID then
+				local wallCentre = (self:GetVert(wall.start) + self:GetVert( sec.walls[j % #sec.walls + 1].start )) / 2
+				local toLeft = wallCentre - newLeftSec.centroid
+				local toRight = wallCentre - newRightSec.centroid
+				if Dot(toLeft, toLeft) < Dot(toRight, toRight) then
+					wall.portal = leftSecID
+				else
+					wall.portal = rightSecID
+				end
+			end
+		end
+	end
+	
+
+	-- and add the new sectors to the list
+
+	table.insert(self.sectors, newLeftSec)
+	table.insert(self.sectors, newRightSec)
+
+	self:DeleteSector(SecID)
+
 end
 
 print("Map Utility loaded")

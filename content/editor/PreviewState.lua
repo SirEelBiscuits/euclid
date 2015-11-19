@@ -6,12 +6,15 @@ function Editor.PreviewState:Enter()
 	Editor.State = self
 	print("entering preview state")
 
-	self.eye = {x = 0, y = 0, z = 1.65}
-	self.angle = 0
 
 	Editor.curMap = Game.OpenMap(Editor.curMapData)
 
-	self.sector = Editor.curMap:GetSector(0)
+	local SecID = 3
+	self.sector = Editor.curMap:GetSector(SecID - 1)
+	Editor.curMapData:SetCentroids()
+	self.eye = Editor.curMapData.sectors[SecID].centroid
+	self.eye.z = self.sector.floorHeight or 0 + 1.65
+	self.angle = 0
 end
 
 function Editor.PreviewState:Update(dt)
