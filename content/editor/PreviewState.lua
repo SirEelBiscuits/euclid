@@ -9,7 +9,7 @@ function Editor.PreviewState:Enter()
 
 	Editor.curMap = Game.OpenMap(Editor.curMapData)
 
-	local SecID = 3
+	local SecID = 1
 	self.sector = Editor.curMap:GetSector(SecID - 1)
 	Editor.curMapData:SetCentroids()
 	self.eye = Editor.curMapData.sectors[SecID].centroid

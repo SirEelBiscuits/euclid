@@ -27,8 +27,8 @@ function Editor.DrawSectorState:Leave(ToState)
 	--
 	-- ALSO DO SOMETHING SENSIBLE WITH THE FLOOR AND CEILING HEIGHTS/TEXTURES
 	
-	local minFloor = 99999999999999
-	local maxCeil  = -99999999999999
+	local minFloor = nil
+	local maxCeil  = nil
 	
 	for secIdx, sec in ipairs(Editor.curMapData.sectors) do
 		for otherWallIdx, otherWall in ipairs(sec.walls) do
@@ -39,10 +39,10 @@ function Editor.DrawSectorState:Leave(ToState)
 					otherWall.portal = #Editor.curMapData.sectors
 					wall.portal = secIdx
 					print("added portal between new sector and sector " .. secIdx)
-					if sec.floorHeight < minFloor then
+					if minFloor == nil or sec.floorHeight < minFloor then
 						minFloor = floorHeight
 					end
-					if sec.ceilHeight > maxCeil then
+					if maxCeil == nil or sec.ceilHeight > maxCeil then
 						maxCeil = sec.ceilHeight
 					end
 				end
@@ -50,8 +50,8 @@ function Editor.DrawSectorState:Leave(ToState)
 		end
 	end
 
-	newSector.ceilHeight = maxCeil
-	newSector.floorHeight = minFloor
+	newSector.ceilHeight = maxCeil or 2
+	newSector.floorHeight = minFloor or 0
 
 	Editor.State = ToState
 end

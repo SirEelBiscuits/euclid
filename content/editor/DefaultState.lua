@@ -160,11 +160,7 @@ function Editor.DefaultState:Update(dt)
 end
 
 function Editor.DefaultState.Render()
-	if Editor.curMap ~= nil then
-		Editor:DrawTopDownMap(
-			Editor.Colors
-		)
-	end
+	Editor:DrawTopDownMap(Editor.Colors)
 
 	if Textures.text then
 		local CursorString = tostring(Editor.Cursor.x) .. ", " .. tostring(Editor.Cursor.y)
