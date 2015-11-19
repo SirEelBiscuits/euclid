@@ -85,6 +85,31 @@ return {
 		ControlType = "button",
 		Key = "j"
 	},
+	{
+		Name = "EnterDrawSectorMode",
+		ControlType = "button",
+		Key = "n"
+	},
+	{
+		Name = "DrawSectorPlaceVert",
+		ControlType = "button",
+		MouseButton = "left",
+	},
+	{
+		Name = "DrawSectorUnplaceVert",
+		ControlType = "button",
+		MouseButton = "right"
+	},
+	{
+		Name = "DrawSectorModeDone",
+		ControlType = "button",
+		Key = 13
+	},
+	{
+		Name = "DrawSectorModeCancel",
+		ControlType = "button",
+		Key = 27
+	},
 
 	-- Mouse Input
 

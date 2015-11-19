@@ -10,7 +10,7 @@ function MapUtility:SetUpMap(map)
 	self.__index = self
 	setmetatable(map, self)
 	for i, v in ipairs(map.verts) do
-		setmetatable(v, Maths.Vertex)
+		setmetatable(v, Maths.Vector)
 	end
 	map:SetCentroids()
 end

@@ -5,7 +5,23 @@ Editor = Editor or {
 	view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 },
 	Selection = {verts = {}, walls = {}, sectors = {}},
 	Cursor = {},
+	Colors = { 
+		walls = {g = 128},
+		vertSelection = {g = 255},
+		sectorSelection = {g = 255},
+		wallSelection = {b = 128},
+		vertDrawing = {b = 255, g = 255}
+	}
 }
+
+function GetEmptyMap()
+	local ret =  {
+		sectors = {},
+		verts = {}
+	}
+	MapUtility:SetUpMap(ret)
+	return ret
+end
 
 function Game.Initialise()
 	Textures = { text = Draw.GetTexture("Mecha.png") }
@@ -16,11 +32,13 @@ function Game.Initialise()
 	Game.LoadAndWatchFile("editor/TypingState.lua")
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
 	Game.LoadAndWatchFile("editor/DragObjectState.lua")
+	Game.LoadAndWatchFile("editor/DrawSectorState.lua")
 	Game.LoadAndWatchFile("editor/MapUtility.lua")
 
 	MapUtility.__index = MapUtility
 
 	Editor.State = Editor.DefaultState
+	Editor.curMapData = GetEmptyMap()
 
 	Game.quit = false
 
@@ -72,7 +90,6 @@ function Editor:OpenMap(filename)
 	self.curMapData:FixAllSectorWindings()
 
 	self.curMap     = Game.OpenMap(Editor.curMapData)
-	self.DebugText  = self.curMap:GetNumSectors()
 	print("done")
 end
 

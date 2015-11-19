@@ -154,23 +154,21 @@ function Editor.DefaultState:Update(dt)
 		end
 	end
 
+	if Game.Controls.EnterDrawSectorMode.pressed then
+		Editor.DrawSectorState:Enter()
+	end
 end
 
 function Editor.DefaultState.Render()
 	if Editor.curMap ~= nil then
 		Editor:DrawTopDownMap(
-			{ 
-				walls = {g = 128},
-				vertSelection = {g = 255},
-				sectorSelection = {g = 255},
-				wallSelection = {b = 128},
-			}
+			Editor.Colors
 		)
 	end
 
 	if Textures.text then
-		Draw.Text({x = 0, y = 0}, Textures.text, Editor.DebugText)
-		Draw.Text({x = 64, y = 0}, Textures.text, tostring(Editor.Cursor.x) .. ", " .. tostring(Editor.Cursor.y))
+		local CursorString = tostring(Editor.Cursor.x) .. ", " .. tostring(Editor.Cursor.y)
+		Draw.Text({x = Draw.GetWidth() - 8 * #CursorString - 4, y = Draw.GetHeight() - 20}, Textures.text, CursorString)
 		SelectionInfo()
 	end
 end
@@ -190,9 +188,9 @@ function SelectionInfo()
 	end
 
 	if numSelected == 1 then
-		Draw.Text({x = 4, y = Draw.GetHeight() - 16}, Textures.text, info)
+		Draw.Text({x = 4, y = Draw.GetHeight() - 20}, Textures.text, info)
 	elseif numSelected > 1 then
-		Draw.Text({x = 4, y = Draw.GetHeight() - 16}, Textures.text, numSelected .. " verts selected")
+		Draw.Text({x = 4, y = Draw.GetHeight() - 20}, Textures.text, numSelected .. " verts selected")
 	end
 end
 

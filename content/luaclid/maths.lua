@@ -35,7 +35,7 @@ function Maths.Vector.Add(left, right)
 end
 
 function Maths.Vector.Sub(left, right)
-	return Maths.Vector:new(left.x - right.x, left.y - right.y, left.z - right.z)
+	return Maths.Vector:new(left.x - right.x, left.y - right.y, (left.z or 0) - (right.z or 0))
 end
 
 function Maths.Vector:LengthSquared()
