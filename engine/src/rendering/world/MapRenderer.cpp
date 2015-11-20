@@ -190,6 +190,7 @@ namespace Rendering {
 					nWallBottomEnd   = ScreenHeight/2 - nFloorHeight * wallScalarEnd;
 
 					vEndTop    = wall.topTex.uvStart.y + Fix16(ceilHeight.val - nCeilHeight.val);
+					vEndMain   = wall.mainTex.uvStart.y + Fix16( Maths::min(ceilHeight.val, nCeilHeight.val) - Maths::max(floorHeight.val, nFloorHeight.val) );
 					vEndBottom = wall.bottomTex.uvStart.y + Fix16(floorHeight.val - nFloorHeight.val);
 				}
 
