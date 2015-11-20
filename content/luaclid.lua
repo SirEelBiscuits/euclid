@@ -74,6 +74,7 @@ function DeepCopy(obj)
 		for k,v in next, obj, nil do
 			copy[k] = DeepCopy(v)
 		end
+		setmetatable(copy, getmetatable(obj))
 	else
 		copy = obj
 	end

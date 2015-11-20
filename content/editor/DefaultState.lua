@@ -41,6 +41,16 @@ function Editor.DefaultState:Update(dt)
 		)
 	end
 
+	if Game.Controls.Undo.pressed then
+		Editor.Selection:Clear()
+		Editor.History:Undo()
+	end
+
+	if Game.Controls.Redo.pressed then
+		Editor.Selection:Clear()
+		Editor.History:Redo()
+	end
+
 	if Game.Controls.AddSelect.pressed then
 		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
 			1 / Editor.view.scale)
@@ -104,15 +114,25 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.DragObject.isDown then
+		Editor.History:RegisterSnapshot()
 		Editor.DragObjectState:Enter()
 	end
 
 	if Game.Controls.DeleteObject.pressed then
+		if #Editor.Selection.verts > 0 or #Editor.Selection.sectors > 0 then
+			Editor.History:RegisterSnapshot()
+		end
+		for i = #Editor.curMapData.sectors, 1, -1 do
+			if Editor.Selection:IsSectorSelected(i) then
+				Editor.curMapData:DeleteSector(i)
+			end
+		end
 		for i = #Editor.curMapData.verts, 1, -1 do
 			if Editor.Selection:IsVertSelected(i) then
 				Editor.curMapData:DeleteVert(i)
 			end
 		end
+		Editor.curMapData:DeleteUnreferencedVerts()
 
 		Editor.Selection:Clear()
 	end
@@ -120,6 +140,7 @@ function Editor.DefaultState:Update(dt)
 	if Game.Controls.SplitWall.pressed then
 		local walls = Editor.Selection:GetSelectedWalls()
 		if #walls == 1 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
+			Editor.History:RegisterSnapshot()
 			Editor.Selection:Clear()
 			Editor.Selection:SelectVert(Editor.curMapData:SplitWall(walls[1].sec, walls[1].wall))
 		end
@@ -148,6 +169,9 @@ function Editor.DefaultState:Update(dt)
 					table.insert(UpdateList, { sec = i, vert1 = vert1found, vert2 = vert2found })
 				end
 			end
+			if #UpdateList > 0 then
+				Editor.History:RegisterSnapshot()
+			end
 			for i = #UpdateList, 1, -1 do
 				Editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
 			end
@@ -155,6 +179,7 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.EnterDrawSectorMode.pressed then
+		Editor.History:RegisterSnapshot()
 		Editor.DrawSectorState:Enter()
 	end
 end

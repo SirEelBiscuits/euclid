@@ -11,7 +11,8 @@ Editor = Editor or {
 		sectorSelection = {g = 255},
 		wallSelection = {b = 128},
 		vertDrawing = {b = 255, g = 255}
-	}
+	},
+	History = {level = 0, snapshots = {}},
 }
 
 function GetEmptyMap()
@@ -39,6 +40,7 @@ function Game.Initialise()
 
 	Editor.State = Editor.DefaultState
 	Editor.curMapData = GetEmptyMap()
+	Editor.History:Clear()
 
 	Game.quit = false
 
@@ -90,6 +92,7 @@ function Editor:OpenMap(filename)
 	self.curMapData:FixAllSectorWindings()
 
 	self.curMap     = Game.OpenMap(Editor.curMapData)
+	self.History:Clear()
 	print("done")
 end
 
@@ -301,4 +304,39 @@ function Editor.Selection:GetSelectedSectors()
 		table.insert(ret, i)
 	end
 	return ret
+end
+
+function Editor.History:RegisterSnapshot()
+	if self.level ~= 0 then
+		local startIdx = #self.snapshots - self.level + 1
+		print("Trimming history, " .. #self.snapshots .. " snapshots, trimming to level " .. self.level)
+		for i = startIdx, #self.snapshots do
+			self.snapshots[i] = nil
+		end
+	end
+	self.level = 0
+
+	Editor.curMapData = DeepCopy(Editor.curMapData)
+	table.insert(self.snapshots, Editor.curMapData)
+	print("There are now " .. #self.snapshots .. " snapshots")
+end
+
+function Editor.History:Undo()
+	self.level = self.level + 1
+	if self.level >= #self.snapshots then
+		self.level = self.level - 1
+	end
+	Editor.curMapData = self.snapshots[#self.snapshots - self.level]
+end
+
+function Editor.History:Redo()
+	self.level = self.level - 1
+	if self.level < 0 then self.level = 0 end
+	Editor.curMapData = self.snapshots[#self.snapshots - self.level]
+end
+
+function Editor.History:Clear()
+	self.level = 0
+	self.snapshots = {}
+	self:RegisterSnapshot()
 end

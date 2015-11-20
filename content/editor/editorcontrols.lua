@@ -154,5 +154,22 @@ return {
 		ControlType = "button",
 		MouseButton = "middle"
 	},
+
+	-- Undo
+	
+	{
+		Name = "Undo",
+		ControlType = "button",
+		Key = "z",
+		CtrlPressed = true,
+		ShiftPressed = false,
+	},
+	{
+		Name = "Redo",
+		ControlType = "button",
+		Key = "z",
+		CtrlPressed = true,
+		ShiftPressed = true,
+	},
 }
 

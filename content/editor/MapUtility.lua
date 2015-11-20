@@ -50,6 +50,25 @@ function MapUtility:DeleteVert(id)
 	table.remove(self.verts, id)
 end
 
+function MapUtility:DeleteUnreferencedVerts()
+	local journal = {}
+	for i, sec in ipairs(self.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			journal[wall.start] = true
+		end
+	end
+	local toDelete = {}
+	for i, vert in pairs(self.verts) do
+		if journal[i] == nil then
+			table.insert(toDelete, i)
+		end
+	end
+	table.sort(toDelete)
+	for i = #toDelete, 1, -1 do
+		self:DeleteVert(toDelete[i])
+	end
+end
+
 -- Walls
 
 function MapUtility:SplitWall(secID, wallID)
@@ -143,8 +162,7 @@ function MapUtility:DeleteSector(id)
 			if wall.portal ~= nil then
 				if wall.portal == id then
 					wall.portal = nil
-				end
-				if wall.portal > id then
+				elseif wall.portal > id then
 					wall.portal = wall.portal - 1
 				end
 			end
