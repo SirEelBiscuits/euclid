@@ -262,4 +262,56 @@ function MapUtility:SplitSector(SecID, wall1ID, wall2ID)
 
 end
 
+function MapUtility:JoinSectors(sec1ID, sec2ID)
+	local sec1 = self.sectors[sec1ID]
+	local sec2 = self.sectors[sec2ID]
+
+	local newSec = {walls = {}}
+
+	local wallToSkip1 = nil
+	local wallToSkip2 = nil
+	for i, wall in ipairs(sec1.walls) do
+		local nextWall = sec1.walls[i % #sec1.walls + 1]
+
+		for j, otherWall in ipairs(sec2.walls) do
+			local otherNextWall = sec2.walls[j % #sec2.walls + 1]
+
+			if wall.start == otherNextWall.start and nextWall.start == otherWall.start then
+				wallToSkip1 = i
+				wallToSkip2 = j
+				break
+			end
+		end
+		if wallToSkip1 ~= nil then
+			for i, wall in ipairs(sec1.walls) do
+				if i ~= wallToSkip1 then
+					table.insert(newSec.walls, DeepCopy(wall))
+				else
+					local idx = wallToSkip2 % #sec2.walls + 1
+					while idx ~= wallToSkip2 do
+						local wall2 = sec2.walls[idx]
+						table.insert(newSec.walls, DeepCopy(wall2))
+						idx = idx % #sec2.walls + 1
+					end
+				end
+			end
+			Editor.curMapData:SetSectorCentroid(newSec)
+			table.insert(Editor.curMapData.sectors, newSec)
+			if Editor.curMapData:IsSectorConvex(#Editor.curMapData.sectors) then
+				if sec1ID > sec2ID then
+					Editor.curMapData:DeleteSector(sec1ID)
+					Editor.curMapData:DeleteSector(sec2ID)
+				else
+					Editor.curMapData:DeleteSector(sec2ID)
+					Editor.curMapData:DeleteSector(sec1ID)
+				end
+				return #Editor.curMapData.sectors
+			else
+				table.remove(Editor.curMapData.sectors)
+				return nil
+			end
+		end
+	end
+end
+
 print("Map Utility loaded")

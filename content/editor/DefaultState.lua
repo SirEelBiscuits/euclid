@@ -175,6 +175,11 @@ function Editor.DefaultState:Update(dt)
 			for i = #UpdateList, 1, -1 do
 				Editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
 			end
+			Editor.Selection:Clear()
+		elseif #verts == 0 and #walls == 0 and #sects == 2 then
+			Editor.History:RegisterSnapshot()
+			Editor.Selection:Clear()
+			Editor.Selection:SelectSector(Editor.curMapData:JoinSectors(sects[1], sects[2]))
 		end
 	end
 
