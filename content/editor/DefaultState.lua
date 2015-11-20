@@ -143,10 +143,14 @@ function Editor.DefaultState:Update(dt)
 
 	if Game.Controls.SplitWall.pressed then
 		local walls = Editor.Selection:GetSelectedWalls()
-		if #walls == 1 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
+		if #walls > 0 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
 			Editor.History:RegisterSnapshot()
 			Editor.Selection:Clear(self.OnSelectionChanged)
-			Editor.Selection:SelectVert(Editor.curMapData:SplitWall(walls[1].sec, walls[1].wall))
+			table.sort(walls, function(a, b) return a.sec < b.sec or (a.sec == b.sec and a.wall < b.wall) end )
+			for i = #walls, 1, -1 do
+				local v = Editor.curMapData:SplitWall(walls[i].sec, walls[i].wall)
+				Editor.Selection:SelectVert(v)
+			end
 		end
 	end
 
