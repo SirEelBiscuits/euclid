@@ -38,10 +38,10 @@ function Editor.DrawSectorState:Leave(ToState)
 				if wall.start == otherNextWall.start and nextWall.start == otherWall.start then
 					otherWall.portal = #Editor.curMapData.sectors
 					wall.portal = secIdx
-					if minFloor == nil or sec.floorHeight < minFloor then
+					if minFloor == nil or (sec.floorHeight or 0) < minFloor then
 						minFloor = sec.floorHeight
 					end
-					if maxCeil == nil or sec.ceilHeight > maxCeil then
+					if maxCeil == nil or (sec.ceilHeight or 2) > maxCeil then
 						maxCeil = sec.ceilHeight
 					end
 				end

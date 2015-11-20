@@ -287,6 +287,37 @@ function Editor:GetSelectionString()
 		else
 			return #verts .. " verts selected", 1
 		end
+	else
+		local working = ""
+		if #verts > 0 then 
+			working = working .. #verts .. " vert" 
+			if #verts > 1 then
+				working = working .. "s"
+			end
+		end
+		if #walls > 0 then
+			if #working > 0 then
+				if #sectors == 0 then
+					working = working .. " and "
+				else
+					working = working .. ", "
+				end
+			end
+			working = working .. #walls .. " wall"
+			if #walls > 1 then
+				working = working .. "s"
+			end
+		end
+		if #sectors > 0 then
+			if #working > 0 then
+				working = working .. " and "
+			end
+			working = working .. #sectors .. " sector"
+			if #sectors > 1 then
+				working = working .. "s"
+			end
+		end
+		return working, 1
 	end
 
 	return "", 0

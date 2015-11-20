@@ -266,7 +266,13 @@ function MapUtility:JoinSectors(sec1ID, sec2ID)
 	local sec1 = self.sectors[sec1ID]
 	local sec2 = self.sectors[sec2ID]
 
-	local newSec = {walls = {}}
+	local newSec = {
+		walls = {},
+		ceilHeight = math.max(sec1.ceilHeight, sec2.ceilHeight),
+		floorHeight = math.min(sec1.floorHeight, sec1.floorHeight),
+		floorTex = sec1.floorTex,
+		ceilTex = sec1.ceilTex,
+	}
 
 	local wallToSkip1 = nil
 	local wallToSkip2 = nil
@@ -295,19 +301,28 @@ function MapUtility:JoinSectors(sec1ID, sec2ID)
 					end
 				end
 			end
-			Editor.curMapData:SetSectorCentroid(newSec)
-			table.insert(Editor.curMapData.sectors, newSec)
-			if Editor.curMapData:IsSectorConvex(#Editor.curMapData.sectors) then
-				if sec1ID > sec2ID then
-					Editor.curMapData:DeleteSector(sec1ID)
-					Editor.curMapData:DeleteSector(sec2ID)
-				else
-					Editor.curMapData:DeleteSector(sec2ID)
-					Editor.curMapData:DeleteSector(sec1ID)
+			self:SetSectorCentroid(newSec)
+			table.insert(self.sectors, newSec)
+
+			for i, sec in ipairs(self.sectors) do
+				for j, wall in ipairs(sec.walls) do
+					if wall.portal == sec1ID or wall.portal == sec2ID then
+						wall.portal = #self.sectors
+					end
 				end
-				return #Editor.curMapData.sectors
+			end
+
+			if self:IsSectorConvex(#self.sectors) then
+				if sec1ID > sec2ID then
+					self:DeleteSector(sec1ID)
+					self:DeleteSector(sec2ID)
+				else
+					self:DeleteSector(sec2ID)
+					self:DeleteSector(sec1ID)
+				end
+				return #self.sectors
 			else
-				table.remove(Editor.curMapData.sectors)
+				table.remove(self.sectors)
 				return nil
 			end
 		end
