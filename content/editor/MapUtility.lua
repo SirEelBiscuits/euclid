@@ -98,10 +98,10 @@ function MapUtility:SplitWall(secID, wallID)
 			if wall.start == wallEndID then
 				local newWall = {
 					start = #self.verts,
-					topTex = DeepCopy(nWall.topTex),
-					mainTex = DeepCopy(nWall.mainTex),
-					bottomTex = DeepCopy(nWall.bottomTex),
-					portal = nWall.portal
+					topTex = DeepCopy(wall.topTex),
+					mainTex = DeepCopy(wall.mainTex),
+					bottomTex = DeepCopy(wall.bottomTex),
+					portal = wall.portal
 				}
 				table.insert(otherSec.walls, i+1, newWall)
 				break
