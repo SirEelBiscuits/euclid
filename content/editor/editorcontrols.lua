@@ -110,6 +110,16 @@ return {
 		ControlType = "button",
 		Key = 27
 	},
+	{
+		Name = "SetCeilHeight",
+		ControlType = "button",
+		Key = "1"
+	},
+	{
+		Name = "SetFloorHeight",
+		ControlType = "button",
+		Key = "2"
+	},
 
 	-- Mouse Input
 

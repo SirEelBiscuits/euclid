@@ -1,8 +1,12 @@
 Editor.DefaultState = Editor.DefaultState or {}
 print("DefaultState reloaded")
 
-function Editor.DefaultState:Enter()
+function Editor.DefaultState:Enter(skipClear)
+	skipClear = skipClear or false
 	print("entering default state")
+	if not skipClear then
+		Editor.Selection:Clear(self.OnSelectionChanged)
+	end
 	Editor.State = self
 end
 
@@ -18,7 +22,7 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.OpenMap.pressed then
-		Editor.TypingState:Enter(
+		Editor.TypingState:Enter("Enter filename or hit escape", "Bad filename, try again",
 			function(filename)
 				Editor:OpenMap(filename)
 				Editor.DefaultState:Enter()
@@ -32,7 +36,7 @@ function Editor.DefaultState:Update(dt)
 
 	if Game.Controls.Save.pressed then
 		print("saving")
-		Editor.TypingState:Enter(
+		Editor.TypingState:Enter("Enter filename or hit escape", "Bad filename, try again",
 			function (filename)
 				Editor:SaveMap(filename)
 
@@ -42,12 +46,12 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.Undo.pressed then
-		Editor.Selection:Clear()
+		Editor.Selection:Clear(self.OnSelectionChanged)
 		Editor.History:Undo()
 	end
 
 	if Game.Controls.Redo.pressed then
-		Editor.Selection:Clear()
+		Editor.Selection:Clear(self.OnSelectionChanged)
 		Editor.History:Redo()
 	end
 
@@ -92,7 +96,7 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.ExclusiveSelect.pressed then
-		Editor.Selection:Clear()
+		Editor.Selection:Clear(self.OnSelectionChanged)
 		
 		local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
 			1 / Editor.view.scale)
@@ -134,14 +138,14 @@ function Editor.DefaultState:Update(dt)
 		end
 		Editor.curMapData:DeleteUnreferencedVerts()
 
-		Editor.Selection:Clear()
+		Editor.Selection:Clear(self.OnSelectionChanged)
 	end
 
 	if Game.Controls.SplitWall.pressed then
 		local walls = Editor.Selection:GetSelectedWalls()
 		if #walls == 1 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
 			Editor.History:RegisterSnapshot()
-			Editor.Selection:Clear()
+			Editor.Selection:Clear(self.OnSelectionChanged)
 			Editor.Selection:SelectVert(Editor.curMapData:SplitWall(walls[1].sec, walls[1].wall))
 		end
 	end
@@ -175,11 +179,14 @@ function Editor.DefaultState:Update(dt)
 			for i = #UpdateList, 1, -1 do
 				Editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
 			end
-			Editor.Selection:Clear()
+			Editor.Selection:Clear(self.OnSelectionChanged)
 		elseif #verts == 0 and #walls == 0 and #sects == 2 then
 			Editor.History:RegisterSnapshot()
-			Editor.Selection:Clear()
-			Editor.Selection:SelectSector(Editor.curMapData:JoinSectors(sects[1], sects[2]))
+			Editor.Selection:Clear(self.OnSelectionChanged)
+			local idx = Editor.curMapData:JoinSectors(sects[1], sects[2])
+			if idx ~= nil then
+				Editor.Selection:SelectSector(idx)
+			end
 		end
 	end
 
@@ -187,36 +194,53 @@ function Editor.DefaultState:Update(dt)
 		Editor.History:RegisterSnapshot()
 		Editor.DrawSectorState:Enter()
 	end
+
+	if Game.Controls.SetCeilHeight.pressed then
+		Editor.History:RegisterSnapshot()
+		Editor.TypingState:Enter("Enter new ceiling height", "bad number entered",
+			function(string)
+				local secs = Editor.Selection:GetSelectedSectors()
+				for i, s in ipairs(secs) do
+					local sec = Editor.curMapData.sectors[s]
+					sec.ceilHeight = tonumber(string)
+				end
+
+				Editor.DefaultState:Enter(true)
+			end
+		)
+	end
+
+	if Game.Controls.SetFloorHeight.pressed then
+		Editor.History:RegisterSnapshot()
+		Editor.TypingState:Enter("Enter new floor height", "bad number entered",
+			function(string)
+				local secs = Editor.Selection:GetSelectedSectors()
+				for i, s in ipairs(secs) do
+					local sec = Editor.curMapData.sectors[s]
+					sec.floorHeight = tonumber(string)
+				end
+
+				Editor.DefaultState:Enter(true)
+		end
+		)
+	end
 end
 
-function Editor.DefaultState.Render()
+function Editor.DefaultState.OnSelectionChanged()
+	Editor.DefaultState.InfoString, Editor.DefaultState.InfoStringHeight = Editor:GetSelectionString()
+end
+
+function Editor.DefaultState:Render()
 	Editor:DrawTopDownMap(Editor.Colors)
 
 	if Textures.text then
 		local CursorString = tostring(Editor.Cursor.x) .. ", " .. tostring(Editor.Cursor.y)
 		Draw.Text({x = Draw.GetWidth() - 8 * #CursorString - 4, y = Draw.GetHeight() - 20}, Textures.text, CursorString)
-		SelectionInfo()
+		self:SelectionInfo()
 	end
 end
 
-function SelectionInfo()
-	local numSelected = 0
-	local info = ""
-	for i in pairs(Editor.Selection.verts) do
-		numSelected = numSelected + 1
-		if numSelected > 1 then
-			break
-		end
-
-		local v = Editor.curMapData.verts[i]
-
-		info = "Selected vert: id = " .. i .. ", position: (".. v.x .. ", " .. v.y .. ")"
-	end
-
-	if numSelected == 1 then
-		Draw.Text({x = 4, y = Draw.GetHeight() - 20}, Textures.text, info)
-	elseif numSelected > 1 then
-		Draw.Text({x = 4, y = Draw.GetHeight() - 20}, Textures.text, numSelected .. " verts selected")
-	end
+function Editor.DefaultState:SelectionInfo()
+	Draw.Text({x = 4, y = Draw.GetHeight() - 16 * self.InfoStringHeight - 4}, Textures.text, self.InfoString)
 end
 

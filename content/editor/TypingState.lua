@@ -1,10 +1,12 @@
 Editor.TypingState = Editor.TypingState or {}
 print("TypingState reloaded")
 
-function Editor.TypingState:Enter(callback)
+function Editor.TypingState:Enter(prompt, failMessage, callback)
 	print("Starting to type string")
 	Editor.State = self
 	self.callback = callback or nullfunc
+	self.prompt = prompt
+	self.failMessage = failMessage
 	self.typedString = ""
 end
 
@@ -35,7 +37,7 @@ end
 
 function Editor.TypingState:Render()
 	if Textures.text then
-		Draw.Text({x = 4, y = 4}, Textures.text, not self.failed and "Enter filename or hit escape" or "Bad filename, try again" )
+		Draw.Text({x = 4, y = 4}, Textures.text, not self.failed and self.prompt or self.failMessage )
 		Draw.Text({x = 4, y = 24}, Textures.text, "> " .. self.typedString)
 
 		if self.failed then

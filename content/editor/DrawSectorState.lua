@@ -38,9 +38,8 @@ function Editor.DrawSectorState:Leave(ToState)
 				if wall.start == otherNextWall.start and nextWall.start == otherWall.start then
 					otherWall.portal = #Editor.curMapData.sectors
 					wall.portal = secIdx
-					print("added portal between new sector and sector " .. secIdx)
 					if minFloor == nil or sec.floorHeight < minFloor then
-						minFloor = floorHeight
+						minFloor = sec.floorHeight
 					end
 					if maxCeil == nil or sec.ceilHeight > maxCeil then
 						maxCeil = sec.ceilHeight

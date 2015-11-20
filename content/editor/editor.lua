@@ -27,8 +27,8 @@ end
 function Game.Initialise()
 	Textures = { text = Draw.GetTexture("Mecha.png") }
 
-
-	Game.LoadControls(dofile("editor/editorcontrols.lua"))
+	Editor.Controls = dofile("editor/editorcontrols.lua")
+	Game.LoadControls(Editor.Controls)
 	Game.LoadAndWatchFile("editor/DefaultState.lua")
 	Game.LoadAndWatchFile("editor/TypingState.lua")
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
@@ -38,7 +38,7 @@ function Game.Initialise()
 
 	MapUtility.__index = MapUtility
 
-	Editor.State = Editor.DefaultState
+	Editor.DefaultState:Enter()
 	Editor.curMapData = GetEmptyMap()
 	Editor.History:Clear()
 
@@ -237,18 +237,77 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 	end
 end
 
-function Editor.Selection:Clear()
+function Editor:GetControlsKey(Name)
+	for i, c in ipairs(self.Controls) do
+		if c.Name == Name then
+			return c.Key
+		end
+	end
+end
+
+function Editor:GetSelectionString()
+	local verts = self.Selection:GetSelectedVerts()
+	local walls = self.Selection:GetSelectedWalls()
+	local sectors = self.Selection:GetSelectedSectors()
+	
+
+	if #sectors > 0 and #verts == 0 and #walls == 0 then
+		local sect = self.curMapData.sectors[sectors[1]]
+
+		local ceilH = self.curMapData.sectors[sectors[1]].ceilHeight or "multiple values"
+		local floorH = self.curMapData.sectors[sectors[1]].floorHeight or "multiple values"
+		for i,s in ipairs(sectors) do
+			local sec = self.curMapData.sectors[s]
+			if sec.ceilHeight ~= ceilH then
+				ceilH = "multiple values"
+			end
+			if sec.floorHeight ~= floorH then
+				floorH = "multiple values"
+			end
+		end
+
+		local workingString = ""
+		if #sectors == 1 then
+			workingString = "Sector id: " .. sectors[1] .. "\n"
+		else
+			workingString = #sectors .. " sectors selected\n"
+		end
+	
+		workingString = workingString ..
+			"ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n" ..
+			"floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. "] to edit\n" 
+
+		return workingString, 3
+
+
+	elseif #verts ~= 0 and #sectors == 0 and #walls == 0 then
+		if #verts == 1 then
+			local v = self.curMapData.verts[verts[1]]
+			return "Selected vert: id = " .. verts[1] .. ", position: (" .. v.x .. ", " .. v.y .. ")", 1
+		else
+			return #verts .. " verts selected", 1
+		end
+	end
+
+	return "", 0
+end
+
+function Editor.Selection:Clear(callback)
 	self.verts = {}
 	self.walls = {}
 	self.sectors = {}
+	self.OnSelectionChange = callback or function() end
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:SelectVert(id)
 	self.verts[id] = true
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:DeselectVert(id)
 	self.verts[id] = nil
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:IsVertSelected(id)
@@ -266,10 +325,12 @@ end
 function Editor.Selection:SelectWall(secID, wallID)
 	self.walls[secID] = self.walls[secID] or {}
 	self.walls[secID][wallID] = true
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:DeselectWall(secID, wallID)
 	self.walls[secID][wallID] = nil
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:IsWallSelected(secID, wallID)
@@ -288,10 +349,12 @@ end
 
 function Editor.Selection:SelectSector(id)
 	self.sectors[id] = true
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:DeselectSector(id)
 	self.sectors[id] = nil
+	self.OnSelectionChange()
 end
 
 function Editor.Selection:IsSectorSelected(id)
@@ -318,7 +381,6 @@ function Editor.History:RegisterSnapshot()
 
 	Editor.curMapData = DeepCopy(Editor.curMapData)
 	table.insert(self.snapshots, Editor.curMapData)
-	print("There are now " .. #self.snapshots .. " snapshots")
 end
 
 function Editor.History:Undo()

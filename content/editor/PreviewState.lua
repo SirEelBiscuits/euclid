@@ -13,7 +13,7 @@ function Editor.PreviewState:Enter()
 	self.sector = Editor.curMap:GetSector(SecID - 1)
 	Editor.curMapData:SetCentroids()
 	self.eye = Editor.curMapData.sectors[SecID].centroid
-	self.eye.z = self.sector.floorHeight or 0 + 1.65
+	self.eye.z = (Editor.curMapData.sectors[SecID].floorHeight or 0) + 1.65
 	self.angle = 0
 end
 

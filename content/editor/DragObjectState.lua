@@ -64,7 +64,7 @@ function Editor.DragObjectState:Update(dt)
 
 	if not Game.Controls.DragObject.isDown then
 		Editor.curMapData:SetCentroids()
-		Editor.DefaultState:Enter()
+		Editor.DefaultState:Enter(true)
 	end
 
 	self:DoMove(Game.Controls.MouseXRel, Game.Controls.MouseYRel)
@@ -76,5 +76,5 @@ function Editor.DragObjectState:Update(dt)
 end
 
 function Editor.DragObjectState:Render()
-	Editor.DefaultState.Render()
+	Editor.DefaultState:Render()
 end
