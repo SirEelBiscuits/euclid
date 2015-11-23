@@ -131,6 +131,21 @@ return {
 		Key = "4"
 	},
 	{
+		Name = "SetTopTexture",
+		ControlType = "button",
+		Key = "5"
+	},
+	{
+		Name = "SetMainTexture",
+		ControlType = "button",
+		Key = "6"
+	},
+	{
+		Name = "SetBottomTexture",
+		ControlType = "button",
+		Key = "7"
+	},
+	{
 		Name = "CancelTexturePick",
 		ControlType = "button",
 		Key = 27

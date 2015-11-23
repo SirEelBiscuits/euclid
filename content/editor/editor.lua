@@ -317,6 +317,62 @@ function Editor:GetSelectionString()
 		else
 			return #verts .. " verts selected", 1, {}
 		end
+	elseif #walls > 0 and #verts == 0 and #sectors == 0 then
+		local wall1 = self.curMapData.sectors[walls[1].sec].walls[walls[1].wall]
+		local topTex = wall1.topTex ~= nil and wall1.topTex.tex or nil
+		if topTex == "" then topTex = nil end
+		local mainTex = wall1.mainTex ~= nil and wall1.mainTex.tex or nil
+		if mainTex == "" then mainTex = nil end
+		local bottomTex = wall1.bottomTex ~= nil and wall1.bottomTex.tex or nil
+		if bottomTex == "" then bottomTex = nil end
+
+		for i, wall in ipairs(walls) do
+			local wallref = self.curMapData.sectors[wall.sec].walls[wall.wall]
+			if wallref.bottomTex == nil or wallref.bottomTex.tex ~= bottomTex then
+				bottomTex = nil
+			end
+			if wallref.mainTex == nil or wallref.mainTex.tex ~= mainTex then
+				mainTex = nil
+			end
+			if wallref.topTex == nil or wallref.topTex.tex ~= topTex then
+				topTex = nil
+			end
+		end
+
+		local workingString = ""
+
+		if #walls == 1 then
+			workingString = workingString .. "wall " .. walls[1].wall .. ", sector ".. walls[1].sec .. "\n"
+		else
+			workingString = workingString .. #walls .. " walls selected: \n"
+		end
+
+		local count = 1
+		local ret = {}
+
+		workingString = workingString .. "top Texture: [" .. (self:GetControlsKey("SetTopTexture") or "???") .. "] to edit\n"
+		count = count + 1
+		if topTex ~= nil then
+			workingString = workingString .. "\n\n\n\n"
+			table.insert(ret, { pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = topTex })
+			count = count + 4
+		end
+		workingString = workingString .. "main Texture: [" .. (self:GetControlsKey("SetMainTexture") or "???") .. "] to edit\n"
+		count = count + 1
+		if mainTex ~= nil then
+			workingString = workingString .. "\n\n\n\n"
+			table.insert(ret, { pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = mainTex })
+			count = count + 4
+		end
+		workingString = workingString .. "bottom Texture: [" .. (self:GetControlsKey("SetBottomTexture") or "???") .. "] to edit\n"
+		count = count + 1
+		if bottomTex ~= nil then
+			workingString = workingString .. "\n\n\n\n"
+			table.insert(ret, { pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = bottomTex })
+			count = count + 4
+		end
+
+		return workingString, count, ret
 	else
 		local working = ""
 		if #verts > 0 then 

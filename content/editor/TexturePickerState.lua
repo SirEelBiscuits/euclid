@@ -13,7 +13,7 @@ function Editor.TexturePickerState:Enter(prompt, callback)
 	self.curPage = 1
 	self.cursor = 1
 
-	self.textures = {}
+	self.textures = {[""] = Draw.GetTexture("")}
 
 	for i, sec in ipairs(Editor.curMapData.sectors) do
 		local texName
@@ -118,10 +118,10 @@ function Editor.TexturePickerState:Update()
 end
 
 function Editor.TexturePickerState:Render()
-	Draw.Text({x = 4, y = 4}, Textures.text, self.prompt)
 	local dest = {x = 0, y = 24, w = 64, h = 64}
 	local page = 1
 	local cursorPos = 1
+	local prompt = self.prompt
 	for name, tex in pairs(self.textures) do
 		if dest.x + dest.w > Draw.GetWidth() then
 			dest.x = 0
@@ -139,6 +139,8 @@ function Editor.TexturePickerState:Render()
 		end
 
 		if cursorPos == self.cursor then
+			prompt = prompt .. " (" .. name .. ")"
+
 			Draw.Line({x = dest.x, y = dest.y}, {x = dest.x + 63, y = dest.y}, Editor.Colors.selectedTexture)
 			Draw.Line({x = dest.x + 63, y = dest.y}, {x = dest.x + 63, y = dest.y + 63}, Editor.Colors.selectedTexture)
 			Draw.Line({x = dest.x + 63, y = dest.y + 63}, {x = dest.x, y = dest.y + 63}, Editor.Colors.selectedTexture)
@@ -148,4 +150,6 @@ function Editor.TexturePickerState:Render()
 		cursorPos = cursorPos + 1
 		dest.x = dest.x + dest.w
 	end
+
+	Draw.Text({x = 4, y = 4}, Textures.text, prompt)
 end

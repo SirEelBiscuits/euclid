@@ -202,67 +202,136 @@ function Editor.DefaultState:Update(dt)
 	end
 
 	if Game.Controls.SetCeilHeight.pressed then
-		Editor.History:RegisterSnapshot()
-		Editor.TypingState:Enter("Enter new ceiling height", "bad number entered",
-			function(string)
-				local secs = Editor.Selection:GetSelectedSectors()
-				for i, s in ipairs(secs) do
-					local sec = Editor.curMapData.sectors[s]
-					sec.ceilHeight = tonumber(string)
-				end
+		local sects = Editor.Selection:GetSelectedSectors()
 
-				Editor.DefaultState:Enter(true)
-			end
-		)
+		if #sects > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TypingState:Enter("Enter new ceiling height", "bad number entered",
+				function(string)
+					local secs = Editor.Selection:GetSelectedSectors()
+					for i, s in ipairs(secs) do
+						local sec = Editor.curMapData.sectors[s]
+						sec.ceilHeight = tonumber(string)
+					end
+
+					Editor.DefaultState:Enter(true)
+				end
+			)
+		end
 	end
 
 	if Game.Controls.SetFloorHeight.pressed then
-		Editor.History:RegisterSnapshot()
-		Editor.TypingState:Enter("Enter new floor height", "bad number entered",
-			function(string)
-				local secs = Editor.Selection:GetSelectedSectors()
-				for i, s in ipairs(secs) do
-					local sec = Editor.curMapData.sectors[s]
-					sec.floorHeight = tonumber(string)
-				end
+		local sects = Editor.Selection:GetSelectedSectors()
 
-				Editor.DefaultState:Enter(true)
+		if #sects > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TypingState:Enter("Enter new floor height", "bad number entered",
+				function(string)
+					local secs = Editor.Selection:GetSelectedSectors()
+					for i, s in ipairs(secs) do
+						local sec = Editor.curMapData.sectors[s]
+						sec.floorHeight = tonumber(string)
+					end
+
+					Editor.DefaultState:Enter(true)
+			end
+			)
 		end
-		)
 	end
 
 	if Game.Controls.SetCeilTexture.pressed then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Ceiling Texture",
-			function(string)
-				if type(string) == "string" then
-					local secs = Editor.Selection:GetSelectedSectors()
-					for i, s in ipairs(secs) do
-						local sec = Editor.curMapData.sectors[s]
-						sec.ceilTex = sec.ceilTex or {}
-						sec.ceilTex.tex = string
+		local sects = Editor.Selection:GetSelectedSectors()
+		if #sects > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TexturePickerState:Enter("Pick Ceiling Texture",
+				function(string)
+					if type(string) == "string" then
+						for i, s in ipairs(sects) do
+							local sec = Editor.curMapData.sectors[s]
+							sec.ceilTex = sec.ceilTex or {}
+							sec.ceilTex.tex = string
+						end
 					end
+					Editor.DefaultState:Enter(true)
 				end
-				Editor.DefaultState:Enter(true)
-			end
-		)
+			)
+		end
 	end
 
 	if Game.Controls.SetFloorTexture.pressed then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Floor Texture",
-			function(string)
-				if type(string) == "string" then
-					local secs = Editor.Selection:GetSelectedSectors()
-					for i, s in ipairs(secs) do
-						local sec = Editor.curMapData.sectors[s]
-						sec.floorTex = sec.floorTex or {}
-						sec.floorTex.tex = string
+		local sects = Editor.Selection:GetSelectedSectors()
+		if #sects > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TexturePickerState:Enter("Pick Floor Texture",
+				function(string)
+					if type(string) == "string" then
+						for i, s in ipairs(sects) do
+							local sec = Editor.curMapData.sectors[s]
+							sec.floorTex = sec.floorTex or {}
+							sec.floorTex.tex = string
+						end
 					end
+					Editor.DefaultState:Enter(true)
 				end
-				Editor.DefaultState:Enter(true)
-			end
-		)
+			)
+		end
+	end
+
+	if Game.Controls.SetTopTexture.pressed then
+		local walls = Editor.Selection:GetSelectedWalls()
+		if #walls > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TexturePickerState:Enter("Pick Top Texture",
+				function(string)
+					if type(string) == "string" then
+						for i, wall in ipairs(walls) do
+							local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+							wall.topTex = wall.topTex or {}
+							wall.topTex.tex = string
+						end
+					end
+					Editor.DefaultState:Enter(true)
+				end
+			)
+		end
+	end
+
+	if Game.Controls.SetMainTexture.pressed then
+		local walls = Editor.Selection:GetSelectedWalls()
+		if #walls > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TexturePickerState:Enter("Pick Main Texture",
+				function(string)
+					if type(string) == "string" then
+						for i, wall in ipairs(walls) do
+							local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+							wall.mainTex = wall.mainTex or {}
+							wall.mainTex.tex = string
+						end
+					end
+					Editor.DefaultState:Enter(true)
+				end
+			)
+		end
+	end
+
+	if Game.Controls.SetBottomTexture.pressed then
+		local walls = Editor.Selection:GetSelectedWalls()
+		if #walls > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TexturePickerState:Enter("Pick Bottom Texture",
+				function(string)
+					if type(string) == "string" then
+						for i, wall in ipairs(walls) do
+							local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+							wall.bottomTex = wall.bottomTex or {}
+							wall.bottomTex.tex = string
+						end
+					end
+					Editor.DefaultState:Enter(true)
+				end
+			)
+		end
 	end
 end
 
