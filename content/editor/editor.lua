@@ -5,15 +5,18 @@ Editor = Editor or {
 	view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 },
 	Selection = {verts = {}, walls = {}, sectors = {}},
 	Cursor = {},
-	Colors = { 
-		walls = {g = 128},
-		vertSelection = {g = 255},
-		sectorSelection = {g = 255},
-		wallSelection = {b = 128},
-		vertDrawing = {b = 255, g = 255},
-		selectedTexture = {g = 255},
-	},
 	History = {level = 0, snapshots = {}},
+}
+
+Editor.Colors = {
+	walls = {g = 128},
+	vert = {g = 128},
+	vertSelection = {b = 255},
+	sectorSelection = {g = 255},
+	sectorNonConvex = {r = 255},
+	wallSelection = {b = 128},
+	vertDrawing = {b = 255, g = 255},
+	selectedTexture = {g = 255},
 }
 
 function GetEmptyMap()
@@ -162,8 +165,19 @@ function Editor:DrawTopDownMap(colors)
 	end
 
 	for i, sec in ipairs(self.curMapData.sectors) do
+		local v = self:ScreenFromWorld(sec.centroid)
+		if self.curMapData:IsSectorConvex(i) == false then
+			Draw.Rect(
+				{
+					x = v.x - 2,
+					y = v.y - 2,
+					w = 5,
+					h = 5,
+				},
+				colors.sectorNonConvex
+			)
+		end
 		if self.Selection:IsSectorSelected(i) then
-			local v = self:ScreenFromWorld(sec.centroid)
 			Draw.Rect(
 				{
 					x = v.x - 1,
@@ -177,18 +191,22 @@ function Editor:DrawTopDownMap(colors)
 	end
 
 	for i, vert in ipairs(self.curMapData.verts) do
+		local color
 		if self.Selection:IsVertSelected(i) then
-			local v = self:ScreenFromWorld(MakeVec(vert))
-			Draw.Rect(
-				{
-					x = v.x - 1,
-					y = v.y - 1,
-					w = 3,
-					h = 3
-				},
-				colors.vertSelection
-			)
+			color = colors.vertSelection
+		else
+			color = colors.vert
 		end
+		local v = self:ScreenFromWorld(MakeVec(vert))
+		Draw.Rect(
+			{
+				x = v.x - 1,
+				y = v.y - 1,
+				w = 3,
+				h = 3
+			},
+			color
+		)
 	end
 end
 
