@@ -228,13 +228,14 @@ function Editor:GetClosestVertIdx(vec, maxDist)
 end
 
 function Editor:GetClosestWallIdx(vec, maxDist)
+	local ret = {}
 	local minDist = maxDist or 9999999999999999
 	local secIdx = -1
 	local wallIdx = -1
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local start = self.curMapData:GetVert(wall.start)
-			local wallEnd = self.curMapData:GetVert(self.curMapData.sectors[i].walls[j % #self.curMapData.sectors[i].walls + 1].start) - start
+			local wallEnd = self.curMapData:GetVert(sec.walls[j % #sec.walls + 1].start) - start
 			local wallLenSq = Dot(wallEnd, wallEnd)
 			local vecRel = vec - start
 
@@ -243,18 +244,34 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 
 			if Dot(vecRel, wallEnd) > 0
 				and Dot(vecRel, wallEnd) < wallLenSq
-				and dist < minDist
+				and dist < minDist 
 			then
 				minDist = dist
 				secIdx = i
 				wallIdx = j
+				ret = {} -- {sec = secIdx, wall = wallIdx, dist = minDist}
+				for ii, innerSec in ipairs(self.curMapData.sectors) do
+					for jj, innerWall in ipairs(innerSec.walls) do
+						local start1 = wall.start
+						local start2 = innerWall.start
+						local end1   = sec.walls[j % #sec.walls + 1].start
+						local end2   = innerSec.walls[jj % #innerSec.walls + 1].start
+						if
+							(
+								(start1 == start2 and end1 == end2)
+								or
+								(start1 == end2 and end1 == start2)
+							) --and not (i == ii and j == jj)
+						then
+							table.insert(ret, {sec = ii, wall = jj, dist = minDist})
+						end
+					end
+				end
 			end
 		end
 	end
 
-	if secIdx ~= -1 then
-		return secIdx, wallIdx, minDist
-	end
+	return ret
 end
 
 function Editor:GetControlsKey(Name)

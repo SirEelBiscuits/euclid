@@ -67,13 +67,15 @@ function Editor.DefaultState:Update(dt)
 				Editor.Selection:SelectVert(idx)
 			end
 		else
-			local secIdx, wallIdx, dist = Editor:GetClosestWallIdx(Editor.Cursor,
+			local wallinfo = Editor:GetClosestWallIdx(Editor.Cursor,
 				1 / Editor.view.scale)
-			if secIdx ~= nil then
-				if Editor.Selection:IsWallSelected(secIdx, wallIdx) then
-					Editor.Selection:DeselectWall(secIdx, wallIdx)
-				else
-					Editor.Selection:SelectWall(secIdx, wallIdx)
+			if #wallinfo > 0 then
+				for i, info in ipairs(wallinfo) do
+					if Editor.Selection:IsWallSelected(info.sec, info.wall) then
+						Editor.Selection:DeselectWall(info.sec, info.wall)
+					else
+						Editor.Selection:SelectWall(info.sec, info.wall)
+					end
 				end
 			else
 				local SecUpdateList = {}
@@ -105,10 +107,12 @@ function Editor.DefaultState:Update(dt)
 		if idx ~= nil then
 			Editor.Selection:SelectVert(idx)
 		else
-			local secIdx, wallIdx, dist = Editor:GetClosestWallIdx(Editor.Cursor,
+			local wallinfo = Editor:GetClosestWallIdx(Editor.Cursor,
 				1 / Editor.view.scale)
-			if secIdx ~= nil then
-				Editor.Selection:SelectWall(secIdx, wallIdx)
+			if #wallinfo > 0 then
+				for i, info in ipairs(wallinfo) do
+					Editor.Selection:SelectWall(info.sec, info.wall)
+				end
 			else
 				for i, sec in ipairs(Editor.curMapData.sectors) do
 					if Editor.curMapData:IsPointInSector(Editor.Cursor, i) then
