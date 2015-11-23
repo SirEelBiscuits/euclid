@@ -22,7 +22,6 @@ function MapUtility:GetVert(id)
 end
 
 function MapUtility:DeleteVert(id)
-	print("deleting vert " .. id)
 	local SecUpdateList = {}
 	for i, sec in ipairs(self.sectors) do
 		local WallUpdateList = {}

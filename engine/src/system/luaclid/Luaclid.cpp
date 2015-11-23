@@ -576,16 +576,17 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRect(
-								dest,
-								tex,
-								Rendering::UVRect{
-									UVVec2(0_fp, 0_fp),
-									UVVec2(Fix16(tex->w), Fix16(tex->h))
-								},
-								1,
-								0
-							);
+							if(tex != nullptr)
+								ctx->DrawRect(
+									dest,
+									tex,
+									Rendering::UVRect{
+										UVVec2(0_fp, 0_fp),
+										UVVec2(Fix16(tex->w), Fix16(tex->h))
+									},
+									1,
+									0
+								);
 						}
 					)
 				);
@@ -595,16 +596,17 @@ namespace System {
 				luaX_push(lua,
 					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Texture*)>>(
 						[ctx](Rendering::ScreenRect dest, Rendering::Texture *tex) {
-							ctx->DrawRectAlpha(
-								dest,
-								tex,
-								Rendering::UVRect{
-									UVVec2(0_fp, 0_fp), 
-									UVVec2(Fix16(tex->w), Fix16(tex->h))
-								},
-								1,
-								0
-							);
+							if(tex != nullptr)
+								ctx->DrawRectAlpha(
+									dest,
+									tex,
+									Rendering::UVRect{
+										UVVec2(0_fp, 0_fp), 
+										UVVec2(Fix16(tex->w), Fix16(tex->h))
+									},
+									1,
+									0
+								);
 						}
 					)	
 				);
@@ -728,6 +730,22 @@ namespace System {
 					}
 				);
 				lua_setfield(lua, -2, "ShowMouse");
+
+				lua_pop(lua, 1);
+			}
+
+			{
+				luaX_getglobal(lua, "Input");
+				
+				//Input.SetTextEditingMode
+				luaX_push(lua,
+					static_cast<std::function<void(bool)>>(
+						[](bool SetOn) {
+							System::Input::SetTextEditingMode(SetOn);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "SetTextEditingMode");
 
 				lua_pop(lua, 1);
 			}

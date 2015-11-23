@@ -120,6 +120,61 @@ return {
 		ControlType = "button",
 		Key = "2"
 	},
+	{
+		Name = "SetCeilTexture",
+		ControlType = "button",
+		Key = "3"
+	},
+	{
+		Name = "SetFloorTexture",
+		ControlType = "button",
+		Key = "4"
+	},
+	{
+		Name = "CancelTexturePick",
+		ControlType = "button",
+		Key = 27
+	},
+	{
+		Name = "TexturePickerAddNew",
+		ControlType = "button",
+		Key = "n"
+	},
+	{
+		Name = "TexturePickerUp",
+		ControlType = "button",
+		Key = "w"
+	},
+	{
+		Name = "TexturePickerDown",
+		ControlType = "button",
+		Key = "s"
+	},
+	{
+		Name = "TexturePickerLeft",
+		ControlType = "button",
+		Key = "a"
+	},
+	{
+		Name = "TexturePickerRight",
+		ControlType = "button",
+		Key = "d"
+	},
+	{
+		Name = "TexturePickerPageUp",
+		ControlType = "button",
+		Key = "r"
+	},
+	{
+		Name = "TexturePickerPageDown",
+		ControlType = "button",
+		Key = "f"
+	},
+	{
+		Name = "TexturePickerSelect",
+		ControlType = "button",
+		Key = 13
+	},
 
 	-- Mouse Input
 

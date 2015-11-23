@@ -7,11 +7,13 @@ function Editor.TypingState:Enter(prompt, failMessage, callback)
 	self.callback = callback or nullfunc
 	self.prompt = prompt
 	self.failMessage = failMessage
+	self.returnState = returnState
 	self.typedString = ""
+	Input.SetTextEditingMode(true)
 end
 
 function Editor.TypingState:Update(dt)
-	for i,v in ipairs(Game.Input) do
+	for i, v in ipairs(Game.Input) do
 		if not v.keyRepeat and v.eventType == InputEventType.KeyDown then
 			self.failed = false
 
@@ -22,12 +24,15 @@ function Editor.TypingState:Update(dt)
 			elseif v.key < 32 then
 				local res, err = pcall(self.callback, self.typedString)
 				if res then
+					Input.SetTextEditingMode(false)
 				else
 					self.err = err
 					self.failed = true
 				end
-			elseif v.key < 256 then
-				self.typedString = self.typedString .. string.char(v.key)
+			end
+		elseif v.eventType == InputEventType.TextInput then
+			if utf8.codepoint(v.textInput:sub(1,1)) >= 32 then
+				self.typedString = self.typedString .. v.textInput 
 			end
 		end
 	end

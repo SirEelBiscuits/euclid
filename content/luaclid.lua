@@ -47,6 +47,7 @@ InputEventType = MakeEnum({
 	MouseDown = 3,
 	MouseUp = 4,
 	MouseMove = 5,
+	TextInput = 6,
 	},
 	"InputEventType"
 )
@@ -144,8 +145,17 @@ function Describe(t, indent)
 	end
 end
 
+function TableSize(foo)
+	local acc = 0
+	for _ in pairs(foo) do
+		acc = acc + 1
+	end
+	return acc
+end
+
 Game = {}
 Draw = {}
 Game.Input={}
+Input = {}
 
 print("luaclid.lua loaded")

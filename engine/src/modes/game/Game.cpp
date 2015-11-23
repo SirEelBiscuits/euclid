@@ -86,7 +86,8 @@ namespace Modes {
 					"mouseMovX", input[i].mouseMovX,
 					"mouseMovY", input[i].mouseMovY,
 					"mouseMovXRel", input[i].mouseMovXRel,
-					"mouseMovYRel", input[i].mouseMovYRel
+					"mouseMovYRel", input[i].mouseMovYRel,
+					"textInput", input[i].textInput
 				);
 
 				lua_seti(lua, -2, i + offset);

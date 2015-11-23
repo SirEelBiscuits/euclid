@@ -10,7 +10,8 @@ Editor = Editor or {
 		vertSelection = {g = 255},
 		sectorSelection = {g = 255},
 		wallSelection = {b = 128},
-		vertDrawing = {b = 255, g = 255}
+		vertDrawing = {b = 255, g = 255},
+		selectedTexture = {g = 255},
 	},
 	History = {level = 0, snapshots = {}},
 }
@@ -34,6 +35,7 @@ function Game.Initialise()
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
 	Game.LoadAndWatchFile("editor/DragObjectState.lua")
 	Game.LoadAndWatchFile("editor/DrawSectorState.lua")
+	Game.LoadAndWatchFile("editor/TexturePickerState.lua")
 	Game.LoadAndWatchFile("editor/MapUtility.lua")
 
 	MapUtility.__index = MapUtility
@@ -164,8 +166,8 @@ function Editor:DrawTopDownMap(colors)
 			local v = self:ScreenFromWorld(sec.centroid)
 			Draw.Rect(
 				{
-					x = v.x,
-					y = v.y,
+					x = v.x - 1,
+					y = v.y - 1,
 					w = 3,
 					h = 3
 				},
@@ -254,8 +256,12 @@ function Editor:GetSelectionString()
 	if #sectors > 0 and #verts == 0 and #walls == 0 then
 		local sect = self.curMapData.sectors[sectors[1]]
 
-		local ceilH = self.curMapData.sectors[sectors[1]].ceilHeight or "multiple values"
-		local floorH = self.curMapData.sectors[sectors[1]].floorHeight or "multiple values"
+		local sec1 = self.curMapData.sectors[sectors[1]]
+
+		local ceilH = sec1.ceilHeight or "multiple values"
+		local floorH = sec1.floorHeight or "multiple values"
+		local ceilTex = sec1.ceilTex ~= nil and sec1.ceilTex.tex or nil
+		local floorTex = sec1.floorTex ~= nil and sec1.floorTex.tex or nil
 		for i,s in ipairs(sectors) do
 			local sec = self.curMapData.sectors[s]
 			if sec.ceilHeight ~= ceilH then
@@ -263,6 +269,12 @@ function Editor:GetSelectionString()
 			end
 			if sec.floorHeight ~= floorH then
 				floorH = "multiple values"
+			end
+			if sec.ceilTex == nil or sec.ceilTex.tex ~= ceilTex then
+				ceilTex = nil
+			end
+			if sec.floorTex == nil or sec.floorTex.tex ~= floorTex then
+				floorTex = nil
 			end
 		end
 
@@ -273,19 +285,37 @@ function Editor:GetSelectionString()
 			workingString = #sectors .. " sectors selected\n"
 		end
 	
-		workingString = workingString ..
-			"ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n" ..
-			"floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. "] to edit\n" 
+		workingString = workingString 
+			.. "ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n" 
+			.. "floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. "] to edit\n" 
+		local count = 3
+		local ret = {}
 
-		return workingString, 3
+		workingString = workingString .. "ceil Texture: [" .. (self:GetControlsKey("SetCeilTexture") or "???") .. "] to edit\n"
+		count = count + 1
+		if ceilTex ~= nil then
+			workingString = workingString .. "\n\n\n\n"
+			table.insert(ret, { pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = ceilTex })
+			count = count + 4
+		end
+
+		workingString = workingString .. "floor Texture: [" .. (self:GetControlsKey("SetFloorTexture") or "???") .. "] to edit\n"
+		count = count + 1
+		if floorTex ~= nil then
+			workingString = workingString .. "\n\n\n\n"
+			table.insert(ret, {pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = floorTex})
+			count = count + 4
+		end
+
+		return workingString, count, ret
 
 
 	elseif #verts ~= 0 and #sectors == 0 and #walls == 0 then
 		if #verts == 1 then
 			local v = self.curMapData.verts[verts[1]]
-			return "Selected vert: id = " .. verts[1] .. ", position: (" .. v.x .. ", " .. v.y .. ")", 1
+			return "Selected vert: id = " .. verts[1] .. ", position: (" .. v.x .. ", " .. v.y .. ")", 1, {}
 		else
-			return #verts .. " verts selected", 1
+			return #verts .. " verts selected", 1, {}
 		end
 	else
 		local working = ""
@@ -317,10 +347,10 @@ function Editor:GetSelectionString()
 				working = working .. "s"
 			end
 		end
-		return working, 1
+		return working, 1, {}
 	end
 
-	return "", 0
+	return "", 0, {}
 end
 
 function Editor.Selection:Clear(callback)

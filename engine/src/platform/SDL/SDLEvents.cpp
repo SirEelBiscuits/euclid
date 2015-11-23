@@ -62,6 +62,8 @@ namespace System {
 		static bool RShiftDown = false;
 		static bool LCtrlDown  = false;
 		static bool RCtrlDown  = false;
+		
+		static bool textEditing{false};
 
 		std::vector<Event> GetEvents() {
 			std::vector<Event> events;
@@ -117,6 +119,15 @@ namespace System {
 				case SDL_MOUSEBUTTONUP:
 				case SDL_MOUSEMOTION:
 					events.emplace_back(Transform(e));
+					break;
+
+				case SDL_TEXTINPUT: 
+					if(textEditing){
+						System::Input::Event ret;
+						ret.textInput = e.text.text;
+						ret.type = EventType::TextInput;
+						events.emplace_back(ret);
+					}
 					break;
 
 					//input events we recognise, but aren't interested it
@@ -177,6 +188,14 @@ namespace System {
 
 		bool IsCtrlDown() {
 			return LCtrlDown || RCtrlDown;
+		}
+
+		void SetTextEditingMode(bool SetOn) {
+			textEditing = SetOn;
+			//if(SetOn)
+			//	SDL_StartTextInput();
+			//else
+			//	SDL_StopTextInput();
 		}
 	}
 

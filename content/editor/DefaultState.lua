@@ -6,6 +6,8 @@ function Editor.DefaultState:Enter(skipClear)
 	print("entering default state")
 	if not skipClear then
 		Editor.Selection:Clear(self.OnSelectionChanged)
+	else
+		self.OnSelectionChanged()
 	end
 	Editor.State = self
 end
@@ -228,10 +230,44 @@ function Editor.DefaultState:Update(dt)
 		end
 		)
 	end
+
+	if Game.Controls.SetCeilTexture.pressed then
+		Editor.History:RegisterSnapshot()
+		Editor.TexturePickerState:Enter("Pick Ceiling Texture",
+			function(string)
+				if type(string) == "string" then
+					local secs = Editor.Selection:GetSelectedSectors()
+					for i, s in ipairs(secs) do
+						local sec = Editor.curMapData.sectors[s]
+						sec.ceilTex = sec.ceilTex or {}
+						sec.ceilTex.tex = string
+					end
+				end
+				Editor.DefaultState:Enter(true)
+			end
+		)
+	end
+
+	if Game.Controls.SetFloorTexture.pressed then
+		Editor.History:RegisterSnapshot()
+		Editor.TexturePickerState:Enter("Pick Floor Texture",
+			function(string)
+				if type(string) == "string" then
+					local secs = Editor.Selection:GetSelectedSectors()
+					for i, s in ipairs(secs) do
+						local sec = Editor.curMapData.sectors[s]
+						sec.floorTex = sec.floorTex or {}
+						sec.floorTex.tex = string
+					end
+				end
+				Editor.DefaultState:Enter(true)
+			end
+		)
+	end
 end
 
 function Editor.DefaultState.OnSelectionChanged()
-	Editor.DefaultState.InfoString, Editor.DefaultState.InfoStringHeight = Editor:GetSelectionString()
+	Editor.DefaultState.InfoString, Editor.DefaultState.InfoStringHeight, Editor.DefaultState.InfoStringTextures = Editor:GetSelectionString()
 end
 
 function Editor.DefaultState:Render()
@@ -245,6 +281,12 @@ function Editor.DefaultState:Render()
 end
 
 function Editor.DefaultState:SelectionInfo()
-	Draw.Text({x = 4, y = Draw.GetHeight() - 16 * self.InfoStringHeight - 4}, Textures.text, self.InfoString)
+	local drawPos = Maths.Vector:new(4, Draw.GetHeight() - 16 * self.InfoStringHeight - 4)
+	Draw.Text(drawPos, Textures.text, self.InfoString)
+	for i, info in ipairs(self.InfoStringTextures) do
+		local pos = drawPos + info.pos
+		pos.w, pos.h = info.pos.w, info.pos.h
+		Draw.RectTextured(pos, Draw.GetTexture(info.tex))
+	end
 end
 
