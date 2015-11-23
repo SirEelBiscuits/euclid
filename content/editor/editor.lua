@@ -242,7 +242,11 @@ end
 function Editor:GetControlsKey(Name)
 	for i, c in ipairs(self.Controls) do
 		if c.Name == Name then
-			return c.Key
+			if c.ShiftPressed then
+				return "shift+" .. c.Key
+			else
+				return c.Key
+			end
 		end
 	end
 end

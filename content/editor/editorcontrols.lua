@@ -113,37 +113,41 @@ return {
 	{
 		Name = "SetCeilHeight",
 		ControlType = "button",
-		Key = "1"
+		Key = "c",
+		ShiftPressed = false
 	},
 	{
 		Name = "SetFloorHeight",
 		ControlType = "button",
-		Key = "2"
+		Key = "f",
+		ShiftPressed = false
 	},
 	{
 		Name = "SetCeilTexture",
 		ControlType = "button",
-		Key = "3"
+		Key = "c",
+		ShiftPressed = true
 	},
 	{
 		Name = "SetFloorTexture",
 		ControlType = "button",
-		Key = "4"
+		Key = "f",
+		ShiftPressed = true
 	},
 	{
 		Name = "SetTopTexture",
 		ControlType = "button",
-		Key = "5"
+		Key = "t"
 	},
 	{
 		Name = "SetMainTexture",
 		ControlType = "button",
-		Key = "6"
+		Key = "m"
 	},
 	{
 		Name = "SetBottomTexture",
 		ControlType = "button",
-		Key = "7"
+		Key = "b"
 	},
 	{
 		Name = "CancelTexturePick",
@@ -158,32 +162,32 @@ return {
 	{
 		Name = "TexturePickerUp",
 		ControlType = "button",
-		Key = "w"
+		Key = 1073741906
 	},
 	{
 		Name = "TexturePickerDown",
 		ControlType = "button",
-		Key = "s"
+		Key = 1073741905
 	},
 	{
 		Name = "TexturePickerLeft",
 		ControlType = "button",
-		Key = "a"
+		Key = 1073741904
 	},
 	{
 		Name = "TexturePickerRight",
 		ControlType = "button",
-		Key = "d"
+		Key = 1073741903
 	},
 	{
 		Name = "TexturePickerPageUp",
 		ControlType = "button",
-		Key = "r"
+		Key = 1073741899
 	},
 	{
 		Name = "TexturePickerPageDown",
 		ControlType = "button",
-		Key = "f"
+		Key = 1073741902
 	},
 	{
 		Name = "TexturePickerSelect",
