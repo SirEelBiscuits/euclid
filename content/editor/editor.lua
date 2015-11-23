@@ -9,14 +9,24 @@ Editor = Editor or {
 }
 
 Editor.Colors = {
-	walls = {g = 128},
-	vert = {g = 128},
-	vertSelection = {b = 255},
-	sectorSelection = {g = 255},
-	sectorNonConvex = {r = 255},
-	wallSelection = {b = 128},
-	vertDrawing = {b = 255, g = 255},
-	selectedTexture = {g = 255},
+	walls           = {r =   0, g = 128, b =   0},
+	step            = {r =  64, g =   0, b =   0},
+	obstacle        = {r = 255, g =   0, b =   0},
+	window          = {r =   0, g =  64, b =  64},
+	portal          = {r =   0, g = 192, b = 192},
+	weirdWall       = {r = 127, g = 127, b = 127},
+	weirdPortal     = {r = 127, g = 127, b = 127},
+
+	wallSelection   = {r =   0, g =   0, b = 128},
+
+	vert            = {r =   0, g = 128, b =   0},
+	vertSelection   = {r =   0, g =   0, b = 255},
+
+	sectorSelection = {r =   0, g = 255, b =   0},
+	sectorNonConvex = {r = 255, g =   0, b =   0},
+
+	vertDrawing     = {r =   0, g = 255, b = 255},
+	selectedTexture = {r =   0, g = 255, b =   0},
 }
 
 function GetEmptyMap()
@@ -143,10 +153,58 @@ function Editor:DrawTopDownMap(colors)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local nWall = sec.walls[j % #sec.walls + 1]
+			local color
+
+			local walls = self:GetWallsWithEnds(wall.start, nWall.start)
+			if #walls > 2 then
+				color = colors.weirdWall
+			elseif #walls == 2 then
+				local sec1 = self.curMapData.sectors[walls[1].sec]
+				local sec2 = self.curMapData.sectors[walls[2].sec]
+
+				local wall1 = sec1.walls[walls[1].wall]
+				local wall2 = sec2.walls[walls[2].wall]
+
+				if wall1.portal == nil and wall2.portal == nil then
+					color = colors.wall
+
+				else
+					if wall1.portal == nil or wall2.portal == nil then
+						color = colors.weirdPortal
+					else
+						-- we've narrowed it down to portal, window, step, obstacle
+						local portalBottom = math.max(sec1.floorHeight, sec2.floorHeight)
+						local portalTop    = math.min(sec1.ceilHeight, sec2.ceilHeight)
+
+						if portalBottom > portalTop then
+							color = colors.weirdPortal
+						else
+							if portalTop - portalBottom <= 0.5 then
+								color = colors.window
+							else
+								local diff = math.abs(sec1.floorHeight - sec2.floorHeight)
+								if diff <= 0.05 then
+									color = colors.portal
+								elseif diff <= 0.5 then
+									color = colors.step
+								else
+									color = colors.obstacle
+								end
+
+							end
+						end
+					end
+				end
+			elseif #walls == 1 then
+				color = colors.walls
+			else
+				assert(false, "what the fuck?")
+			end
+
 			Draw.Line(
 				self:ScreenFromWorld(MakeVec(self.curMapData.verts[wall.start])),
 				self:ScreenFromWorld(MakeVec(self.curMapData.verts[nWall.start])),
-				colors.walls
+				color
 			)
 		end
 	end
@@ -249,28 +307,28 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 				minDist = dist
 				secIdx = i
 				wallIdx = j
-				ret = {} -- {sec = secIdx, wall = wallIdx, dist = minDist}
-				for ii, innerSec in ipairs(self.curMapData.sectors) do
-					for jj, innerWall in ipairs(innerSec.walls) do
-						local start1 = wall.start
-						local start2 = innerWall.start
-						local end1   = sec.walls[j % #sec.walls + 1].start
-						local end2   = innerSec.walls[jj % #innerSec.walls + 1].start
-						if
-							(
-								(start1 == start2 and end1 == end2)
-								or
-								(start1 == end2 and end1 == start2)
-							) --and not (i == ii and j == jj)
-						then
-							table.insert(ret, {sec = ii, wall = jj, dist = minDist})
-						end
-					end
-				end
+				ret = self:GetWallsWithEnds(wall.start, sec.walls[j % #sec.walls + 1].start)
 			end
 		end
 	end
 
+	return ret
+end
+
+function Editor:GetWallsWithEnds(vert1, vert2)
+	local ret = {}
+	for i, sec in ipairs(self.curMapData.sectors) do
+		for j, wall in ipairs(sec.walls) do
+			local wallend = sec.walls[j % #sec.walls + 1].start
+			if
+				(vert1 == wall.start and vert2 == wallend)
+				or
+				(vert1 == wallend and vert2 == wall.start)
+			then
+				table.insert(ret, {sec = i, wall = j})
+			end
+		end
+	end
 	return ret
 end
 
