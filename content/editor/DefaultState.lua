@@ -337,6 +337,10 @@ function Editor.DefaultState:Update(dt)
 			)
 		end
 	end
+
+	if Game.Controls.DragCamera.isDown then
+		Editor.CameraDragState:Enter()
+	end
 end
 
 function Editor.DefaultState.OnSelectionChanged()

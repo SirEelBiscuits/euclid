@@ -202,7 +202,7 @@ namespace Rendering {
 		}
 
 		auto left = rect.pos.x;
-		auto right = Maths::min(Width, static_cast<unsigned>(left + rect.size.x));
+		auto right = Maths::min(Width, static_cast<unsigned>(left + rect.size.x - 1));
 		unsigned bottom = rect.pos.y + rect.size.y;
 		for(unsigned y = rect.pos.y; y < bottom && y < Height; ++y)
 			DrawHLine(left, right, y, c);

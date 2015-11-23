@@ -1,55 +1,55 @@
 return {
 	{
-		ControlType = "button",
 		Name = "Quit",
+		ControlType = "button",
 		Key = 27
 	},
 	{
-		ControlType = "button",
 		Name = "reinit",
+		ControlType = "button",
 		Key = "r"
 	},
 	{
-		ControlType = "button",
 		Name = "OpenMap",
+		ControlType = "button",
 		Key = "o",
 		CtrlPressed = true
 	},
 	{
-		ControlType = "button",
 		Name = "Preview",
+		ControlType = "button",
 		Key = "p"
 	},
 	{
-		ControlType = "mouse",
 		Name = "Turn",
+		ControlType = "mouse",
 		axis = "x",
 		relative = true,
 		scale = -0.1
 	},
 	{
-		ControlType = "button",
 		Name = "RaiseCeiling",
+		ControlType = "button",
 		Key = "d"
 	},
 	{
-		ControlType = "button",
 		Name = "LowerCeiling",
+		ControlType = "button",
 		Key = "c"
 	},
 	{
-		ControlType = "button",
 		Name = "RaiseFloor",
+		ControlType = "button",
 		Key = "f"
 	},
 	{
-		ControlType = "button",
 		Name = "LowerFloor",
+		ControlType = "button",
 		Key = "v"
 	},
 	{
-		ControlType = "button",
 		Name = "Save",
+		ControlType = "button",
 		Key = "s",
 		CtrlPressed = true
 	},
@@ -69,6 +69,11 @@ return {
 		Name = "DragObject",
 		ControlType = "button",
 		MouseButton = "middle"
+	},
+	{
+		Name = "DragCamera",
+		ControlType = "button",
+		MouseButton = "right",
 	},
 	{
 		Name = "DeleteObject",
