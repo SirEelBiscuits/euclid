@@ -264,11 +264,21 @@ namespace Rendering {
 					}
 
 					//this is the same for both types of wall, portal and non-
-					ceilRenderableTop[x]     = wallRenderableTop[x];
-					ceilRenderableBottom[x]  = static_cast<int>(Maths::max(wallTop, wallRenderableTop[x])) - 1;
-
-					floorRenderableTop[x]    = static_cast<int>(Maths::min(wallBottom, wallRenderableBottom[x])) + 1;
-					floorRenderableBottom[x] = wallRenderableBottom[x];
+					ceilRenderableTop[x]     = static_cast<int>(Maths::max(wallRenderableTop[x], ceilRenderableTop[x]));
+					ceilRenderableBottom[x]  = static_cast<int>(
+						Maths::min(
+							wallRenderableBottom[x],
+							Maths::max(wallTop, wallRenderableTop[x]) - 1
+						)
+					);
+					
+					floorRenderableTop[x]    = static_cast<int>(
+						Maths::max(
+							wallRenderableTop[x],
+							Maths::min(wallBottom, wallRenderableBottom[x]) + 1
+						)
+					);
+					floorRenderableBottom[x] = static_cast<int>(Maths::min(wallRenderableBottom[x], floorRenderableBottom[x]));
 
 					if(isPortal && !(portalTop > wallBottom) && !(portalBottom < wallTop)) {
 						if(wallTop < portalTop)
