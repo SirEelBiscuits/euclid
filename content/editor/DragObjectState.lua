@@ -35,8 +35,8 @@ function Editor.DragObjectState:Enter()
 end
 
 function Editor.DragObjectState:DoMove(x, y)
-	local xmov = x / Editor.view.scale
-	local ymov = -y / Editor.view.scale
+	local xmov = x / Editor.view.scale / Draw.GetScale()
+	local ymov = -y / Editor.view.scale / Draw.GetScale()
 	for i, v in ipairs(Editor.curMapData.verts) do
 		if self.vertsToMove[i] then
 			v.x = v.x + xmov
@@ -60,8 +60,6 @@ function Editor.DragObjectState:WasMoveBad()
 end
 
 function Editor.DragObjectState:Update(dt)
-	Editor.Cursor = Maths.Vector:new(Game.Controls.MouseX, Game.Controls.MouseY)
-
 	if not Game.Controls.DragObject.isDown then
 		Editor.curMapData:SetCentroids()
 		Editor.DefaultState:Enter(true)
@@ -71,8 +69,6 @@ function Editor.DragObjectState:Update(dt)
 	if self:WasMoveBad() then
 		self:DoMove(-Game.Controls.MouseXRel, -Game.Controls.MouseYRel)
 	end
-
-
 end
 
 function Editor.DragObjectState:Render()

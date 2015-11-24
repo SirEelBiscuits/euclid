@@ -13,8 +13,6 @@ function Editor.DefaultState:Enter(skipClear)
 end
 
 function Editor.DefaultState:Update(dt)
-	Editor.Cursor = Editor:WorldFromScreen(Maths.Vector:new(Game.Controls.MouseX, Game.Controls.MouseY))
-
 	if Game.Controls.reinit.pressed then
 		Game.Initialise()
 	end

@@ -84,8 +84,6 @@ function Editor.DrawSectorState:IsVertPosValid(pos)
 end
 
 function Editor.DrawSectorState:Update(dt)
-	Editor.Cursor = Editor:WorldFromScreen(Maths.Vector:new(Game.Controls.MouseX, Game.Controls.MouseY))
-
 	local nearVert = Editor:GetClosestVertIdx(Editor.Cursor, 1/Editor.view.scale)
 	local vert = nearVert or Editor.Cursor
 	self.vertValid = self:IsVertPosValid(vert)
@@ -125,15 +123,16 @@ function Editor.DrawSectorState:Render()
 		prevVec = vec
 	end
 
+	local ScreenCursor = Editor:ScreenFromWorld(Editor.Cursor)
 	if self.vertValid then
 		if prevVec ~= nil then
-			Draw.Line({x = Game.Controls.MouseX, y = Game.Controls.MouseY}, {x = prevVec.x, y = prevVec.y}, {g = 255})
+			Draw.Line({x = ScreenCursor.x, y = ScreenCursor.y}, {x = prevVec.x, y = prevVec.y}, {g = 255})
 		end
-		Draw.Rect({x = Game.Controls.MouseX - 1, y = Game.Controls.MouseY - 1, w = 3, h = 3}, {g = 255})
+		Draw.Rect({x = ScreenCursor.x - 1, y = ScreenCursor.y - 1, w = 3, h = 3}, {g = 255})
 	else
 		if prevVec ~= nil then
-			Draw.Line({x = Game.Controls.MouseX, y = Game.Controls.MouseY}, {x = prevVec.x, y = prevVec.y}, {r = 255})
+			Draw.Line({x = ScreenCursor.x, y = ScreenCursor.y}, {x = prevVec.x, y = prevVec.y}, {r = 255})
 		end
-		Draw.Rect({x = Game.Controls.MouseX - 1, y = Game.Controls.MouseY - 1, w = 3, h = 3}, {r = 255})
+		Draw.Rect({x = ScreenCursor.x - 1, y = ScreenCursor.y - 1, w = 3, h = 3}, {r = 255})
 	end
 end

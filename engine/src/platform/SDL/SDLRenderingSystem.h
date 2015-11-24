@@ -39,9 +39,6 @@ namespace Rendering {
 
 	private:
 
-		int ScreenWidth;
-		int ScreenHeight;
-
 		winType win{nullptr};
 		renType ren{nullptr};
 

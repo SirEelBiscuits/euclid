@@ -77,6 +77,13 @@ function Game.Update(dt)
 	local n = math.log(Game.FPS)
 	Game.FPS = (n * Game.FPS + 1/dt) / (n+1)
 
+	Editor.Cursor = Editor:WorldFromScreen(
+		Maths.Vector:new(
+			Game.Controls.MouseX / Draw.GetScale(),
+			Game.Controls.MouseY / Draw.GetScale()
+		)
+	)
+
 	Editor.State:Update(dt)
 
 	if false then

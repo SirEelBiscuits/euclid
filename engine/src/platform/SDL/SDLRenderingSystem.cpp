@@ -47,9 +47,7 @@ namespace Rendering {
 		unsigned Scale,
 		bool FullScreen,
 		char const *Title
-	)	: Context(Width/Scale, Height/Scale, false)
-		, ScreenWidth(Width)
-		, ScreenHeight(Height)
+	)	: Context(Width, Height, Scale, false)
 	{
 		if(nullptr == sysCanonical) {
 			sysCanonical = std::make_shared<SDLSystem>();
@@ -60,8 +58,8 @@ namespace Rendering {
 			Title,
 			SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED,
-			ScreenWidth,
-			ScreenHeight,
+			Width,
+			Height,
 			static_cast<Uint32>(SDL_WINDOW_SHOWN | (FullScreen ? SDL_WINDOW_FULLSCREEN : 0))
 		));
 		if(nullptr == win) {
@@ -75,7 +73,7 @@ namespace Rendering {
 			exit(EXIT_FAILURE);
 		}
 
-		SetResolution(GetWidth(), GetHeight());
+		SetResolution(Width, Height);
 	}
 
 	SDLContext::~SDLContext() {
@@ -97,13 +95,13 @@ namespace Rendering {
 
 	void SDLContext::SetResolution(unsigned Width, unsigned Height)
 	{
-		Context::Width = Width;
-		Context::Height = Height;
+		Context::Width = Width / Scale;
+		Context::Height = Height / Scale;
 		if(nullptr != t) {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);
 		}
-		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, Width, Height);
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
 	}

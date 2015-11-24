@@ -654,6 +654,16 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "GetHeight");
 
+				//Draw.GetScale
+				luaX_push(lua,
+					static_cast<std::function<int()>>(
+						[ctx](){
+							return ctx->GetScale();
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetScale");
+
 				//Draw.GetTexture
 				luaX_push(lua,
 					static_cast<std::function<Rendering::Texture*(std::string)>>(

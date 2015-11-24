@@ -13,12 +13,15 @@ POST_STD_LIB
 
 namespace Rendering {
 	struct Context {
-		Context(unsigned Width, unsigned Height, bool shouldAllocateScreenBuffer);
+		Context(unsigned Width, unsigned Height, unsigned Scale, bool shouldAllocateScreenBuffer);
 		virtual ~Context();
 
 		//inline because they need to be fast fast fast!
-		unsigned  GetWidth()                                { return Width; };
-		unsigned  GetHeight()                               { return Height; };
+		unsigned  GetWidth()  const                         { return Width; };
+		unsigned  GetHeight() const                         { return Height; };
+		unsigned  GetWindowWidth()  const                   { return Width * Scale; };
+		unsigned  GetWindowHeight() const                   { return Height * Scale; };
+		unsigned  GetScale()  const                         { return Scale; };
 		Color    &ScreenPixel(unsigned x, unsigned y)       { return screen[x + Width * y]; };
 		Color    &ScreenPixel(ScreenVec2 pos)               { return ScreenPixel(pos.x, pos.y); };
 		Color    &ScreenPixel_slow(unsigned x, unsigned y);
@@ -128,6 +131,7 @@ namespace Rendering {
 		Color*   screen{nullptr};
 		unsigned Height{0u};
 		unsigned Width {0u};
+		unsigned Scale {0u};
 
 		btStorageType vFOV{45}, vFOVMult{1};
 		btStorageType hFOV{45}, hFOVMult{1};
