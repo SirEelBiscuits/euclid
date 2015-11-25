@@ -7,8 +7,9 @@ function Editor.CameraDragState:Enter()
 end
 
 function Editor.CameraDragState:Update()
-	Editor.view.eye.x = Editor.view.eye.x - Game.Controls.MouseXRel / Editor.view.scale
-	Editor.view.eye.y = Editor.view.eye.y + Game.Controls.MouseYRel / Editor.view.scale
+	local movVec = Maths.Vector:new(-Game.Controls.MouseXRel, Game.Controls.MouseYRel) 
+		/ Editor.view.scale / Draw.GetScale()
+	Editor.view.eye = Editor.view.eye + movVec
 
 	if not Game.Controls.DragCamera.isDown then
 		Editor.DefaultState:Enter(true)

@@ -301,16 +301,10 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local start = self.curMapData:GetVert(wall.start)
-			local wallEnd = self.curMapData:GetVert(sec.walls[j % #sec.walls + 1].start) - start
-			local wallLenSq = Dot(wallEnd, wallEnd)
-			local vecRel = vec - start
-
-			local crossProd = Cross2D(wallEnd, vecRel)
-			local dist = crossProd * crossProd / wallLenSq
-
-			if Dot(vecRel, wallEnd) > 0
-				and Dot(vecRel, wallEnd) < wallLenSq
-				and dist < minDist 
+			local wallEnd = self.curMapData:GetVert(sec.walls[j % #sec.walls + 1].start) 
+			local dist = Maths.PointLineSegDistance(vec, start, wallEnd)
+			if
+				dist < minDist 
 			then
 				minDist = dist
 				secIdx = i

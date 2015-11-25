@@ -28,24 +28,40 @@ return {
 		scale = -0.1
 	},
 	{
+		Name = "PreviewForward",
+		ControlType = "axis",
+		PosKey = "w",
+		NegKey = "s",
+	},
+	{
+		Name = "PreviewRight",
+		ControlType = "axis",
+		PosKey = "d",
+		NegKey = "a",
+	},
+	{
 		Name = "RaiseCeiling",
 		ControlType = "button",
-		Key = "d"
+		Key = "c",
+		ShiftPressed = false
 	},
 	{
 		Name = "LowerCeiling",
 		ControlType = "button",
-		Key = "c"
+		Key = "c",
+		ShiftPressed = true
 	},
 	{
 		Name = "RaiseFloor",
 		ControlType = "button",
-		Key = "f"
+		Key = "f",
+		ShiftPressed = false
 	},
 	{
 		Name = "LowerFloor",
 		ControlType = "button",
-		Key = "v"
+		Key = "f",
+		ShiftPressed = true
 	},
 	{
 		Name = "Save",

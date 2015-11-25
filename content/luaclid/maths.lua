@@ -121,4 +121,47 @@ function Dot(left, right)
 	return left.x * right.x + left.y * right.y + left.z * right.z
 end
 
+function Maths.LineIntersect(line1, line2)
+	local l1e = line1.e - line1.s -- line1 is line1.s to line1.s + l1e
+	local l2e = line2.e - line2.s -- line2 is line2.s to line2.s + l2e
+	local l2Rel = line2.s - line1.s
+
+	local rXs = Cross2D(l1e, l2e)
+	local t = Cross2D(l2Rel, l2e)
+	local u = Cross2D(l2Rel, l1e)
+
+	if rXs == 0 then
+		return nil
+		--[[
+		if t == 0 then
+			-- colinear
+		else
+			-- parallel
+		end --]]--
+	else
+		t = t / rXs
+		u = u / rXs
+		local point = line1.s + t * l1e
+		return (t >= -0.0000000000001 and t <= 1 and u >= -0.0000000000001 and u <= 1), line1.s + t * l1e
+	end
+end
+
+function Maths.PointLineSegDistance(point, lineStart, lineEnd)
+	local pointRel = point - lineStart
+	local lineEndRel = lineEnd - lineStart
+	local lenSq = Dot(lineEndRel, lineEndRel)
+	local xProd = Cross2D(lineEndRel, pointRel)
+	local dist = xProd * xProd / lenSq
+	if Dot(pointRel, lineEndRel) > 0
+		and Dot(pointRel, lineEndRel) < lenSq
+	then
+		return dist
+	else
+		return math.sqrt(math.min(
+			pointRel:LengthSquared(),
+			(point - lineEnd):LengthSquared()
+		))
+	end
+end
+
 print("luaclid maths loaded")

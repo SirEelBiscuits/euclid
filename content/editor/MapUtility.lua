@@ -328,4 +328,65 @@ function MapUtility:JoinSectors(sec1ID, sec2ID)
 	end
 end
 
+-- MISC
+
+function MapUtility:SafeMove(StartSector, StartPosition, TargetPosition)
+	local sec = self.sectors[StartSector]
+	for i, wall in ipairs(sec.walls) do
+		local nextWall = sec.walls[i % #sec.walls + 1]
+		local start = self:GetVert(wall.start)
+		local nextStart = self:GetVert(nextWall.start)
+
+		if Cross2D(nextStart - start, StartPosition - start)  > 0 then
+			local seg, point = Maths.LineIntersect(
+				{s = start, e = nextStart},
+				{s = StartPosition, e = TargetPosition}
+			)
+
+			if seg == true then
+				if wall.portal ~= nil then
+					return self:SafeMove(wall.portal, StartPosition, TargetPosition)
+				else
+					point.z = TargetPosition.z or 0
+					return StartSector, point
+				end
+			end
+		end
+	end
+	return StartSector, TargetPosition
+end
+
+function MapUtility:PopOutOfWalls(Sector, Position, radius)
+	return self:PopOutOfWallsInner(Sector, Position, Sector, radius)
+end
+
+function MapUtility:PopOutOfWallsInner(Sector, Position, WorkingSector, radius)
+	local workingPosition = Maths.Vector:new(Position.x, Position.y, Position.z or 0)
+	local sec = self.sectors[WorkingSector]
+	for i, wall in ipairs(sec.walls) do
+		local nextWall = sec.walls[i % #sec.walls + 1]
+		local wallStart = self:GetVert(wall.start)
+		local wallEnd = self:GetVert(nextWall.start)
+
+		local dist = Maths.PointLineSegDistance(workingPosition, wallStart, wallEnd)
+		if Cross2D(wallEnd - wallStart, workingPosition - wallStart) > 0 then
+			if wall.portal == nil then
+				if dist < radius then
+					local norm = wallEnd - wallStart
+					norm.x, norm.y = norm.y, -norm.x
+					norm = norm / math.sqrt(norm:LengthSquared())
+
+					local newPos = workingPosition + norm * (dist - radius)
+					Sector, workingPosition = self:SafeMove(Sector, workingPosition, newPos)
+				end
+			else
+				if dist < radius then
+					Sector, workingPosition = self:PopOutOfWallsInner(Sector, workingPosition, wall.portal, radius)
+				end
+			end
+		end
+	end
+	return Sector, workingPosition
+end
+
 print("Map Utility loaded")

@@ -9,11 +9,12 @@ function Editor.PreviewState:Enter()
 
 	Editor.curMap = Game.OpenMap(Editor.curMapData)
 
-	local SecID = 1
-	self.sector = Editor.curMap:GetSector(SecID - 1)
+	self.radius = .5
+	self.secID = 1
+	self.sector = Editor.curMap:GetSector(self.secID - 1)
 	Editor.curMapData:SetCentroids()
-	self.eye = Editor.curMapData.sectors[SecID].centroid
-	self.eye.z = (Editor.curMapData.sectors[SecID].floorHeight or 0) + 1.65
+	self.eye = Editor.curMapData.sectors[self.secID].centroid
+	self.eye.z = (Editor.curMapData.sectors[self.secID].floorHeight or 0) + 1.65
 	self.angle = 0
 end
 
@@ -40,6 +41,13 @@ function Editor.PreviewState:Update(dt)
 	end
 
 	self.angle = self.angle + Game.Controls.Turn
+
+	local targetPos = self.eye + Maths.RotationMatrix(self.angle) 
+		* Maths.Vector:new(Game.Controls.PreviewRight, Game.Controls.PreviewForward, 0) * dt
+
+	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos, self.radius)
+	self.secID, self.eye = Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
+	self.sector = Editor.curMap:GetSector(self.secID - 1)
 end
 
 function Editor.PreviewState:Render()
@@ -47,4 +55,3 @@ function Editor.PreviewState:Render()
 	Draw.Map(view)
 	Draw.TopDownMap(Editor.curMap, view, {g = 255})
 end
-
