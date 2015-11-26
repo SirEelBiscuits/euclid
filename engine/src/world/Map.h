@@ -52,7 +52,7 @@ namespace World {
 		Vert                   centroid    {};
 		Mesi::Meters           floorHeight {0};
 		Mesi::Meters           ceilHeight  {2};
-		btStorageType          LightLevel  {0.05f};
+		btStorageType          lightLevel  {0.05f};
 		Rendering::TextureInfo floor       {};
 		Rendering::TextureInfo ceiling     {};
 

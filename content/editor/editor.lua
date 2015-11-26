@@ -359,6 +359,7 @@ function Editor:GetSelectionString()
 
 		local ceilH = sec1.ceilHeight or "multiple values"
 		local floorH = sec1.floorHeight or "multiple values"
+		local light = sec1.lightLevel or "multiple values"
 		local ceilTex = sec1.ceilTex ~= nil and sec1.ceilTex.tex or nil
 		local floorTex = sec1.floorTex ~= nil and sec1.floorTex.tex or nil
 		for i,s in ipairs(sectors) do
@@ -368,6 +369,9 @@ function Editor:GetSelectionString()
 			end
 			if sec.floorHeight ~= floorH then
 				floorH = "multiple values"
+			end
+			if sec.lightLevel ~= light then
+				light = "multiple values"
 			end
 			if sec.ceilTex == nil or sec.ceilTex.tex ~= ceilTex then
 				ceilTex = nil
@@ -386,8 +390,9 @@ function Editor:GetSelectionString()
 	
 		workingString = workingString 
 			.. "ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n" 
-			.. "floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. "] to edit\n" 
-		local count = 3
+			.. "floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. " ] to edit\n"
+			.. "light level: " .. light .. "[" .. (self:GetControlsKey("SetLightLevel") or "???") .. " ] to edit\n"
+		local count = 4
 		local ret = {}
 
 		workingString = workingString .. "ceil Texture: [" .. (self:GetControlsKey("SetCeilTexture") or "???") .. "] to edit\n"

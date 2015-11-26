@@ -16,6 +16,7 @@ return {
 			},
 			floorHeight = 0,
 			ceilHeight = 2.25,
+			lightLevel = 0.5,
 
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
@@ -30,6 +31,7 @@ return {
 
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
+			lightLevel = 0.9,
 
 			floorHeight = 1,
 			ceilHeight = 2.0,

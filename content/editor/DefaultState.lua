@@ -241,6 +241,28 @@ function Editor.DefaultState:Update(dt)
 		end
 	end
 
+	if Game.Controls.SetLightLevel.pressed then
+		local sects = Editor.Selection:GetSelectedSectors()
+
+		if #sects > 0 then
+			Editor.History:RegisterSnapshot()
+			Editor.TypingState:Enter("Enter new light level", "bad light level entered",
+			function(string)
+				local ll = tonumber(string)
+				if ll < 0 or ll > 1 then
+					error("Light level must be in 0-1 range")
+				end
+				for i, s in ipairs(sects) do
+					local sec = Editor.curMapData.sectors[s]
+					sec.lightLevel = ll
+				end
+
+				Editor.DefaultState:Enter(true)
+			end
+			)
+		end
+	end
+
 	if Game.Controls.SetCeilTexture.pressed then
 		local sects = Editor.Selection:GetSelectedSectors()
 		if #sects > 0 then

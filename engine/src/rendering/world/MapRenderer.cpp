@@ -27,7 +27,7 @@ namespace Rendering {
 
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, float &uStart, float &uEnd);
 
-		btStorageType DepthMultFromDistance(Mesi::Meters distance);
+		btStorageType DepthMultFromDistance(Mesi::Meters distance, btStorageType ambientStrength);
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
@@ -257,7 +257,7 @@ namespace Rendering {
 						dist += dDist;
 					}
 
-					auto depthShadeVal = DepthMultFromDistance(dist);
+					auto depthShadeVal = DepthMultFromDistance(dist, sec.lightLevel);
 
 					if(x < minX || x > maxX) {
 						continue;
@@ -370,7 +370,7 @@ namespace Rendering {
 				ceilHeight, floorHeight,
 				sec.floor.tex,
 				sec.ceiling.tex,
-				1 //lightlevel
+				sec.lightLevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
 				, portalDepth
@@ -504,7 +504,7 @@ namespace Rendering {
 				for(; y < ScreenHeight/2; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
-					auto depthMult = DepthMultFromDistance(distances[y]);
+					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(ceilRenderableBottom[x] >= y && y >= ceilRenderableTop[x]) {
 							if(stripActive == false) {
@@ -551,7 +551,7 @@ namespace Rendering {
 				for(; y < ScreenHeight; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
-					auto depthMult = DepthMultFromDistance(distances[y]);
+					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(floorRenderableBottom[x] >= y && y >= floorRenderableTop[x]) {
 							if(stripActive == false) {
@@ -696,8 +696,13 @@ namespace Rendering {
 		return true;
 		}
 
-		btStorageType DepthMultFromDistance(Mesi::Meters distance) {
-			return Maths::clamp(.5f / distance.val, 0.005f, 0.9f * (0.995f) + 0.005f);
+		btStorageType DepthMultFromDistance(Mesi::Meters distance, btStorageType ambientLight) {
+			if(distance < 0.001_m)
+				return 0.9 * (1 - ambientLight) + ambientLight;
+			return Maths::clamp(
+				.5f / distance.val,
+				ambientLight,
+				0.9f * (1 - ambientLight) + ambientLight);
 		}
 	}
 }

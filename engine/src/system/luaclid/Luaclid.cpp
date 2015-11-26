@@ -266,6 +266,7 @@ namespace System {
 					auto sec = map->AddNewSector();
 					sec->ceilHeight.val = luaX_returnlocal<btStorageType>(lua, "ceilHeight");
 					sec->floorHeight.val = luaX_returnlocal<btStorageType>(lua, "floorHeight");
+					sec->lightLevel = luaX_returnlocal<btStorageType>(lua, "lightLevel");
 					sec->floor = LoadTexInfo(lua, "floorTex");
 					sec->ceiling = LoadTexInfo(lua, "ceilTex");
 
@@ -481,7 +482,7 @@ namespace System {
 			auto luaSector = luaX_registerClass<World::Sector>(lua
 					, "ceilHeight",        &World::Sector::ceilHeight
 					, "floorHeight",       &World::Sector::floorHeight
-					, "lightLevel",        &World::Sector::LightLevel
+					, "lightLevel",        &World::Sector::lightLevel
 				// methods below here
 					, "GetNumWalls",       &World::Sector::GetNumWalls
 					, "InsertWallAfter",   &World::Sector::InsertWallAfter

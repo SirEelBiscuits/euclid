@@ -144,6 +144,11 @@ return {
 		ShiftPressed = false
 	},
 	{
+		Name = "SetLightLevel",
+		ControlType = "button",
+		Key = "l"
+	},
+	{
 		Name = "SetCeilTexture",
 		ControlType = "button",
 		Key = "c",
