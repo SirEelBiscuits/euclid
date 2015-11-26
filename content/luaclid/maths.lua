@@ -146,8 +146,11 @@ function Maths.LineIntersect(line1, line2)
 	end
 end
 
+-- currently the second returned value is the direction from the wall to
+-- the point, but may be negative if it is perpendicular to the line seg
 function Maths.PointLineSegDistance(point, lineStart, lineEnd)
 	local pointRel = point - lineStart
+	pointRel.z = 0
 	local lineEndRel = lineEnd - lineStart
 	local lenSq = Dot(lineEndRel, lineEndRel)
 	local xProd = Cross2D(lineEndRel, pointRel)
@@ -155,12 +158,17 @@ function Maths.PointLineSegDistance(point, lineStart, lineEnd)
 	if Dot(pointRel, lineEndRel) > 0
 		and Dot(pointRel, lineEndRel) < lenSq
 	then
-		return dist
+		return math.sqrt(dist), Maths.Vector:new(-lineEndRel.y, lineEndRel.x)
 	else
-		return math.sqrt(math.min(
-			pointRel:LengthSquared(),
-			(point - lineEnd):LengthSquared()
-		))
+		local prSq = pointRel:LengthSquared()
+		local er   = point - lineEnd
+		er.z = 0
+		local erSq = er:LengthSquared()
+		if prSq < erSq then
+			return math.sqrt(prSq), pointRel
+		else
+			return math.sqrt(erSq), er
+		end
 	end
 end
 

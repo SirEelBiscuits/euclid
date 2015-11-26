@@ -368,21 +368,20 @@ function MapUtility:PopOutOfWallsInner(Sector, Position, WorkingSector, radius)
 		local wallStart = self:GetVert(wall.start)
 		local wallEnd = self:GetVert(nextWall.start)
 
-		local dist = Maths.PointLineSegDistance(workingPosition, wallStart, wallEnd)
-		if Cross2D(wallEnd - wallStart, workingPosition - wallStart) > 0 then
-			if wall.portal == nil then
-				if dist < radius then
-					local norm = wallEnd - wallStart
-					norm.x, norm.y = norm.y, -norm.x
-					norm = norm / math.sqrt(norm:LengthSquared())
+		local dist, norm = Maths.PointLineSegDistance(workingPosition, wallStart, wallEnd)
+		if WorkingSector == 3 and i == 4 then
+		end
+		if wall.portal == nil then
+			if dist < radius then
+				norm = norm / math.sqrt(norm:LengthSquared())
 
-					local newPos = workingPosition + norm * (dist - radius)
-					Sector, workingPosition = self:SafeMove(Sector, workingPosition, newPos)
-				end
-			else
-				if dist < radius then
-					Sector, workingPosition = self:PopOutOfWallsInner(Sector, workingPosition, wall.portal, radius)
-				end
+				local newPos = workingPosition + norm * (radius - dist)
+				Sector, workingPosition = self:SafeMove(Sector, workingPosition, newPos)
+			end
+		else
+			if Cross2D(wallEnd - wallStart, workingPosition - wallStart) > 0
+				and dist < radius then
+				Sector, workingPosition = self:PopOutOfWallsInner(Sector, workingPosition, wall.portal, radius)
 			end
 		end
 	end
