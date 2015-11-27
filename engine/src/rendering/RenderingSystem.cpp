@@ -17,9 +17,10 @@
 
 namespace Rendering {
 
-	Context::Context(unsigned Width, unsigned Height, bool shouldAllocateScreenBuffer)
+	Context::Context(unsigned Width, unsigned Height, unsigned Scale, bool shouldAllocateScreenBuffer)
 		: Width(Width)
 		, Height(Height)
+		, Scale(Scale)
 		, screen{ nullptr }
 	{
 	}
@@ -28,7 +29,7 @@ namespace Rendering {
 	}
 		
 	Color & Context::ScreenPixel_slow(unsigned x, unsigned y) {
-		if(x < 0 || x >= Width || y < 0 || y >= Height)
+		if(x < 0 || x >= GetWidth() || y < 0 || y >= GetHeight())
 			return Dummy;
 		return ScreenPixel(x, y);
 	}
@@ -48,23 +49,24 @@ namespace Rendering {
 	}
 	
 	void Context::DrawLine(ScreenVec2 start, ScreenVec2 end, Color c) {
-
+		auto Width = (int)GetWidth()-1;
+		auto Height = (int)GetHeight()-1;
 		if(start.x == end.x)
-			if(start.x < 0 || start.x >= Width)
+			if(start.x < 0 || start.x > Width)
 				return;
 			else
 				DrawVLine(start.x,
-					Maths::clamp(start.y, 0, (int)GetWidth()-1),
-					Maths::clamp(end.y, 0, (int)GetHeight()-1),
+					Maths::clamp(start.y, 0, Height),
+					Maths::clamp(end.y, 0, Height),
 					c
 				);
 		if(start.y == end.y)
-			if(start.y < 0 || start.y >= Height)
+			if(start.y < 0 || start.y > Height)
 				return;
 			else
 				DrawHLine(
-					Maths::clamp(start.x, 0, (int)GetWidth()-1),
-					Maths::clamp(end.x, 0, (int)GetWidth()-1),
+					Maths::clamp(start.x, 0, Width),
+					Maths::clamp(end.x, 0, Width),
 					start.y,
 					c
 				);
@@ -79,30 +81,30 @@ namespace Rendering {
 			start.y += (int)std::round(m * (end.y - start.y));
 			start.x = 0;
 		}
-		if(end.x >= (int)Width) {
-			float m = ((float)Width - 1 - start.x) / (end.x - start.x);
+		if(end.x > Width) {
+			float m = ((float)Width - - start.x) / (end.x - start.x);
 			end.y = start.y + (int)std::round(m * (end.y - start.y));
-			end.x = Width - 1;
+			end.x = Width;
 		}
 
 		if(start.y < 0) {
 			float m = -(float)start.y / (end.y - start.y);
 			start.x += (int)std::round(m * (end.x - start.x));
 			start.y = 0;
-		} else if(start.y >= (int)Height) {
-			float m = ((float)Height - 1 - end.y) / (start.y - end.y);
+		} else if(start.y > Height) {
+			float m = ((float)Height  - end.y) / (start.y - end.y);
 			start.x = end.x + (int)std::round(m * (start.x - end.x));
-			start.y = Height - 1;
+			start.y = Height;
 		}
 
 		if(end.y < 0) {
 			float m = -(float)end.y / (start.y - end.y);
 			end.x += (int)std::round(m * (start.x - end.x));
 			end.y = 0;
-		} else if(end.y >= (int)Height) {
-			float m = ((float)Height - 1 - start.y) / (end.y - start.y);
+		} else if(end.y > Height) {
+			float m = ((float)Height - start.y) / (end.y - start.y);
 			end.x = start.x + (int)std::round(m * (end.x - start.x));
-			end.y = Height - 1;
+			end.y = Height;
 		}
 
 		// Bresenham's algorithm, see:
@@ -201,10 +203,13 @@ namespace Rendering {
 			rect.pos.y = 0;
 		}
 
+		if(rect.size.x == 0 || rect.size.y == 0)
+			return;
+
 		auto left = rect.pos.x;
-		auto right = Maths::min(Height, static_cast<unsigned>(left + rect.size.x));
+		auto right = Maths::min(GetWidth(), static_cast<unsigned>(left + rect.size.x - 1));
 		unsigned bottom = rect.pos.y + rect.size.y;
-		for(unsigned y = rect.pos.y; y < bottom && y < Height; ++y)
+		for(unsigned y = rect.pos.y; y < bottom && y < GetHeight(); ++y)
 			DrawHLine(left, right, y, c);
 	}
 
@@ -213,6 +218,8 @@ namespace Rendering {
 	}
 
 	void Context::DrawText(ScreenVec2 topLeft, Texture * tex, char const * text) {
+		if(tex == nullptr)
+			return;
 		auto const size = ScreenVec2((int)tex->w / 32, (int)tex->h / 8);
 		auto curPos = topLeft;
 		for(auto curChar = text; *curChar != 0; ++curChar) {
@@ -233,7 +240,7 @@ namespace Rendering {
 						Fix16(size.y)
 					)
 				);
-				DrawRectAlpha(dstR, tex, srcR, 1);
+				DrawRectAlpha(dstR, tex, srcR, 1, 0);
 				curPos.x += size.x;
 			}
 		}
@@ -244,7 +251,8 @@ namespace Rendering {
 		unsigned y,
 		Texture const *tex,
 		UVVec2 start, UVVec2 end,
-		btStorageType colorMult
+		btStorageType colorMult,
+		uint8_t stencil
 	) {
 		auto xLen = static_cast<Fix16>(xRight - xLeft);
 		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
@@ -262,13 +270,14 @@ namespace Rendering {
 				(unsigned)uvCur.y
 			) * colorMult;
 #endif
+			ScreenPixel(x, y).a = stencil;
 			uvCur += deltaUV;
 		}
 
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, float colorMult) {
+	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -289,7 +298,7 @@ namespace Rendering {
 			x = dest.pos.x;
 		}
 
-		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+		for(; x < xTarget && static_cast<unsigned>(x) < GetWidth(); x +=1, ax += dx) {
 			//handle dest.pos starting beyond the top of the screen
 			auto ay = src.pos.y;
 			auto y = 0;
@@ -299,7 +308,7 @@ namespace Rendering {
 				y = dest.pos.y;
 			}
 
-			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+			for(; y < yTarget && static_cast<unsigned>(y) < GetHeight(); y += 1, ay += dy) {
 				//todo: is this actually faster than float multiplication..?
 #ifdef BILINEAR_FILTERING
 				Color c = tex->pixel_bilinear(ax, ay);
@@ -309,6 +318,7 @@ namespace Rendering {
 				c.r = (uint8_t)((Fix16)c.r * m);
 				c.g = (uint8_t)((Fix16)c.g * m);
 				c.b = (uint8_t)((Fix16)c.b * m);
+				c.a = stencil;
 				ScreenPixel(x, y) = c;
 			}
 
@@ -316,7 +326,7 @@ namespace Rendering {
 		}
 	}
 
-	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, float colorMult) {
+	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -337,7 +347,7 @@ namespace Rendering {
 			x = dest.pos.x;
 		}
 
-		for(; x < xTarget && static_cast<unsigned>(x) < Width; x +=1, ax += dx) {
+		for(; x < xTarget && static_cast<unsigned>(x) < GetWidth(); x +=1, ax += dx) {
 			//handle dest.pos starting beyond the top of the screen
 			auto ay = src.pos.y;
 			auto y = 0;
@@ -347,7 +357,7 @@ namespace Rendering {
 				y = dest.pos.y;
 			}
 
-			for(; y < yTarget && static_cast<unsigned>(y) < Height; y += 1, ay += dy) {
+			for(; y < yTarget && static_cast<unsigned>(y) < GetHeight(); y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
 				Color dst = ScreenPixel(x, y);
 #ifdef BILINEAR_FILTERING
@@ -359,6 +369,7 @@ namespace Rendering {
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				c.a = stencil;
 				ScreenPixel(x, y) = c;
 			}
 

@@ -37,12 +37,15 @@ namespace System {
 					pushedItems += luaX_getlocal(lua, "Name");
 					if(lua_type(lua, -1) != LUA_TSTRING) {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 					auto Name = luaX_return<std::string>(lua);
 					--pushedItems;
 
 					pushedItems += luaX_getlocal(lua, "Key");
+					auto isMouse = false;
 					auto Key = 0;
 					switch(lua_type(lua, -1)) {
 					case LUA_TSTRING: {
@@ -51,6 +54,7 @@ namespace System {
 							if(str.length() != 1) {
 								lua_pop(lua, pushedItems);
 								ASSERT(false); //does this work right?
+								++id;
 								continue;
 							}
 							if(KeyIsReasonable(str[0]))
@@ -63,18 +67,75 @@ namespace System {
 						}
 						break;
 					default:
-						lua_pop(lua, pushedItems);
-						ASSERT(false); //just once I need to check this continue goes to the right place!
-						continue;
+						lua_pop(lua, 1);
+						--pushedItems;
+						{
+							pushedItems += luaX_getlocal(lua, "MouseButton");
+							switch(lua_type(lua, -1)) {
+							case LUA_TSTRING: {
+									isMouse = true;
+									auto str = luaX_return<std::string>(lua);
+									--pushedItems;
+									if(str.compare("left") == 0)
+										Key = 1;
+									else if(str.compare("right") == 0)
+										Key = 3;
+									else if(str.compare("middle") == 0)
+										Key = 2;
+									else {
+										lua_pop(lua, pushedItems);
+										ASSERT(false);
+										++id;
+										continue;
+									}
+								}
+								break;
+							default:
+								lua_pop(lua, pushedItems);
+								ASSERT(false);
+								++id;
+								continue;
+							}
+						}
+						break;
 					}
+
+					//here we grab the shift/ctrl must be up/down/don't care values
+					Mask mask = Mask::None;
+					pushedItems += luaX_getlocal(lua, "ShiftPressed");
+					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+						if(luaX_return<bool>(lua)) {
+							mask = (Mask)((int)mask | (int)Mask::ShiftDown);
+						} else {
+							mask = (Mask)((int)mask | (int)Mask::ShiftUp);
+						}
+					} else {
+						ASSERT(lua_type(lua, -1) == LUA_TNIL);
+						lua_pop(lua, 1);
+					}
+					--pushedItems;
+					pushedItems += luaX_getlocal(lua, "CtrlPressed");
+					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+						if(luaX_return<bool>(lua)) {
+							mask = (Mask)((int)mask | (int)Mask::CtrlDown);
+						} else {
+							mask = (Mask)((int)mask | (int)Mask::CtrlUp);
+						}
+					} else {
+						ASSERT(lua_type(lua, -1) == LUA_TNIL);
+						lua_pop(lua, 1);
+					}
+					--pushedItems;
 					
-					inputList.emplace_back(std::make_unique<Button>(Name, Key));
+					inputList.emplace_back(std::make_unique<Button>(Name, Key, isMouse, mask));
 				}
 
 				else if(controlType.compare("axis") == 0) {
 					pushedItems += luaX_getlocal(lua, "Name");
 					if(lua_type(lua, -1) != LUA_TSTRING) {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 					auto Name = luaX_return<std::string>(lua);
@@ -89,6 +150,7 @@ namespace System {
 							if(str.length() != 1) {
 								lua_pop(lua, pushedItems);
 								ASSERT(false); //does this work right?
+								++id;
 								continue;
 							}
 							if(KeyIsReasonable(str[0]))
@@ -103,6 +165,7 @@ namespace System {
 					default:
 						lua_pop(lua, pushedItems);
 						ASSERT(false); //just once I need to check this continue goes to the right place!
+						++id;
 						continue;
 					}
 
@@ -115,6 +178,7 @@ namespace System {
 							if(str.length() != 1) {
 								lua_pop(lua, pushedItems);
 								ASSERT(false); //does this work right?
+								++id;
 								continue;
 							}
 							if(KeyIsReasonable(str[0]))
@@ -128,6 +192,7 @@ namespace System {
 					default:
 						lua_pop(lua, pushedItems);
 						ASSERT(false); //just once I need to check this continue goes to the right place!
+						++id;
 						continue;
 					}
 
@@ -138,6 +203,8 @@ namespace System {
 					pushedItems += luaX_getlocal(lua, "Name");
 					if(lua_type(lua, -1) != LUA_TSTRING) {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 					auto name = luaX_return<std::string>(lua);
@@ -147,6 +214,8 @@ namespace System {
 					pushedItems += luaX_getlocal(lua, "axis");
 					if(lua_type(lua, -1) != LUA_TSTRING) {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 					auto axisString = luaX_return<std::string>(lua);
@@ -157,12 +226,16 @@ namespace System {
 						axis = AxisDirection::y;
 					else {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 
 					pushedItems += luaX_getlocal(lua, "relative");
 					if(lua_type(lua, -1) != LUA_TBOOLEAN) {
 						lua_pop(lua, pushedItems);
+						ASSERT(false);
+						++id;
 						continue;
 					}
 					auto relative = luaX_return<bool>(lua);
@@ -221,24 +294,39 @@ namespace System {
 			return false;
 		}
 
-		Button::Button(std::string name, int key)
+		Button::Button(std::string name, int key, bool isMouse, Mask mask)
 			: name(name)
 			, key(key)
 			, state(UnPressed)
 			, newlyPressed(false)
 			, newlyReleased(false)
+			, isMouse(isMouse)
+			, requireShiftDown((int)mask & (int)Mask::ShiftDown)
+			, requireShiftUp  ((int)mask & (int)Mask::ShiftUp)
+			, requireCtrlDown ((int)mask & (int)Mask::CtrlDown)
+			, requireCtrlUp   ((int)mask & (int)Mask::CtrlUp)
 		{}
 
 		void Button::HandleEvent(Input::Event e) {
-			if(e.key != key || isMouseEvent(e) || e.repeat)
+			if(
+				e.key != key 
+				|| isMouseEvent(e) != isMouse 
+				|| e.repeat
+				|| (requireShiftDown && !System::Input::IsShiftDown())
+				|| (requireShiftUp   && System::Input::IsShiftDown())
+				|| (requireCtrlDown  && !System::Input::IsCtrlDown())
+				|| (requireCtrlUp    && System::Input::IsCtrlDown())
+			)
 				return;
 
 			switch(e.type) {
 			case System::Input::EventType::KeyDown:
+			case System::Input::EventType::MouseDown:
 				 newlyPressed = state == UnPressed;
 				 state = Pressed;
 				 break;
 			case System::Input::EventType::KeyUp:
+			case System::Input::EventType::MouseUp:
 				newlyReleased = state == Pressed;
 				state = UnPressed;
 				break;

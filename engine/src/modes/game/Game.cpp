@@ -86,7 +86,8 @@ namespace Modes {
 					"mouseMovX", input[i].mouseMovX,
 					"mouseMovY", input[i].mouseMovY,
 					"mouseMovXRel", input[i].mouseMovXRel,
-					"mouseMovYRel", input[i].mouseMovYRel
+					"mouseMovYRel", input[i].mouseMovYRel,
+					"textInput", input[i].textInput
 				);
 
 				lua_seti(lua, -2, i + offset);
@@ -136,17 +137,6 @@ namespace Modes {
 			lua_pushlightuserdata(lua, &controls);
 			lua_pushcclosure(lua, closure, 1);
 			lua_setfield(lua, -2, "AddControls");
-		}
-		lua_pop(lua, 1);
-
-		lua_getglobal(lua, "Draw");
-		//RenderMap
-		{
-			auto f = [this](Rendering::World::View v) {
-				this->mapRenderer.Render(v);
-			};
-			luaX_push(lua, static_cast<std::function<void(Rendering::World::View)>>(f));
-			lua_setfield(lua, -2, "Map");
 		}
 		lua_pop(lua, 1);
 

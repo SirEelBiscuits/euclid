@@ -21,12 +21,13 @@ namespace Rendering {
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
 			Rendering::Color tmpc,
+			uint8_t stencil,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &wallStartVS, PositionVec2 &wallEndVS, float &uStart, float &uEnd);
 
-		btStorageType DepthMultFromDistance(Mesi::Meters distance);
+		btStorageType DepthMultFromDistance(Mesi::Meters distance, btStorageType ambientStrength);
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
@@ -88,11 +89,9 @@ namespace Rendering {
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
 		}
 
-		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int portalDepth) {
-			if(portalDepth == 0 || minX > maxX || view.sector == nullptr)
+		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
+			if(portalDepth == MaxPortalDepth || minX > maxX || view.sector == nullptr)
 				return;
-			else if(portalDepth > 0)
-				--portalDepth;
 			ASSERT(maxX < (int)widthUsed);
 
 			struct RoomRenderDefer {
@@ -191,6 +190,7 @@ namespace Rendering {
 					nWallBottomEnd   = ScreenHeight/2 - nFloorHeight * wallScalarEnd;
 
 					vEndTop    = wall.topTex.uvStart.y + Fix16(ceilHeight.val - nCeilHeight.val);
+					vEndMain   = wall.mainTex.uvStart.y + Fix16( Maths::min(ceilHeight.val, nCeilHeight.val) - Maths::max(floorHeight.val, nFloorHeight.val) );
 					vEndBottom = wall.bottomTex.uvStart.y + Fix16(floorHeight.val - nFloorHeight.val);
 				}
 
@@ -257,18 +257,28 @@ namespace Rendering {
 						dist += dDist;
 					}
 
-					auto depthShadeVal = DepthMultFromDistance(dist);
+					auto depthShadeVal = DepthMultFromDistance(dist, sec.lightLevel);
 
 					if(x < minX || x > maxX) {
 						continue;
 					}
 
 					//this is the same for both types of wall, portal and non-
-					ceilRenderableTop[x]     = wallRenderableTop[x];
-					ceilRenderableBottom[x]  = static_cast<int>(Maths::max(wallTop, wallRenderableTop[x])) - 1;
-
-					floorRenderableTop[x]    = static_cast<int>(Maths::min(wallBottom, wallRenderableBottom[x])) + 1;
-					floorRenderableBottom[x] = wallRenderableBottom[x];
+					ceilRenderableTop[x]     = static_cast<int>(Maths::max(wallRenderableTop[x], ceilRenderableTop[x]));
+					ceilRenderableBottom[x]  = static_cast<int>(
+						Maths::min(
+							wallRenderableBottom[x],
+							Maths::max(wallTop, wallRenderableTop[x]) - 1
+						)
+					);
+					
+					floorRenderableTop[x]    = static_cast<int>(
+						Maths::max(
+							wallRenderableTop[x],
+							Maths::min(wallBottom, wallRenderableBottom[x]) + 1
+						)
+					);
+					floorRenderableBottom[x] = static_cast<int>(Maths::min(wallRenderableBottom[x], floorRenderableBottom[x]));
 
 					if(isPortal && !(portalTop > wallBottom) && !(portalBottom < wallTop)) {
 						if(wallTop < portalTop)
@@ -282,6 +292,7 @@ namespace Rendering {
 								wall.topTex.tex,
 								depthShadeVal
 								, Rendering::Color{64, 0, 0, 255}
+								, portalDepth
 							);
 
 						if(wall.mainTex.tex != nullptr) {
@@ -312,6 +323,7 @@ namespace Rendering {
 								wall.bottomTex.tex,
 								depthShadeVal
 								, Rendering::Color{128, 0, 0, 255}
+								, portalDepth
 							);
 
 						wallRenderableTop[x] = static_cast<int>(Maths::min(ScreenHeight-1, 
@@ -331,6 +343,7 @@ namespace Rendering {
 							wall.mainTex.tex,
 							depthShadeVal
 							, Rendering::Color{255, 0, 0, 255}
+							, portalDepth
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -357,12 +370,13 @@ namespace Rendering {
 				ceilHeight, floorHeight,
 				sec.floor.tex,
 				sec.ceiling.tex,
-				1 //lightlevel
+				sec.lightLevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
+				, portalDepth
 			);
 			for(auto &dl : deferList) {
-				RenderRoom(dl.view, dl.minX, dl.maxX, portalDepth);
+				RenderRoom(dl.view, dl.minX, dl.maxX, MaxPortalDepth, portalDepth + 1);
 			}
 			for(auto &dl : curtainDeferList)
 				DrawWallSlice(
@@ -378,6 +392,7 @@ namespace Rendering {
 					dl.tex,
 					dl.invDist,
 					Rendering::Color{0, 0, 128, 128},
+					portalDepth,
 					true
 				);
 		}
@@ -392,6 +407,7 @@ namespace Rendering {
 			Rendering::Texture *tex,
 			btStorageType colorScale,
 			Rendering::Color tmpc,
+			uint8_t stencil,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
@@ -401,7 +417,9 @@ namespace Rendering {
 				wallTop = Maths::max(wallTop, viewSlotTop);
 				wallBottom = Maths::min(wallBottom, viewSlotBottom);
 
-				ctx.DrawVLine(x, wallTop, wallBottom, tmpc * colorScale);
+				auto c = tmpc * colorScale;
+				c.a = stencil;
+				ctx.DrawVLine(x, wallTop, wallBottom, c);
 			} else {
 				auto const ppm = Fix16(Rendering::Texture::PixelsPerMeter);
 				auto srcR = Rendering::UVRect(UVVec2(u * ppm, vStart * ppm), UVVec2(1_fp, vEnd * ppm));
@@ -424,9 +442,9 @@ namespace Rendering {
 
 				Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
 				if(useAlpha)
-					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale);
+					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
 				else
-					ctx.DrawRect(dstR, tex, srcR, colorScale);
+					ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
 			}
 			return true;
 		}
@@ -439,7 +457,8 @@ namespace Rendering {
 			Rendering::Texture *ceilTex,
 			float lightlevel,
 			Rendering::Color tmpceil,
-			Rendering::Color tmpfloor
+			Rendering::Color tmpfloor,
+			uint8_t stencil
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
 			for(auto y = 0u; y < ScreenHeight; ++y)
@@ -485,7 +504,7 @@ namespace Rendering {
 				for(; y < ScreenHeight/2; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
-					auto depthMult = DepthMultFromDistance(distances[y]);
+					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(ceilRenderableBottom[x] >= y && y >= ceilRenderableTop[x]) {
 							if(stripActive == false) {
@@ -503,7 +522,8 @@ namespace Rendering {
 								ceilTex,
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x, rightFix16.y),
-								depthMult
+								depthMult,
+								stencil
 							);
 							stripActive = false;
 						}
@@ -519,7 +539,8 @@ namespace Rendering {
 							ceilTex,
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
-							depthMult
+							depthMult,
+							stencil
 						);
 					}
 				}
@@ -530,7 +551,7 @@ namespace Rendering {
 				for(; y < ScreenHeight; ++y) {
 					auto stripStarted = 0u;
 					auto stripActive = false;
-					auto depthMult = DepthMultFromDistance(distances[y]);
+					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
 					for(auto x = minX; x <= maxX; ++x) {
 						if(floorRenderableBottom[x] >= y && y >= floorRenderableTop[x]) {
 							if(stripActive == false) {
@@ -548,7 +569,8 @@ namespace Rendering {
 								floorTex,
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x,rightFix16.y),
-								depthMult
+								depthMult,
+								stencil
 							);
 							stripActive = false;
 						}
@@ -564,7 +586,8 @@ namespace Rendering {
 							floorTex,
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
-							depthMult
+							depthMult,
+							stencil
 						);
 					}
 				}
@@ -673,8 +696,13 @@ namespace Rendering {
 		return true;
 		}
 
-		btStorageType DepthMultFromDistance(Mesi::Meters distance) {
-			return Maths::clamp(.5f / distance.val, 0.005f, 0.9f * (0.995f) + 0.005f);
+		btStorageType DepthMultFromDistance(Mesi::Meters distance, btStorageType ambientLight) {
+			if(distance < 0.001_m)
+				return 0.9 * (1 - ambientLight) + ambientLight;
+			return Maths::clamp(
+				.5f / distance.val,
+				ambientLight,
+				0.9f * (1 - ambientLight) + ambientLight);
 		}
 	}
 }

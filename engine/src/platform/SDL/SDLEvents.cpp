@@ -58,6 +58,13 @@ namespace System {
 		static int const DEBUG_LOOP_RECORD_KEY  = SDLK_F7;
 		static int const DEBUG_RENDERING_KEY    = SDLK_F4;
 
+		static bool LShiftDown = false;
+		static bool RShiftDown = false;
+		static bool LCtrlDown  = false;
+		static bool RCtrlDown  = false;
+		
+		static bool textEditing{false};
+
 		std::vector<Event> GetEvents() {
 			std::vector<Event> events;
 			auto done = false;
@@ -92,10 +99,35 @@ namespace System {
 						break;
 #endif
 				//FALLTHROUGH
+					switch(e.key.keysym.sym) {
+					case SDLK_LCTRL:
+						LCtrlDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_RCTRL:
+						RCtrlDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_LSHIFT:
+						LShiftDown = e.type == SDL_KEYDOWN;
+						break;
+					case SDLK_RSHIFT:
+						RShiftDown = e.type == SDL_KEYDOWN;
+						break;
+					default:
+						break;
+					}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 				case SDL_MOUSEMOTION:
 					events.emplace_back(Transform(e));
+					break;
+
+				case SDL_TEXTINPUT: 
+					if(textEditing){
+						System::Input::Event ret;
+						ret.textInput = e.text.text;
+						ret.type = EventType::TextInput;
+						events.emplace_back(ret);
+					}
 					break;
 
 					//input events we recognise, but aren't interested it
@@ -148,6 +180,22 @@ namespace System {
 				}
 			}
 			return events;
+		}
+
+		bool IsShiftDown() { 
+			return LShiftDown || RShiftDown;
+		}
+
+		bool IsCtrlDown() {
+			return LCtrlDown || RCtrlDown;
+		}
+
+		void SetTextEditingMode(bool SetOn) {
+			textEditing = SetOn;
+			//if(SetOn)
+			//	SDL_StartTextInput();
+			//else
+			//	SDL_StopTextInput();
 		}
 	}
 

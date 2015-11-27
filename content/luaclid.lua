@@ -47,6 +47,7 @@ InputEventType = MakeEnum({
 	MouseDown = 3,
 	MouseUp = 4,
 	MouseMove = 5,
+	TextInput = 6,
 	},
 	"InputEventType"
 )
@@ -66,14 +67,15 @@ local function isArray(t)
 	return true
 end
 
-function deepCopy(obj)
+function DeepCopy(obj)
 	local objType = type(obj)
 	local copy
 	if objType == "table" then
 		copy = {}
 		for k,v in next, obj, nil do
-			copy[k] = deepCopy(v)
+			copy[k] = DeepCopy(v)
 		end
+		setmetatable(copy, getmetatable(obj))
 	else
 		copy = obj
 	end
@@ -130,7 +132,7 @@ function Describe(t, indent)
 		local k,v
 		for k,v in pairs(t) do
 			print("  " .. k .. "=")
-			Describe(v, indent .. "  ")
+			print(v, indent .. "  ")
 		end
 
 		local mt = getmetatable(t)
@@ -143,8 +145,17 @@ function Describe(t, indent)
 	end
 end
 
+function TableSize(foo)
+	local acc = 0
+	for _ in pairs(foo) do
+		acc = acc + 1
+	end
+	return acc
+end
+
 Game = {}
 Draw = {}
 Game.Input={}
+Input = {}
 
 print("luaclid.lua loaded")

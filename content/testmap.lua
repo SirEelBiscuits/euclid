@@ -16,21 +16,22 @@ return {
 			},
 			floorHeight = 0,
 			ceilHeight = 2.25,
+			lightLevel = 0.5,
 
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
 
-			onEnter = function() printf("sector entered") end,
 		},
 		{
 			walls = {
-				{start = 1},
+				{start = 1, portal = 1},
 				{start = 2},
 				{start = 5},
 			},
 
 			floorTex = {tex = "floor.png"},
 			ceilTex  = {tex = "ceil.png"},
+			lightLevel = 0.9,
 
 			floorHeight = 1,
 			ceilHeight = 2.0,

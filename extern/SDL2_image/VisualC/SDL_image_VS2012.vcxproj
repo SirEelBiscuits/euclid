@@ -119,15 +119,15 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\Release;$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration);$(SolutionDir)extern\SDL2\VisualC\SDLmain\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Debug/SDL2_image.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"
-xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -194,15 +194,15 @@ xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern
       <AdditionalDependencies>SDL2main.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\Release;$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration);$(SolutionDir)extern\SDL2\VisualC\SDLmain\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/SDL2_image.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)"
-xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)"</Command>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

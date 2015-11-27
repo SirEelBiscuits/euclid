@@ -5,20 +5,16 @@ PREAMBLE
 PRE_STD_LIB
 POST_STD_LIB
 
+#include "rendering/RenderingPrimitives.h"
 #include "lib/BasicTypes.h"
-#include "world/Map.h"
+#include "MapRenderingShared.h"
 
 namespace Rendering {
 	
 	struct Context;
+	class Texture;
 
 	namespace World {
-
-		struct View {
-			PositionVec3            eye    {};
-			::World::Sector const * sector {nullptr};
-			TransformMat2           forward{};
-		};
 
 		class MapRenderer {
 		public:
@@ -35,7 +31,7 @@ namespace Rendering {
 
 				portalDepth is the recursive depth to go to. negative values indicate infinity
 			*/
-			void RenderRoom(View const &view, int minX, int maxX, int portalDepth = -1);
+			void RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth = -1, int portalDepth = 0);
 
 			void DrawHorizontalPlanes(
 				View view,
@@ -45,7 +41,8 @@ namespace Rendering {
 				Rendering::Texture *ceilTex,
 				float lightlevel,
 				Rendering::Color tmpceil,
-				Rendering::Color tmpfloor
+				Rendering::Color tmpfloor,
+				uint8_t stencil
 			);
 
 			//////////

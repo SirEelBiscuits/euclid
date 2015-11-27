@@ -17,6 +17,7 @@ namespace System {
 			MouseDown,
 			MouseUp,
 			MouseMove,
+			TextInput,
 		};
 
 		struct Event {
@@ -24,10 +25,10 @@ namespace System {
 				int key{0};
 				int button;
 			};
-
-			bool repeat{false};
-			EventType type{EventType::None};
+			std::string textInput;
 			int mouseMovX, mouseMovY, mouseMovXRel, mouseMovYRel;
+			EventType type{EventType::None};
+			bool repeat{false};
 		};
 
 		//Implemented in platform code
@@ -35,9 +36,18 @@ namespace System {
 
 		//Implemented in platform code
 		bool ReturnOnKeyInput();
-
+		
 		//implemented in platform code
 		std::vector<Event> GetEvents();
+		
+		//implemented in platform code
+		bool IsShiftDown();
+		
+		//implemented in platform code
+		bool IsCtrlDown();
+		
+		//implemented in platform code
+		void SetTextEditingMode(bool SetOn);
 	}
 
 	namespace Events {
