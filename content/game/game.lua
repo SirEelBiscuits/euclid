@@ -1,9 +1,12 @@
 StateList = StateList or {}
+Game.data = {}
 function Game.Initialise()
 	Game.LoadAndWatchFile("luaclid/MapUtility.lua")
 	Game.LoadAndWatchFile("game/SFA.lua")
 	Game.LoadAndWatchFile("game/Entity.lua")
 	Game.LoadAndWatchFile("game/Player.lua")
+	Game.LoadAndWatchFile("game/PlayerController.lua")
+	Game.LoadAndWatchFile("game/Camera.lua")
 
 	Game:EnterState(StateList.SFA)
 
@@ -11,13 +14,11 @@ function Game.Initialise()
 end
 
 function Game.SaveState()
-	StateListBackup = DeepCopy(StateList)
-	StateBackup = Game.State
+	dataBackup = DeepCopy(Game.data)
 end
 
 function Game.LoadState()
-	StateList = DeepCopy(StateListBackup)
-	Game.State = StateBackup
+	Game.data = DeepCopy(dataBackup)
 end
 
 function Game:EnterState(NewState)
@@ -40,3 +41,5 @@ end
 function Game.Render()
 	Game.State:Render()
 end
+
+print("game reloaded")

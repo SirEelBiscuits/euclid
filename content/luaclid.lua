@@ -67,15 +67,21 @@ local function isArray(t)
 	return true
 end
 
-function DeepCopy(obj)
+function DeepCopy(obj, lookup)
+	lookup = lookup or {}
 	local objType = type(obj)
 	local copy
 	if objType == "table" then
+		if lookup[obj] ~= nil then
+			return lookup[obj]
+		end
+
 		copy = {}
-		for k,v in next, obj, nil do
-			copy[k] = DeepCopy(v)
+		for k,v in pairs(obj) do
+			copy[k] = DeepCopy(v, lookup)
 		end
 		setmetatable(copy, getmetatable(obj))
+		lookup[obj] = copy
 	else
 		copy = obj
 	end

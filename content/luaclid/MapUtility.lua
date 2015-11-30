@@ -330,7 +330,12 @@ end
 
 -- MISC
 
-function MapUtility:SafeMove(StartSector, StartPosition, TargetPosition)
+function MapUtility:SafeMove(
+	StartSector,
+	StartPosition,
+	TargetPosition,
+	TransitionCheck
+)
 	local sec = self.sectors[StartSector]
 	for i, wall in ipairs(sec.walls) do
 		local nextWall = sec.walls[i % #sec.walls + 1]
@@ -345,7 +350,17 @@ function MapUtility:SafeMove(StartSector, StartPosition, TargetPosition)
 
 			if seg == true then
 				if wall.portal ~= nil then
-					return self:SafeMove(wall.portal, StartPosition, TargetPosition)
+					if TransitionCheck == nil or TransitionCheck(StartSector, wall.portal) then
+						return self:SafeMove(
+							wall.portal,
+							StartPosition,
+							TargetPosition,
+							TransitionCheck
+						)
+					else
+						point.z = TargetPosition.z or 0
+						return StartSector, point
+					end
 				else
 					point.z = TargetPosition.z or 0
 					return StartSector, point
@@ -356,11 +371,17 @@ function MapUtility:SafeMove(StartSector, StartPosition, TargetPosition)
 	return StartSector, TargetPosition
 end
 
-function MapUtility:PopOutOfWalls(Sector, Position, radius)
-	return self:PopOutOfWallsInner(Sector, Position, Sector, radius)
+function MapUtility:PopOutOfWalls(Sector, Position, radius, TransitionCheck)
+	return self:PopOutOfWallsInner(Sector, Position, Sector, radius, TransitionCheck)
 end
 
-function MapUtility:PopOutOfWallsInner(Sector, Position, WorkingSector, radius)
+function MapUtility:PopOutOfWallsInner(
+	Sector,
+	Position,
+	WorkingSector,
+	radius,
+	TransitionCheck
+)
 	local workingPosition = Maths.Vector:new(Position.x, Position.y, Position.z or 0)
 	local sec = self.sectors[WorkingSector]
 	for i, wall in ipairs(sec.walls) do
@@ -371,7 +392,8 @@ function MapUtility:PopOutOfWallsInner(Sector, Position, WorkingSector, radius)
 		local dist, norm = Maths.PointLineSegDistance(workingPosition, wallStart, wallEnd)
 		if WorkingSector == 3 and i == 4 then
 		end
-		if wall.portal == nil then
+		if wall.portal == nil
+			or (TransitionCheck ~= nil and TransitionCheck(WorkingSector, wall.portal) == false) then
 			if dist < radius then
 				norm = norm / math.sqrt(norm:LengthSquared())
 

@@ -1,10 +1,13 @@
 Player = Player or CreateNewClass(Entity)
 
-function Player:new(map, sector, position)
-	local newInst = Entity:new(0.5, 1.65, nil, map, sector, position)
+function Player:ctor()
+	Entity.ctor(self)
+	self.radius = 0.5
+	self.height = 1.7
 
-	newInst.eyeHeight = 1.5
-	newInst.angle = 0
-	setmetatable(newInst, self)
-	return newInst
+	self.eyeHeight = 1.58
+	self.stepHeight = 0.2
+	self.angle = 0
 end
+
+print("Player reloaded")

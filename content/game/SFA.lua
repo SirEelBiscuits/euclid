@@ -1,19 +1,25 @@
 StateList.SFA = StateList.SFA or {
 	defaultmapfile = "game/demomap.lua",
-	EntityList = {}
+	UpdateList = {},
+	maps = {},
 }
 
 function StateList.SFA:Enter()
+	print("Entered main SFA state")
 	Game.LoadControls(dofile("game/controls.lua"))
 
 	Game.ShowMouse(false)
 
-	self.map = dofile(self.defaultmapfile)
-	MapUtility:SetUpMap(self.map)
-	self.mapRenderable = Game.OpenMap(self.map)
+	Game.data.map = dofile(self.defaultmapfile)
+	MapUtility:SetUpMap(Game.data.map)
+	Game.data.map.renderable = Game.OpenMap(Game.data.map)
 
-	self.Player = Player:new(self.map)
-	table.insert(self.EntityList, self.Player)
+	Game.data.UpdateList = {}
+	Game.data.UpdateList.Player = Player:new({map = Game.data.map})
+	Game.data.UpdateList.PlayerController = 
+		PlayerController:new({entity = Game.data.UpdateList.Player})
+
+	Game.data.Camera = Camera:new({entity = Game.data.UpdateList.Player})
 end
 
 function StateList.SFA:Leave()
@@ -29,25 +35,15 @@ function StateList.SFA:Update(dt)
 		Game.quit = true
 	end
 
-	self.Player.angle = self.Player.angle + Game.Controls.Turn
-
-	self.Player.velocity = 
-		Maths.RotationMatrix(self.Player.angle)
-		* Maths.Vector:new(Game.Controls.Right, Game.Controls.Forward, 0)
-		* 4
-
-	for i, entity in ipairs(self.EntityList) do
-		entity:Update(dt)
+	for k, updatable in pairs(Game.data.UpdateList) do
+		updatable:Update(dt)
 	end
 
 	return not Game.quit
 end
 
 function StateList.SFA:Render(dt)
-	Draw.Map({
-		eye    = self.Player.position + Maths.Vector:new(0, 0, self.Player.eyeHeight),
-		sector = self.mapRenderable:GetSector(self.Player.sector - 1),
-		angle  = math.rad(self.Player.angle)
-	})
+	Draw.Map(Game.data.Camera:GetView(self.maps))
 end
 
+print("SFA.lua reloaded")
