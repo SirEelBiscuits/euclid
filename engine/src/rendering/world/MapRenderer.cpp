@@ -440,11 +440,15 @@ namespace Rendering {
 					srcR.pos.y += oldSrcH - srcR.size.y;
 				}
 
-				Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
-				if(useAlpha)
-					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
-				else
-					ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+				if((wallBottom - wallTop) + 1 > 0) {
+					Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
+					if(useAlpha)
+						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
+					else
+						ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+				} else {
+					return false;
+				}
 			}
 			return true;
 		}
