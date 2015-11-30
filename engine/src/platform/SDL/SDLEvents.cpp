@@ -72,7 +72,7 @@ namespace System {
 			while(SDL_PollEvent(&e) && !done) {
 				switch(e.type) {
 				case SDL_KEYDOWN:
-#ifdef EUCLID_DEBUG
+#ifndef EUCLID_FINAL_RELEASE
 					switch(e.key.keysym.sym) {
 					case DEBUG_START_RECORD_KEY:
 						EventCallback(Events::Types::InputLoopStart, nullptr, nullptr);
@@ -91,7 +91,7 @@ namespace System {
 #endif
 				//FALLTHROUGH
 				case SDL_KEYUP:
-#ifdef EUCLID_DEBUG
+#ifdef EUCLID_FINAL_RELEASE
 					if(e.key.keysym.sym == DEBUG_START_RECORD_KEY
 						|| e.key.keysym.sym == DEBUG_STOP_RECORD_KEY
 						|| e.key.keysym.sym == DEBUG_LOOP_RECORD_KEY

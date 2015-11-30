@@ -3,6 +3,10 @@
 
 // Flags used for platform/version stuff:
 
+#if false
+#	define EUCLID_FINAL_RELEASE
+#endif
+
 #ifdef _DEBUG
 #	define EUCLID_DEBUG
 #endif
