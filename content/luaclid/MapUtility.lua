@@ -350,7 +350,7 @@ function MapUtility:SafeMove(
 
 			if seg == true then
 				if wall.portal ~= nil then
-					if TransitionCheck == nil or TransitionCheck(StartSector, wall.portal) then
+					if TransitionCheck == nil or TransitionCheck(StartSector, wall.portal, i) then
 						return self:SafeMove(
 							wall.portal,
 							StartPosition,
@@ -393,7 +393,7 @@ function MapUtility:PopOutOfWallsInner(
 		if WorkingSector == 3 and i == 4 then
 		end
 		if wall.portal == nil
-			or (TransitionCheck ~= nil and TransitionCheck(WorkingSector, wall.portal) == false) then
+			or (TransitionCheck ~= nil and TransitionCheck(WorkingSector, wall.portal, i) == false) then
 			if dist < radius then
 				norm = norm / math.sqrt(norm:LengthSquared())
 

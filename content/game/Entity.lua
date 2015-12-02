@@ -20,28 +20,39 @@ function Entity:Update(dt)
 		self.sector,
 		self.position,
 		self.position + self.velocity * dt,
-		function(startSec, ToSec)
+		function(startSec, ToSec, wallID)
+			local wall = self.map.sectors[startSec].walls[wallID]
 			local sec = self.map.sectors[ToSec]
 			return
 				sec.floorHeight < self.position.z + self.stepHeight
-				and sec.ceilHeight > self.position.z + self.height
+				and 
+					(
+						((sec.ceilTex == nil or sec.ceilTex.tex == "")
+						and (wall.topTex == nil or wall.topTex.tex == ""))
+						or sec.ceilHeight > self.position.z + self.height
+					)
 		end
 	)
 	self.sector, self.position = self.map:PopOutOfWalls(
 		newSec,
 		newPos,
 		self.radius,
-		function(startSec, ToSec)
+		function(startSec, ToSec, wallID)
+			local wall = self.map.sectors[startSec].walls[wallID]
 			local sec = self.map.sectors[ToSec]
 			return
 				sec.floorHeight < self.position.z + self.stepHeight
-				and sec.ceilHeight > self.position.z + self.height
+				and 
+					(
+						((sec.ceilTex == nil or sec.ceilTex.tex == "")
+						and (wall.topTex == nil or wall.topTex.tex == ""))
+						or sec.ceilHeight > self.position.z + self.height
+					)
 		end
 	)
 
-
 	local cursec = self.map.sectors[self.sector]
-	if self.position.z + self.height > cursec.ceilHeight then
+	if self.position.z + self.height > cursec.ceilHeight and (cursec.ceilTex ~= nil and cursec.ceilTex.tex ~= "") then
 		self.velocity.z = 0
 		self.position.z = cursec.ceilHeight - self.height
 	end
