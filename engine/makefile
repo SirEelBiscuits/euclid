@@ -5,12 +5,12 @@ CXX=g++
 SRC_DIR=src
 OBJ_DIR=int
 OUT_DIR=bin
-INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src
+INC_DIRS+=src ../extern/SDL2/include ../extern/lua/src ../extern/SDL2_image
 LIB_DIRS+=../extern/SDL2/bin ../extern/lua/bin
 
 C_FLAGS+= -std=c++14 -fpermissive -w -pthread -static-libstdc++
 C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
-LD_FLAGS+= -llua -lSDL2 -lSDL2main -ldl
+LD_FLAGS+= -llua -lSDL2 -lSDL2main -lSDL2_image -ldl
 LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
 
 SRC_FILES = $(shell find $(SRC_DIR) -name '*.cpp' | grep -v SDLAndWindows)

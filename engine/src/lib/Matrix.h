@@ -99,7 +99,7 @@ public:
 
 	Matrix& operator=(Matrix const &other) = default;
 	BaseType &operator()(unsigned, unsigned y) {
-		switch y {
+		switch(y) {
 		case 0: return x;
 		case 1: return this->y;
 		case 2: return z;
@@ -109,7 +109,7 @@ public:
 	}
 
 	BaseType const &operator()(unsigned, unsigned y) const {
-		switch y {
+		switch(y){
 		case 0: return x;
 		case 1: return this->y;
 		case 2: return z;
@@ -119,7 +119,7 @@ public:
 	}
 
 	BaseType &operator[](unsigned y) {
-		switch y {
+		switch(y){
 		case 0: return x;
 		case 1: return this->y;
 		case 2: return z;
@@ -129,7 +129,7 @@ public:
 	}
 
 	BaseType const &operator[](unsigned y) const {
-		switch y {
+		switch(y){
 		case 0: return x;
 		case 1: return this->y;
 		case 2: return z;

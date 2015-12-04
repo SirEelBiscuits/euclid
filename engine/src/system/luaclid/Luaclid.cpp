@@ -5,7 +5,7 @@
 #include "world/Map.h"
 #include "system/Files.h"
 
-#include "Rendering/RenderingSystem.h"
+#include "rendering/RenderingSystem.h"
 #include "rendering/world/MapRenderer.h"
 #include "rendering/world/TopDownMapRenderer.h"
 
@@ -169,7 +169,7 @@ namespace System {
 	namespace Luaclid {
 
 		struct ExtraSpace {
-			ExtraSpace(Rendering::Context &ctx) 
+			ExtraSpace(Rendering::Context &ctx)
 				: mapRenderer(std::make_unique<Rendering::World::MapRenderer>(ctx))
 			{}
 			std::unique_ptr<Rendering::World::MapRenderer> mapRenderer{nullptr};
@@ -288,7 +288,7 @@ namespace System {
 							if(portalID != World::IDType(-1)) {
 								patchupList.emplace_back(patchup{World::IDType(secIdx - 1), World::IDType(wallIdx - 1), portalID});
 							}
-							
+
 							wall->mainTex   = LoadTexInfo(lua, "mainTex");
 							wall->bottomTex = LoadTexInfo(lua, "bottomTex");
 							wall->topTex    = LoadTexInfo(lua, "topTex");
@@ -329,7 +329,7 @@ namespace System {
 
 		void StoreMap(lua_State *lua, World::Map const &map) {
 			luaX_push(lua, luaX_emptytable{0, 2});
-			
+
 			luaX_setlocal(lua, "verts", luaX_emptytable{static_cast<int>(map.GetNumVerts()) , 0});
 			luaX_getlocal(lua, "verts");
 			for(auto i = 0u; i < map.GetNumVerts(); ++i) {
@@ -515,7 +515,7 @@ namespace System {
 				, "AddNewSector",        &World::Map::AddNewSector
 				, "RemoveSector",        &World::Map::RemoveSector
 				, "GetNumVerts",         &World::Map::GetNumVerts
-				, "GetVertID",           &World::Map::GetVertID 
+				, "GetVertID",           &World::Map::GetVertID
 				, "AddNewVert",          &World::Map::AddNewVert
 				, "RemoveVert",          &World::Map::RemoveVert
 				, "RegisterAllTextures", &World::Map::RegisterAllTextures
@@ -549,12 +549,12 @@ namespace System {
 					}
 				)
 			));
-			
+
 			{
 				luaX_getglobal(lua, "Draw");
 
 				//Draw.Line
-				luaX_push(lua, 
+				luaX_push(lua,
 					static_cast<std::function<void(ScreenVec2, ScreenVec2, Rendering::Color)>>(
 						[ctx](ScreenVec2 start, ScreenVec2 end, Rendering::Color c) {
 							ctx->DrawLine(start, end, c);
@@ -602,14 +602,14 @@ namespace System {
 									dest,
 									tex,
 									Rendering::UVRect{
-										UVVec2(0_fp, 0_fp), 
+										UVVec2(0_fp, 0_fp),
 										UVVec2(Fix16(tex->w), Fix16(tex->h))
 									},
 									1,
 									0
 								);
 						}
-					)	
+					)
 				);
 				lua_setfield(lua, -2, "RectTexturedAlpha");
 
@@ -623,9 +623,9 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "TopDownMap");
 
-				
+
 				//Draw.Map
-				luaX_push(lua, 
+				luaX_push(lua,
 					static_cast<std::function<void(Rendering::World::View)>>(
 						[mapRenderer = getExtraSpace(lua)->mapRenderer.get()]
 						(Rendering::World::View v) {
@@ -710,9 +710,9 @@ namespace System {
 
 			{
 				luaX_getglobal(lua, "Game");
-			
+
 				//Game.OpenMap
-				lua_pushcfunction(lua, 
+				lua_pushcfunction(lua,
 					(
 						[]
 						(lua_State *s) {
@@ -747,7 +747,7 @@ namespace System {
 
 			{
 				luaX_getglobal(lua, "Input");
-				
+
 				//Input.SetTextEditingMode
 				luaX_push(lua,
 					static_cast<std::function<void(bool)>>(

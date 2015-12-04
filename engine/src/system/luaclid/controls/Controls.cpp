@@ -2,6 +2,7 @@
 
 PRE_STD_LIB
 #include <string>
+#include <float.h>
 POST_STD_LIB
 
 #include "lib/Maths.h"
@@ -9,7 +10,7 @@ POST_STD_LIB
 namespace System {
 	namespace Controls {
 		void Config::HandleInput(Input::Event e) {
-			for(auto &i : inputList) 
+			for(auto &i : inputList)
 				i->HandleEvent(e);
 		}
 
@@ -126,7 +127,7 @@ namespace System {
 						lua_pop(lua, 1);
 					}
 					--pushedItems;
-					
+
 					inputList.emplace_back(std::make_unique<Button>(Name, Key, isMouse, mask));
 				}
 
@@ -309,8 +310,8 @@ namespace System {
 
 		void Button::HandleEvent(Input::Event e) {
 			if(
-				e.key != key 
-				|| isMouseEvent(e) != isMouse 
+				e.key != key
+				|| isMouseEvent(e) != isMouse
 				|| e.repeat
 				|| (requireShiftDown && !System::Input::IsShiftDown())
 				|| (requireShiftUp   && System::Input::IsShiftDown())
@@ -347,7 +348,7 @@ namespace System {
 			newlyReleased = false;
 		}
 
-		Axis::Axis(std::string name, int posKey, int negKey) 
+		Axis::Axis(std::string name, int posKey, int negKey)
 			: name(name)
 			, posKey(posKey)
 			, negKey(negKey)
