@@ -1,2 +1,2 @@
 #!/bin/bash/
-res=`cmd /k "msbuild.bat $1"`
+res=`cmd /k "msbuild.bat $@"`

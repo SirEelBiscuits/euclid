@@ -52,4 +52,6 @@ extern/libs/
 extern/lua/.depend
 extern/lua/liblua.a
 
+package/
+
 pkg

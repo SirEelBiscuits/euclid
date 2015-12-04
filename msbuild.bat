@@ -10,6 +10,6 @@ for /f "tokens=2,* skip=2" %%a in ('reg query %key% /v %value%') do (
 )
 echo "%data%"
 
-"%data%msbuild" /m:4 /nologo /clp:ErrorsOnly /p:Configuration=%1 /p:Platform=x86 euclid.sln
+"%data%msbuild" /m:4 /nologo /clp:ErrorsOnly /t:%1 /p:Configuration=%2 /p:Platform=x86 euclid.sln
 
 exit %ERRORLEVEL%
