@@ -8,6 +8,10 @@ SDL2:
 	cd SDL2; mkdir bin 2> /dev/null; cd bin; cmake ..
 	make -C SDL2/bin
 
+SDL2_image:
+	cd SDL2_image; mkdir bin 2> /dev/null; cd bin; cmake ..
+	make -C SDL2_image/bin
+
 clean:
 	make -C lua clean
 	rm -rf SDL2/bin

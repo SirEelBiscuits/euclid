@@ -43,7 +43,7 @@ void luaX_push(lua_State *s, std::unique_ptr<T> value) {
 	new(p) ptrT;
 	*p = std::move(value);
 	luaX_push(s, luaX_emptytable());
-	auto f = 
+	auto f =
 		[]
 		(lua_State *lua) {
 		auto t = lua_gettop(lua);
@@ -253,7 +253,7 @@ template<typename Tuple, int I>
 class luaX_returntuplefromstackInner {
 public:
 	static void Fn(lua_State *lua, Tuple& ret) {
-		std::get<I>(ret) = luaX_return<std::tuple_element<I, Tuple>::type>(lua);
+		std::get<I>(ret) = luaX_return<typename std::tuple_element<I, Tuple>::type>(lua);
 		luaX_returntuplefromstackInner<Tuple, I-1>::Fn(lua, ret);
 	}
 };

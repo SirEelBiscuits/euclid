@@ -53,7 +53,7 @@ luaX_ref luaX_registerClass(lua_State *lua) {
 		return *flxr->second;
 	}
 	luaX_getglobal(lua, "CreateNativeClass");
-	
+
 	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
 
 	auto lxr = std::make_unique<luaX_ref>(lua); // this pops the object
@@ -74,7 +74,7 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args..
 	luaX_registerClassMethod(lua, args...);
 }
 
-template<typename T, typename... Args>
+template<typename T>
 void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
 	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
 }
