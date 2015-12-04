@@ -46,7 +46,7 @@ function Editor.PreviewState:Update(dt)
 	local targetPos = self.eye + Maths.RotationMatrix(self.angle) 
 		* Maths.Vector:new(Game.Controls.PreviewRight, Game.Controls.PreviewForward, 0) * dt * self.speed
 
-	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos, self.radius)
+	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos)
 	self.secID, self.eye = Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
 	self.sector = Editor.curMap:GetSector(self.secID - 1)
 end

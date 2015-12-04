@@ -20,7 +20,6 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,      ///< viewslot, will be used to clip the render
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
-			Rendering::Color tmpc,
 			uint8_t stencil,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
@@ -281,7 +280,9 @@ namespace Rendering {
 					floorRenderableBottom[x] = static_cast<int>(Maths::min(wallRenderableBottom[x], floorRenderableBottom[x]));
 
 					if(isPortal && !(portalTop > wallBottom) && !(portalBottom < wallTop)) {
-						if(wallTop < portalTop)
+						bool topDrawn{false}, bottomDrawn{false};
+						if(wallTop < portalTop) {
+							topDrawn = wall.topTex.tex != nullptr;
 							DrawWallSlice(
 								ctx,
 								x,
@@ -290,10 +291,10 @@ namespace Rendering {
 								wall.topTex.uvStart.y, vEndTop,
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.topTex.tex,
-								depthShadeVal
-								, Rendering::Color{64, 0, 0, 255}
-								, portalDepth
+								depthShadeVal,
+								portalDepth
 							);
+						}
 
 						if(wall.mainTex.tex != nullptr) {
 							curtainDeferList.emplace_back(CurtainRenderDefer{
@@ -312,7 +313,8 @@ namespace Rendering {
 						}
 						wasPortalDrawn = true;
 
-						if(wallBottom > portalBottom)
+						if(wallBottom > portalBottom) {
+							bottomDrawn = wall.bottomTex.tex != nullptr;
 							DrawWallSlice(
 								ctx,
 								x,
@@ -321,17 +323,19 @@ namespace Rendering {
 								wall.bottomTex.uvStart.y, vEndBottom,
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.bottomTex.tex,
-								depthShadeVal
-								, Rendering::Color{128, 0, 0, 255}
-								, portalDepth
+								depthShadeVal,
+								portalDepth
 							);
+						}
 
-						wallRenderableTop[x] = static_cast<int>(Maths::min(ScreenHeight-1, 
-							Maths::max(Maths::max(portalTop, wallTop), wallRenderableTop[x])
-						));
-						wallRenderableBottom[x] = static_cast<int>(Maths::max(0, 
-							Maths::min(Maths::min(portalBottom, wallBottom), wallRenderableBottom[x])
-						));
+						if(topDrawn)
+							wallRenderableTop[x] = static_cast<int>(Maths::min(ScreenHeight-1,
+								Maths::max(Maths::max(portalTop, wallTop), wallRenderableTop[x])
+							));
+						if(bottomDrawn)
+							wallRenderableBottom[x] = static_cast<int>(Maths::max(0,
+								Maths::min(Maths::min(portalBottom, wallBottom), wallRenderableBottom[x])
+							));
 					} else { // regular wall
 						DrawWallSlice(
 							ctx,
@@ -341,9 +345,8 @@ namespace Rendering {
 							wall.mainTex.uvStart.y, vEndMain,
 							wallRenderableTop[x], wallRenderableBottom[x],
 							wall.mainTex.tex,
-							depthShadeVal
-							, Rendering::Color{255, 0, 0, 255}
-							, portalDepth
+							depthShadeVal,
+							portalDepth
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -391,7 +394,6 @@ namespace Rendering {
 					dl.viewSlotBottom,
 					dl.tex,
 					dl.invDist,
-					Rendering::Color{0, 0, 128, 128},
 					portalDepth,
 					true
 				);
@@ -406,21 +408,13 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,
 			Rendering::Texture *tex,
 			btStorageType colorScale,
-			Rendering::Color tmpc,
 			uint8_t stencil,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
 				return false;
 
-			if(tex == nullptr) {
-				wallTop = Maths::max(wallTop, viewSlotTop);
-				wallBottom = Maths::min(wallBottom, viewSlotBottom);
-
-				auto c = tmpc * colorScale;
-				c.a = stencil;
-				ctx.DrawVLine(x, wallTop, wallBottom, c);
-			} else {
+			if(tex != nullptr) {
 				auto const ppm = Fix16(Rendering::Texture::PixelsPerMeter);
 				auto srcR = Rendering::UVRect(UVVec2(u * ppm, vStart * ppm), UVVec2(1_fp, vEnd * ppm));
 
@@ -440,11 +434,15 @@ namespace Rendering {
 					srcR.pos.y += oldSrcH - srcR.size.y;
 				}
 
-				Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
-				if(useAlpha)
-					ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
-				else
-					ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+				if((wallBottom - wallTop) + 1 > 0) {
+					Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
+					if(useAlpha)
+						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
+					else
+						ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+				} else {
+					return false;
+				}
 			}
 			return true;
 		}
@@ -467,8 +465,8 @@ namespace Rendering {
 			auto vfovm = ctx.GetVFOVMult();
 
 			//todo: is it really worth doing this double loop?
-			for(auto x = minX; x <= maxX; ++x) {
-				for(auto y = ceilRenderableTop[x]; y <= floorRenderableBottom[x]; ++y) {
+			//for(auto x = minX; x <= maxX; ++x) {
+				for(auto y = 0; y <= ScreenHeight; ++y) {
 					if(distances[y] == 0_m) {
 						auto p = y - ScreenHeight / 2.f;
 						auto pp = -p / (ScreenHeight * vfovm);
@@ -478,7 +476,6 @@ namespace Rendering {
 							distances[y] = floorHeight/pp;
 					}
 				}
-			}
 
 		
 			auto reverseT = view.forward.Inverse();
@@ -597,7 +594,11 @@ namespace Rendering {
 
 			for(auto x = minX; x <= maxX; ++x) {
 				ceilRenderableTop[x] = ceilRenderableBottom[x];
+				if(ceilTex != nullptr)
+					wallRenderableTop[x] = Maths::max(wallRenderableTop[x], ceilRenderableTop[x]);
 				floorRenderableBottom[x] = floorRenderableTop[x];
+				if(floorTex != nullptr)
+					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x]);
 			}
 		}
 

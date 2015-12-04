@@ -44,6 +44,7 @@ extern/SDL2_image/VisualC/Win32/*
 *.psess
 *.vsp
 *.vspx
+*.opendb
 
 
 extern/libs/

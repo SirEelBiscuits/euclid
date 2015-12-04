@@ -50,7 +50,7 @@ function Game.Initialise()
 	Game.LoadAndWatchFile("editor/DrawSectorState.lua")
 	Game.LoadAndWatchFile("editor/TexturePickerState.lua")
 	Game.LoadAndWatchFile("editor/CameraDragState.lua")
-	Game.LoadAndWatchFile("editor/MapUtility.lua")
+	Game.LoadAndWatchFile("luaclid/MapUtility.lua")
 
 	MapUtility.__index = MapUtility
 
