@@ -596,9 +596,9 @@ namespace Rendering {
 				ceilRenderableTop[x] = ceilRenderableBottom[x];
 				if(ceilTex != nullptr)
 					wallRenderableTop[x] = Maths::max(wallRenderableTop[x], ceilRenderableTop[x]);
-				floorRenderableBottom[x] = floorRenderableTop[x];
+				floorRenderableBottom[x] = floorRenderableTop[x] - 1;
 				if(floorTex != nullptr)
-					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x]);
+					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x] - 1);
 			}
 		}
 
