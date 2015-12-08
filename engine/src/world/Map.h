@@ -10,6 +10,8 @@ POST_STD_LIB
 #include "lib/BasicTypes.h"
 #include "rendering/Textures.h"
 
+#include "Sprite.h"
+
 namespace World {
 
 	using Vert = PositionVec2;
@@ -84,6 +86,8 @@ namespace World {
 
 		void             RegisterTexture(std::shared_ptr<Rendering::Texture> ptr);
 		void             RegisterAllTextures();
+
+		SpriteBarrow     barrow   {*this};
 
 	private:
 		std::list<Sector> sectors  {};

@@ -64,6 +64,9 @@
     <ClCompile Include="src\rendering\world\TopDownMapRenderer.cpp">
       <Filter>src\rendering\world</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\Sprite.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\platform\SDL\SDLRenderingSystem.h">
@@ -155,6 +158,9 @@
     </ClInclude>
     <ClInclude Include="src\rendering\world\MapRenderingShared.h">
       <Filter>src\rendering\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\Sprite.h">
+      <Filter>src\world</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
