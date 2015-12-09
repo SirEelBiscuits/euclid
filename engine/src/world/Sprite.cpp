@@ -9,59 +9,64 @@ POST_STD_LIB
 #include "world/Map.h"
 
 namespace World {
+	void Sprite::MoveSector(IDType toSector) {
+		map->barrow.MoveSprite(*this, toSector);
+	}
+
+	void Sprite::MoveMapAndSector(Map *toMap, IDType toSector) {
+		map->barrow.MoveSprite(*this, *toMap, toSector);
+	}
+
+	void Sprite::Deleter::operator()(Sprite * s) {
+		s->map->barrow.DeleteSprite(*s);
+	}
+
 	SpriteBarrow::SpriteBarrow(Map &owner)
 		: mapOwner(owner) 
 	{}
 
-	Sprite* SpriteBarrow::CreateSprite(IDType sectorID, PositionVec3 pos) {
+	Sprite::Ptr SpriteBarrow::CreateSprite(IDType sectorID, PositionVec3 pos) {
 		auto &list = sprites[sectorID];
-		auto spr = std::make_unique<Sprite>();
+		auto spr = Sprite::Ptr(new Sprite());
 		spr->map = &mapOwner;
 		spr->secID = sectorID;
 		spr->position = pos;
 
-		list.push_back(std::move(spr));
+		list.push_back(spr.get());
 
-		return list.back().get();
+		return spr;
 	}
 
 	std::vector<Sprite*> SpriteBarrow::GetSprites(IDType sectorID) {
-		std::vector<Sprite*> ret;
-		for(auto &e : sprites[sectorID])
-			ret.push_back(e.get());
-		return ret;
+		return std::vector<Sprite*>(sprites[sectorID]);
 	}
 
 	void SpriteBarrow::DeleteSprite(Sprite &sprite) {
 		ASSERT(sprite.map == &mapOwner);
-
-		std::remove_if(
-			sprites[sprite.secID].begin(),
-			sprites[sprite.secID].end(),
-			[sprite](Sprite::Ptr &a){return a.get() == &sprite;}
-		);
+		auto &list = sprites[sprite.secID];
+		std::remove(list.begin(), list.end(), &sprite);
 	}
 
 
 	void SpriteBarrow::MoveSprite(Sprite &sprite, IDType toSector) {
 		auto &list = sprites[sprite.secID];
-		auto itr = std::find_if(
-			list.begin(),
-			list.end(),
-			[sprite](Sprite::Ptr &a){return a.get() == &sprite;}
-		);
+		auto itr = std::find(list.begin(), list.end(), &sprite);
 
 		if(itr != list.end()) {
-			auto spriteUP = std::move(*itr);
-			std::remove_if(list.begin(), list.end(), [](Sprite::Ptr &a){return a.get() == nullptr;});
-
-			auto &newList = sprites[toSector];
-			spriteUP->secID = toSector;
-			newList.push_back(std::move(spriteUP));
+			sprite.secID = toSector;
+			sprites[toSector].push_back(*itr);
+			std::remove(list.begin(), list.end(), &sprite);
 		}
 	}
 
 	void SpriteBarrow::MoveSprite(Sprite &sprite, Map &toMap, IDType toSector) {
-		CRITICAL_ASSERT(false && "not yet implemented" );
+		auto &list = sprites[sprite.secID];
+		auto itr = std::find(list.begin(), list.end(), &sprite);
+		if(itr != list.end()) {
+			sprite.map = &toMap;
+			sprite.secID = toSector;
+			toMap.barrow.sprites[toSector].push_back(*itr);
+			std::remove(list.begin(), list.end(), &sprite);
+		}
 	}
 }

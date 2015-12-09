@@ -25,7 +25,15 @@ namespace World {
 		Mesi::Meters height;
 		PositionVec3 position;
 
-		using Ptr = std::unique_ptr<Sprite>;
+		class Deleter {
+		public:
+			void operator() (Sprite * s);
+		};
+
+		using Ptr = std::unique_ptr<Sprite, Deleter>;
+
+		void MoveSector(IDType toSector);
+		void MoveMapAndSector(Map *map, IDType toSector);
 
 		private:
 			Map *map;
@@ -38,13 +46,13 @@ namespace World {
 	public:
 		SpriteBarrow(Map &owner);
 
-		Sprite*              CreateSprite(IDType sectorID, PositionVec3 position);
+		Sprite::Ptr          CreateSprite(IDType sectorID, PositionVec3 position);
 		std::vector<Sprite*> GetSprites  (IDType sectorID);
 		void                 DeleteSprite(Sprite &sprite);
 		void                 MoveSprite  (Sprite &sprite, IDType toSector);
 		void                 MoveSprite  (Sprite &sprite, Map &toMap, IDType toSector);
 	private:
 		Map &mapOwner;
-		std::map<IDType, std::vector<Sprite::Ptr>> sprites;
+		std::map<IDType, std::vector<Sprite*>> sprites;
 	};
 }

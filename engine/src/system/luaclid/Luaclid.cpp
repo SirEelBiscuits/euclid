@@ -453,13 +453,16 @@ namespace System {
 			// we need to pre-declare these classes, as there are some circular references within some of them
 			auto luaPosVec = luaX_registerClass<PositionVec2>(lua
 				, "x", &PositionVec2::x
-				, "y", &PositionVec3::y);
+				, "y", &PositionVec2::y
+			);
 			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
 				, "width", &Rendering::Texture::w
-				, "height", &Rendering::Texture::h);
+				, "height", &Rendering::Texture::h
+			);
 			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua
 				, "tex", &Rendering::TextureInfo::tex
-				, "uvStart", &Rendering::TextureInfo::uvStart);
+				, "uvStart", &Rendering::TextureInfo::uvStart
+			);
 
 			////////////////////////////////////
 			// Wall
@@ -527,6 +530,35 @@ namespace System {
 			luaX_registerClassMethodNonVoid<World::Map, World::Vert*, 1, World::IDType>(lua
 				, "GetVert", &World::Map::GetVert
 			);
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					lua_getfield(s, 1, "_data");
+					auto map = static_cast<World::Map*>(lua_touserdata(s, -1));
+					lua_pop(s, 1);
+					luaX_push(s,
+						map->barrow.CreateSprite(
+							lua_tonumber(s, 2) - 1, //account for the index differences
+							luaX_return<PositionVec3>(s)
+						)
+					);
+					return 1;
+				}
+			);
+			lua_setfield(lua, -2, "CreateSprite");
+			lua_pop(lua, 1);
+
+			/////////////////////////////////
+			// Sprite
+			auto luaSprite = luaX_registerClass<World::Sprite>(lua
+				, "MoveMapAndSector", &World::Sprite::MoveMapAndSector
+				, "MoveSector",       &World::Sprite::MoveSector
+				, "texture",          &World::Sprite::tex
+				, "height",           &World::Sprite::height
+			);
+			luaSprite.push();
+			//luaX_registerClassMemberSpecial(lua, "height", &World::Sprite::height);
+			luaX_registerClassMemberSpecial(lua, "position", &World::Sprite::position);
+
 			lua_pop(lua, 1);
 
 			ASSERT(lua_gettop(lua) == x);
