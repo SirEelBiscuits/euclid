@@ -535,9 +535,9 @@ namespace System {
 					lua_getfield(s, 1, "_data");
 					auto map = static_cast<World::Map*>(lua_touserdata(s, -1));
 					lua_pop(s, 1);
+					auto secID = lua_tonumber(s, 2) - 1;
 					luaX_push(s,
-						map->barrow.CreateSprite(
-							lua_tonumber(s, 2) - 1, //account for the index differences
+						map->GetSector(secID)->barrow.CreateSprite(
 							luaX_return<PositionVec3>(s)
 						)
 					);
@@ -550,14 +550,14 @@ namespace System {
 			/////////////////////////////////
 			// Sprite
 			auto luaSprite = luaX_registerClass<World::Sprite>(lua
-				, "MoveMapAndSector", &World::Sprite::MoveMapAndSector
-				, "MoveSector",       &World::Sprite::MoveSector
+				, "Move",             &World::Sprite::Move
 				, "texture",          &World::Sprite::tex
 				, "height",           &World::Sprite::height
+				, "position",         &World::Sprite::position
 			);
 			luaSprite.push();
 			//luaX_registerClassMemberSpecial(lua, "height", &World::Sprite::height);
-			luaX_registerClassMemberSpecial(lua, "position", &World::Sprite::position);
+			//luaX_registerClassMemberSpecial(lua, "position", &World::Sprite::position);
 
 			lua_pop(lua, 1);
 

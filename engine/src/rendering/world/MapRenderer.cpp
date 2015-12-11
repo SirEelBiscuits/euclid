@@ -1,5 +1,9 @@
 #include "MapRenderer.h"
 
+PRE_STD_LIB
+#include <algorithm>
+POST_STD_LIB
+
 #include "rendering/Textures.h"
 #include "rendering/RenderingSystem.h"
 #include "world/Map.h"
@@ -397,6 +401,7 @@ namespace Rendering {
 					portalDepth,
 					true
 				);
+			DrawSprites(view, minX, maxX, sec.lightLevel, ceilHeight, floorHeight, portalDepth);
 		}
 
 		bool DrawWallSlice(
@@ -453,7 +458,7 @@ namespace Rendering {
 			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
 			Rendering::Texture *floorTex,
 			Rendering::Texture *ceilTex,
-			float lightlevel,
+			btStorageType lightlevel,
 			Rendering::Color tmpceil,
 			Rendering::Color tmpfloor,
 			uint8_t stencil
@@ -600,6 +605,76 @@ namespace Rendering {
 				if(floorTex != nullptr)
 					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x] - 1);
 			}
+		}
+
+		void MapRenderer::DrawSprites(
+			View view,
+			int minX, int maxX,
+			btStorageType lightLevel,
+			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
+			int portalDepth
+		) {
+			auto sprites = view.sector->barrow.GetSprites();
+			
+			auto vFOVMult = ctx.GetVFOVMult();
+			auto hFOVMult = ctx.GetHFOVMult();
+			auto ScreenHeight = ctx.GetHeight();
+			auto ScreenWidth = ctx.GetWidth();
+
+			std::sort(sprites.begin(), sprites.end(), [view](::World::Sprite *a, ::World::Sprite *b) {
+				auto u = a->position - view.eye;
+				auto v = b->position - view.eye;
+				return u.LengthSquared() > v.LengthSquared();
+			} );
+
+			for(auto &sprite : sprites) {
+				if(sprite->tex == nullptr)
+					continue;
+				auto height          = Mesi::Meters(sprite->tex->h / Texture::PixelsPerMeter);
+				auto width           = Mesi::Meters(sprite->tex->w / Texture::PixelsPerMeter);
+				auto posVS           = view.forward * AsVec2(sprite->position - view.eye);
+				if(posVS.y < 0.001_m)
+					continue;
+				auto posSS = posVS;
+				posSS.x.val = (posVS.x.val / posSS.y.val) * hFOVMult * ScreenWidth / 2 + ScreenWidth / 2;
+
+				auto distScaleV      = vFOVMult * ScreenHeight / posVS.y;
+				auto distScaleH      = hFOVMult * ScreenWidth  / posVS.y;
+				auto relativeZ       = sprite->position.z - view.eye.z;
+				auto spritebottom    = ScreenHeight/2 - relativeZ * distScaleV;
+				auto spritetop       = ScreenHeight/2 - (relativeZ + height) * distScaleV;
+				auto spriteHalfWidth = width / 2.0f * distScaleH;
+
+				ctx.DrawRectAlphaDepth(
+					Rendering::ScreenRect(
+						{int(posSS.x.val - spriteHalfWidth), int(spritetop)},
+						{int(2 * spriteHalfWidth), int(spritebottom - spritetop)}
+					),
+					sprite->tex,
+					Rendering::UVRect(
+						{0_fp, 0_fp}, 
+						{Fix16(sprite->tex->w), Fix16(sprite->tex->h)}
+					),
+					lightLevel, 
+					portalDepth,
+					minX,
+					maxX
+				);
+			}
+
+			/*
+			
+				METHOD
+
+				- sort far-to-near
+				- transform sprites positions into view space
+				- calculate height/width (NB: this may create issues for the way textures currently work,
+				                          if non-standard sizes are wanted for the sprite)
+				- use special depth-checking draw function
+				- ???
+				- profit
+			
+			*/
 		}
 
 		bool ClipToView(btStorageType hFOVMult, PositionVec2 &start, PositionVec2 &end, float &uStart, float &uEnd) {

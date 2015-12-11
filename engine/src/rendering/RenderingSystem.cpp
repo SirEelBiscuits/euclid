@@ -10,7 +10,7 @@
 			FlipBuffers();\
 			debugRendering &= !System::Input::ReturnOnKeyInput();\
 		} \
-	 } while(false)
+	} while(false)
 #else
 #	define DEBUG_RENDERING()
 #endif
@@ -371,6 +371,58 @@ namespace Rendering {
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
 				c.a = stencil;
 				ScreenPixel(x, y) = c;
+			}
+
+			DEBUG_RENDERING();
+		}
+	}
+
+	void Context::DrawRectAlphaDepth(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil, unsigned minX, unsigned maxX) {
+		//todo: use actual fixed point type?
+		auto const bitShift = 16u;
+		auto const bitmult = 1 << bitShift;
+
+		auto const dx = src.size.x / Fix16(dest.size.x);
+		auto const dy = src.size.y / Fix16(dest.size.y);
+		auto const xTarget = Maths::min(dest.pos.x + dest.size.x, maxX + 1);
+		auto const yTarget = dest.pos.y + dest.size.y;
+		auto ax = src.pos.x;
+
+		auto const m = static_cast<unsigned>(bitmult * colorMult);
+
+		//handle dest.pos starting beyond the left of the screen
+		auto x = dest.pos.x;
+		if(dest.pos.x < (int)minX) {
+			ax += Fix16(minX - dest.pos.x) * dx;
+			x = minX;
+
+		}
+
+		for(; x < xTarget && static_cast<unsigned>(x) < GetWidth(); x +=1, ax += dx) {
+
+			//handle dest.pos starting beyond the top of the screen
+			auto ay = src.pos.y;
+			auto y = 0;
+			if(dest.pos.y < 0) {
+				ay -= Fix16(dest.pos.y) * dx;
+			} else {
+				y = dest.pos.y;
+			}
+
+			for(; y < yTarget && static_cast<unsigned>(y) < GetHeight(); y += 1, ay += dy) {
+				//todo - get rid of the floating point maths
+				Color dst = ScreenPixel(x, y);
+#ifdef BILINEAR_FILTERING
+				Color c = tex->pixel_bilinear(ax, ay);
+#else
+				Color c = tex->pixel((unsigned)ax, (unsigned)ay);
+#endif
+				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
+				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
+				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
+				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				c.a = stencil;
+				ScreenPixel(x, y) = c.a <= dst.a ? c : dst;
 			}
 
 			DEBUG_RENDERING();

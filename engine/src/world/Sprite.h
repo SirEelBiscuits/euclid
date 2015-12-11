@@ -16,6 +16,7 @@ namespace Rendering {
 
 namespace World {
 	class Map;
+	class Sector;
 
 	using IDType = unsigned;
 
@@ -32,27 +33,24 @@ namespace World {
 
 		using Ptr = std::unique_ptr<Sprite, Deleter>;
 
-		void MoveSector(IDType toSector);
-		void MoveMapAndSector(Map *map, IDType toSector);
+		void Move(Map *map, IDType toSector);
 
 		private:
-			Map *map;
-			IDType secID;
+			Sector *sector;
 
 			friend class SpriteBarrow;
 	};
 
 	class SpriteBarrow {
 	public:
-		SpriteBarrow(Map &owner);
+		SpriteBarrow(Sector &owner);
 
-		Sprite::Ptr          CreateSprite(IDType sectorID, PositionVec3 position);
-		std::vector<Sprite*> GetSprites  (IDType sectorID);
+		Sprite::Ptr          CreateSprite(PositionVec3 position);
+		std::vector<Sprite*> GetSprites  () const;
 		void                 DeleteSprite(Sprite &sprite);
-		void                 MoveSprite  (Sprite &sprite, IDType toSector);
 		void                 MoveSprite  (Sprite &sprite, Map &toMap, IDType toSector);
 	private:
-		Map &mapOwner;
-		std::map<IDType, std::vector<Sprite*>> sprites;
+		Sector *owner;
+		std::vector<Sprite*> sprites;
 	};
 }

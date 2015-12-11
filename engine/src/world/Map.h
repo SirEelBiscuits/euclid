@@ -58,6 +58,8 @@ namespace World {
 		Rendering::TextureInfo floor       {};
 		Rendering::TextureInfo ceiling     {};
 
+		SpriteBarrow           barrow   {*this};
+
 	private:
 		std::vector<Wall>      walls       {};
 	};
@@ -86,8 +88,6 @@ namespace World {
 
 		void             RegisterTexture(std::shared_ptr<Rendering::Texture> ptr);
 		void             RegisterAllTextures();
-
-		SpriteBarrow     barrow   {*this};
 
 	private:
 		std::list<Sector> sectors  {};

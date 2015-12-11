@@ -9,64 +9,44 @@ POST_STD_LIB
 #include "world/Map.h"
 
 namespace World {
-	void Sprite::MoveSector(IDType toSector) {
-		map->barrow.MoveSprite(*this, toSector);
-	}
 
-	void Sprite::MoveMapAndSector(Map *toMap, IDType toSector) {
-		map->barrow.MoveSprite(*this, *toMap, toSector);
+	void Sprite::Move(Map *toMap, IDType toSector) {
+		sector->barrow.MoveSprite(*this, *toMap, toSector);
 	}
 
 	void Sprite::Deleter::operator()(Sprite * s) {
-		s->map->barrow.DeleteSprite(*s);
+		s->sector->barrow.DeleteSprite(*s);
 	}
 
-	SpriteBarrow::SpriteBarrow(Map &owner)
-		: mapOwner(owner) 
+	SpriteBarrow::SpriteBarrow(Sector &owner)
+		: owner(&owner) 
 	{}
 
-	Sprite::Ptr SpriteBarrow::CreateSprite(IDType sectorID, PositionVec3 pos) {
-		auto &list = sprites[sectorID];
+	Sprite::Ptr SpriteBarrow::CreateSprite(PositionVec3 pos) {
 		auto spr = Sprite::Ptr(new Sprite());
-		spr->map = &mapOwner;
-		spr->secID = sectorID;
+		spr->sector = owner;
 		spr->position = pos;
 
-		list.push_back(spr.get());
+		sprites.push_back(spr.get());
 
 		return spr;
 	}
 
-	std::vector<Sprite*> SpriteBarrow::GetSprites(IDType sectorID) {
-		return std::vector<Sprite*>(sprites[sectorID]);
+	std::vector<Sprite*> SpriteBarrow::GetSprites() const {
+		return std::vector<Sprite*>(sprites);
 	}
 
 	void SpriteBarrow::DeleteSprite(Sprite &sprite) {
-		ASSERT(sprite.map == &mapOwner);
-		auto &list = sprites[sprite.secID];
-		std::remove(list.begin(), list.end(), &sprite);
-	}
-
-
-	void SpriteBarrow::MoveSprite(Sprite &sprite, IDType toSector) {
-		auto &list = sprites[sprite.secID];
-		auto itr = std::find(list.begin(), list.end(), &sprite);
-
-		if(itr != list.end()) {
-			sprite.secID = toSector;
-			sprites[toSector].push_back(*itr);
-			std::remove(list.begin(), list.end(), &sprite);
-		}
+		std::remove(sprites.begin(), sprites.end(), &sprite);
 	}
 
 	void SpriteBarrow::MoveSprite(Sprite &sprite, Map &toMap, IDType toSector) {
-		auto &list = sprites[sprite.secID];
-		auto itr = std::find(list.begin(), list.end(), &sprite);
-		if(itr != list.end()) {
-			sprite.map = &toMap;
-			sprite.secID = toSector;
-			toMap.barrow.sprites[toSector].push_back(*itr);
-			std::remove(list.begin(), list.end(), &sprite);
+		auto itr = std::find(sprites.begin(), sprites.end(), &sprite);
+		if(itr != sprites.end()) {
+			auto targetBarrow = toMap.GetSector(toSector)->barrow;
+			sprite.sector = targetBarrow.owner;
+			targetBarrow.sprites.push_back(*itr);
+			std::remove(sprites.begin(), sprites.end(), &sprite);
 		}
 	}
 }
