@@ -44,6 +44,6 @@ Gargamel::ArgumentList Arguments {
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::RenderScale,       "render-scale", RequiredArgument, "4",        "Scale down the render"),
 	GGM_DESCRIBE_ARG        (CLArgs::Editor,      'e',  "editor",       NoArgument,                   "Launch the editor"),
 	GGM_DESCRIBE_ARG        (CLArgs::StartScript, '\0', "start-script", RequiredArgument,             "The script to launch"),
-	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::FOV,               "fov",          RequiredArgument, "45",       "The vertical FOV to use"),
+	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::FOV,               "fov",          RequiredArgument, "30",       "The vertical FOV to use"),
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Config,            "config",       RequiredArgument, "game.cfg", "The game config to use"),
 };
