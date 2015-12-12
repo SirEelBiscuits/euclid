@@ -16,9 +16,9 @@ namespace Rendering {
 	namespace World {
 
 		struct View {
-			PositionVec3            eye    {};
-			::World::Sector const * sector {nullptr};
-			TransformMat2           forward{};
+			PositionVec3      eye    {};
+			::World::Sector * sector {nullptr};
+			TransformMat2     forward{};
 
 			PositionVec2 ToViewSpace(PositionVec2 in) const {
 				return forward * (in - AsVec2(eye));

@@ -253,11 +253,13 @@
     <ClCompile Include="src\system\luaclid\Luaclid.cpp" />
     <ClCompile Include="src\system\luaX\LuaX.cpp" />
     <ClCompile Include="src\world\Map.cpp" />
+    <ClCompile Include="src\world\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\lib\FixedPoint.h" />
     <ClInclude Include="src\modes\editor\Editor.h" />
     <ClInclude Include="src\rendering\RenderingPrimitives.h" />
+    <ClInclude Include="src\world\Sprite.h" />
     <ClInclude Include="src\rendering\Textures.h" />
     <ClInclude Include="src\rendering\world\MapRenderer.h" />
     <ClInclude Include="src\rendering\world\MapRenderingShared.h" />

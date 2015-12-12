@@ -39,10 +39,18 @@ namespace Rendering {
 				Mesi::Meters ceilHeight, Mesi::Meters floorHeight, ///< height of floor and ceiling to draw
 				Rendering::Texture *floorTex,
 				Rendering::Texture *ceilTex,
-				float lightlevel,
+				btStorageType lightlevel,
 				Rendering::Color tmpceil,
 				Rendering::Color tmpfloor,
 				uint8_t stencil
+			);
+
+			void DrawSprites(
+				View view,
+				int minX, int maxX,
+				btStorageType lightLevel,
+				Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
+				int portalDepth
 			);
 
 			//////////

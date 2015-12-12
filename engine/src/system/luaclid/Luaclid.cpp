@@ -453,13 +453,16 @@ namespace System {
 			// we need to pre-declare these classes, as there are some circular references within some of them
 			auto luaPosVec = luaX_registerClass<PositionVec2>(lua
 				, "x", &PositionVec2::x
-				, "y", &PositionVec3::y);
+				, "y", &PositionVec2::y
+			);
 			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
 				, "width", &Rendering::Texture::w
-				, "height", &Rendering::Texture::h);
+				, "height", &Rendering::Texture::h
+			);
 			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua
 				, "tex", &Rendering::TextureInfo::tex
-				, "uvStart", &Rendering::TextureInfo::uvStart);
+				, "uvStart", &Rendering::TextureInfo::uvStart
+			);
 
 			////////////////////////////////////
 			// Wall
@@ -527,6 +530,45 @@ namespace System {
 			luaX_registerClassMethodNonVoid<World::Map, World::Vert*, 1, World::IDType>(lua
 				, "GetVert", &World::Map::GetVert
 			);
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					lua_getfield(s, 1, "_data");
+					auto map = static_cast<World::Map*>(lua_touserdata(s, -1));
+					lua_pop(s, 1);
+					auto secID = lua_tonumber(s, 2) - 1;
+					luaX_push(s,
+						map->GetSector(secID)->barrow.CreateSprite(
+							luaX_return<PositionVec3>(s)
+						)
+					);
+					return 1;
+				}
+			);
+			lua_setfield(lua, -2, "CreateSprite");
+			lua_pop(lua, 1);
+
+			/////////////////////////////////
+			// Sprite
+			auto luaSprite = luaX_registerClass<World::Sprite>(lua
+				, "_Move",             &World::Sprite::Move
+				, "texture",          &World::Sprite::tex
+				, "height",           &World::Sprite::height
+				, "position",         &World::Sprite::position
+			);
+			luaSprite.push();
+			
+			//Move needs wrapping to transform the array index :(
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					luaX_push(s, luaX_return<int>(s) - 1);
+					lua_getfield(s, 1, "_Move");
+					lua_insert(s, 1);
+					lua_call(s, 3, 0);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "Move");
+
 			lua_pop(lua, 1);
 
 			ASSERT(lua_gettop(lua) == x);

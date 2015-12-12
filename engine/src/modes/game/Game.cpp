@@ -105,7 +105,7 @@ namespace Modes {
 		return System::Luaclid::GameUpdate(lua, dt);
 	}
 
-	static Rendering::Color clearColour{100, 149, 237, 0};
+	static Rendering::Color clearColour{100, 149, 237, 255};
 	void Game::RenderLogic() {
 		ctx.Clear(clearColour);
 		System::Luaclid::GameRender(lua);
