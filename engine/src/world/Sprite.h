@@ -6,6 +6,7 @@ PRE_STD_LIB
 #include <memory>
 #include <map>
 #include <vector>
+#include <algorithm>
 POST_STD_LIB
 
 #include "lib/BasicTypes.h"
@@ -25,6 +26,8 @@ namespace World {
 		Rendering::Texture *tex;
 		Mesi::Meters height;
 		PositionVec3 position;
+
+		Sector* GetSector() { return sector; }
 
 		class Deleter {
 		public:
@@ -49,6 +52,17 @@ namespace World {
 		std::vector<Sprite*> GetSprites  () const;
 		void                 DeleteSprite(Sprite &sprite);
 		void                 MoveSprite  (Sprite &sprite, Map &toMap, IDType toSector);
+
+		int                  GetNumSprites() const { return sprites.size(); }
+		void                 SetNumSprites(int num) {
+			if(num < sprites.size())
+				sprites.resize(num);
+		}
+		void                 AddSprite(Sprite &sprite) {
+			//TODO find out why this is still needed
+			if(std::find(sprites.begin(), sprites.end(), &sprite) == sprites.end())
+				sprites.push_back(&sprite);
+		}
 	private:
 		Sector *owner;
 		std::vector<Sprite*> sprites;

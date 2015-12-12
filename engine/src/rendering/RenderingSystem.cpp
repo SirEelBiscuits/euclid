@@ -384,7 +384,7 @@ namespace Rendering {
 
 		auto const dx = src.size.x / Fix16(dest.size.x);
 		auto const dy = src.size.y / Fix16(dest.size.y);
-		auto const xTarget = Maths::min(dest.pos.x + dest.size.x, maxX + 1);
+		auto const xTarget = Maths::min(dest.pos.x + dest.size.x, (int)maxX + 1);
 		auto const yTarget = dest.pos.y + dest.size.y;
 		auto ax = src.pos.x;
 

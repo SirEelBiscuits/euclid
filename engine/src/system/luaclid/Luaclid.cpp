@@ -550,14 +550,24 @@ namespace System {
 			/////////////////////////////////
 			// Sprite
 			auto luaSprite = luaX_registerClass<World::Sprite>(lua
-				, "Move",             &World::Sprite::Move
+				, "_Move",             &World::Sprite::Move
 				, "texture",          &World::Sprite::tex
 				, "height",           &World::Sprite::height
 				, "position",         &World::Sprite::position
 			);
 			luaSprite.push();
-			//luaX_registerClassMemberSpecial(lua, "height", &World::Sprite::height);
-			//luaX_registerClassMemberSpecial(lua, "position", &World::Sprite::position);
+			
+			//Move needs wrapping to transform the array index :(
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					luaX_push(s, luaX_return<int>(s) - 1);
+					lua_getfield(s, 1, "_Move");
+					lua_insert(s, 1);
+					lua_call(s, 3, 0);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "Move");
 
 			lua_pop(lua, 1);
 

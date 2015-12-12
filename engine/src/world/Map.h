@@ -58,7 +58,7 @@ namespace World {
 		Rendering::TextureInfo floor       {};
 		Rendering::TextureInfo ceiling     {};
 
-		SpriteBarrow           barrow   {*this};
+		SpriteBarrow           barrow      {*this};
 
 	private:
 		std::vector<Wall>      walls       {};
