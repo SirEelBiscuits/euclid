@@ -285,6 +285,22 @@ namespace System {
 			}
 		}
 
+		void Config::ClearInputState() {
+			for(auto &i : inputList) {
+				i->ClearState();
+			}
+		};
+
+		std::unique_ptr<Config> Config::Copy() {
+			auto ret = std::make_unique<Config>();
+			for(auto &i : inputList) {
+				auto ip = std::unique_ptr<IInput>(i->Copy());
+				ret->inputList.push_back(std::move(ip));
+			}
+
+			return ret;
+		}
+
 		bool isMouseEvent(Input::Event e) {
 			switch(e.type) {
 			case System::Input::EventType::MouseDown:
@@ -311,6 +327,16 @@ namespace System {
 			, requireCtrlDown ((int)mask & (int)Mask::CtrlDown)
 			, requireCtrlUp   ((int)mask & (int)Mask::CtrlUp)
 		{}
+
+		void Button::ClearState() {
+			state = UnPressed;
+			newlyPressed = false;
+			newlyReleased = false;
+		}
+
+		std::unique_ptr<IInput> Button::Copy() {
+			return std::make_unique<Button>(*this);
+		}
 
 		void Button::HandleEvent(Input::Event e) {
 			if(
@@ -359,6 +385,14 @@ namespace System {
 			, state(0)
 		{}
 
+		void Axis::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> Axis::Copy() {
+			return std::make_unique<Axis>(*this);
+		}
+
 		void Axis::HandleEvent(Input::Event e) {
 			if((e.key != posKey && e.key != negKey) || isMouseEvent(e) || e.repeat)
 				return;
@@ -388,6 +422,14 @@ namespace System {
 			, state(0)
 		{}
 
+		void MouseAxis::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> MouseAxis::Copy() {
+			return std::make_unique<MouseAxis>(*this);
+		}
+
 		void MouseAxis::HandleEvent(Input::Event e) {
 			if(e.type != System::Input::EventType::MouseMove)
 				return;
@@ -416,6 +458,14 @@ namespace System {
 			, maxMagnitude(maxMagnitude)
 			, state(0)
 		{}
+
+		void MouseAxisRel::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> MouseAxisRel::Copy() {
+			return std::make_unique<MouseAxisRel>(*this);
+		}
 
 		void MouseAxisRel::HandleEvent(Input::Event e) {
 			if(e.type != System::Input::EventType::MouseMove)

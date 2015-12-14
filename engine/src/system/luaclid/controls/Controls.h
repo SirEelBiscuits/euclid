@@ -17,6 +17,8 @@ namespace System {
 		public:
 			virtual void HandleEvent(Input::Event event) = 0;
 			virtual void SetValue(lua_State *lua) = 0;
+			virtual void ClearState() = 0;
+			virtual std::unique_ptr<IInput> Copy() = 0;
 		};
 		
 		enum class Mask {
@@ -30,6 +32,8 @@ namespace System {
 		class Button : public IInput {
 		public:
 			Button(std::string name, int key, bool isMouse, Mask mask = Mask::None);
+			virtual void ClearState() override;
+			virtual std::unique_ptr<IInput> Copy() override;
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -49,6 +53,8 @@ namespace System {
 		class Axis : public IInput {
 		public:
 			Axis(std::string name, int posKey, int negKey);
+			virtual void ClearState() override;
+			virtual std::unique_ptr<IInput> Copy() override;
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -62,6 +68,8 @@ namespace System {
 		class MouseAxis : public IInput {
 		public:
 			MouseAxis(std::string name, AxisDirection axis, float scale, float maxMagnitude);
+			virtual void ClearState() override;
+			virtual std::unique_ptr<IInput> Copy() override;
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -76,6 +84,8 @@ namespace System {
 		class MouseAxisRel : public IInput {
 		public:
 			MouseAxisRel(std::string name, AxisDirection axis, float scale, float maxMagnitude);
+			virtual void ClearState() override;
+			virtual std::unique_ptr<IInput> Copy() override;
 			virtual void HandleEvent(Input::Event event) override;
 			virtual void SetValue(lua_State *lua) override;
 
@@ -96,6 +106,10 @@ namespace System {
 			void LoadControls(lua_State *lua);
 			void ClearControls() { inputList.clear(); }
 			void PushInputInfo(lua_State *lua);
+
+			void ClearInputState();
+
+			std::unique_ptr<Config> Copy();
 		private:
 			std::vector<std::unique_ptr<IInput>> inputList;
 		};

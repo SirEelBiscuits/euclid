@@ -15,6 +15,7 @@ namespace Modes {
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 		, mapRenderer(ctx)
+		, controls(new System::Controls::Config())
 	{
 		System::Luaclid::SetUp(lua, ctx, cfg);
 		SetUpAdditionalLuaStuff();
@@ -56,6 +57,7 @@ namespace Modes {
 			if(inputqueuePosition >= inputqueue.size()) {
 				inputqueuePosition = 0;
 				System::Luaclid::GameLoadState(lua);
+				controls = controlsSaveState->Copy();
 			}
 			break;
 		case InputRecordState::Normal:
@@ -67,9 +69,9 @@ namespace Modes {
 		lua_getglobal(lua, "Game");
 
 		for(auto &i : input) {
-			controls.HandleInput(i);
+			controls->HandleInput(i);
 		}
-		controls.PushInputInfo(lua);
+		controls->PushInputInfo(lua);
 		lua_setfield(lua, -2, "Controls");
 
 		if(lua_istable(lua, -1)) {
@@ -123,7 +125,7 @@ namespace Modes {
 				controls->LoadControls(s);
 				return 0;
 			};
-			lua_pushlightuserdata(lua, &controls);
+			lua_pushlightuserdata(lua, controls.get());
 			lua_pushcclosure(lua, closure, 1);
 			lua_setfield(lua, -2, "LoadControls");
 		}
@@ -134,7 +136,7 @@ namespace Modes {
 				controls->LoadControls(s);
 				return 0;
 			};
-			lua_pushlightuserdata(lua, &controls);
+			lua_pushlightuserdata(lua, controls.get());
 			lua_pushcclosure(lua, closure, 1);
 			lua_setfield(lua, -2, "AddControls");
 		}
@@ -171,12 +173,15 @@ namespace Modes {
 			break;
 		case Types::InputLoopMarkEnd:
 			MarkLoopEnd();
+			controls = controlsSaveState->Copy();
 			break;
 		case Types::InputLoopStart:
 			MarkLoopStart();
+			controlsSaveState = controls->Copy();
 			break;
 		case Types::InputLoopStop:
 			StopLoop();
+			controls->ClearInputState();
 			break;
 		case Types::DebugRenderingStart:
 			ctx.StartDebugRendering();
