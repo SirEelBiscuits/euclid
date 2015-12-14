@@ -118,7 +118,7 @@ namespace Modes {
 		//LoadControls
 		{
 			auto closure = [](lua_State *s) {
-				auto controls = static_cast<System::Controls::Config*>(lua_touserdata(s, lua_upvalueindex(1)));
+				auto *controls = luaX_touserdata<System::Controls::Config>(s, lua_upvalueindex(1));
 				controls->ClearControls();
 				controls->LoadControls(s);
 				return 0;
@@ -130,7 +130,7 @@ namespace Modes {
 		//AddControls
 		{
 			auto closure = [](lua_State *s) {
-				auto controls = static_cast<System::Controls::Config*>(lua_touserdata(s, lua_upvalueindex(1)));
+				auto *controls = luaX_touserdata<System::Controls::Config>(s, lua_upvalueindex(1));
 				controls->LoadControls(s);
 				return 0;
 			};
