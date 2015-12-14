@@ -19,6 +19,10 @@ function Editor.PreviewState:Enter()
 	self.angle = 0
 end
 
+function Editor.PreviewState:CurSec()
+	return Editor.curMapData.sectors[self.secID]
+end
+
 function Editor.PreviewState:Update(dt)
 	if Game.Controls.Quit.pressed then
 		Editor.DefaultState:Enter()
@@ -41,6 +45,8 @@ function Editor.PreviewState:Update(dt)
 		self.sector:set_floorHeight(self.sector:get_floorHeight() - 0.1)
 	end
 
+	self.eye.z = self.eye.z + Game.Controls.RaiseCamera * dt
+
 	self.angle = self.angle + Game.Controls.Turn
 
 	local targetPos = self.eye + Maths.RotationMatrix(self.angle) 
@@ -48,6 +54,7 @@ function Editor.PreviewState:Update(dt)
 
 	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos)
 	self.secID, self.eye = Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
+	self.eye.z = math.max(self:CurSec().floorHeight + 0.1, math.min(self:CurSec().ceilHeight - 0.1, self.eye.z))
 	self.sector = Editor.curMap:GetSector(self.secID - 1)
 end
 

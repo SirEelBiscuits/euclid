@@ -32,11 +32,11 @@ void luaX_push(lua_State *s, T *value) {
 	ASSERT(lua_gettop(s) == t + 1);
 }
 
-template<typename T>
-void luaX_push(lua_State *s, std::unique_ptr<T> value) {
+template<typename T, typename S>
+void luaX_push(lua_State *s, std::unique_ptr<T, S> value) {
 	auto t = lua_gettop(s);
 
-	using ptrT = std::unique_ptr<T>;
+	using ptrT = std::unique_ptr<T, S>;
 
 	auto p = static_cast<ptrT*>(lua_newuserdata(s, sizeof(ptrT)));
 

@@ -10,6 +10,8 @@ POST_STD_LIB
 #include "lib/BasicTypes.h"
 #include "rendering/Textures.h"
 
+#include "Sprite.h"
+
 namespace World {
 
 	using Vert = PositionVec2;
@@ -55,6 +57,8 @@ namespace World {
 		btStorageType          lightLevel  {0.05f};
 		Rendering::TextureInfo floor       {};
 		Rendering::TextureInfo ceiling     {};
+
+		SpriteBarrow           barrow      {*this};
 
 	private:
 		std::vector<Wall>      walls       {};

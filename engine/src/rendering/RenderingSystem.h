@@ -113,13 +113,19 @@ namespace Rendering {
 		*/
 		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil);
 		
+		/**
+			Draw a texture to screen rectangle, respecting the texture alpha, minx and maxx values,
+			and only drawing over pixels whose stencil value is equal or greater than the listed value
+		 */
+		void DrawRectAlphaDepth(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil, unsigned minX, unsigned maxX);
+
 		btStorageType GetVFOV() const { return vFOV; }
 		btStorageType GetVFOVMult() const { return vFOVMult; };
-		void SetvFov(btStorageType fovAngle) { vFOV = fovAngle; vFOVMult = 1/tan(fovAngle * PI / 180); } //todo magic numbers and move to .cpp
+		void SetvFov(btStorageType fovAngle) { vFOV = fovAngle; vFOVMult = tan(fovAngle * PI / 180); } //todo magic numbers and move to .cpp
 
 		btStorageType GetHFOV() const { return hFOV; }
 		btStorageType GetHFOVMult() const { return hFOVMult; };
-		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = 1/tan(fovAngle * PI / 180); } //todo magic numbers and move to .cpp
+		void SethFov(btStorageType fovAngle) { hFOV = fovAngle; hFOVMult = tan(fovAngle * PI / 180); } //todo magic numbers and move to .cpp
 
 		void StartDebugRendering() { debugRendering = true; }
 

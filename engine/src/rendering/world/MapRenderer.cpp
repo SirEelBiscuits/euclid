@@ -1,5 +1,9 @@
 #include "MapRenderer.h"
 
+PRE_STD_LIB
+#include <algorithm>
+POST_STD_LIB
+
 #include "rendering/Textures.h"
 #include "rendering/RenderingSystem.h"
 #include "world/Map.h"
@@ -123,8 +127,8 @@ namespace Rendering {
 				auto &wall = *sec.GetWall(wi);
 				auto &nextWall = *sec.GetWall((wi+1) % sec.GetNumWalls());
 
-				auto wallStartVS = view.forward * (*nextWall.start - AsVec2(view.eye));
-				auto wallEndVS   = view.forward * (*wall.start - AsVec2(view.eye));
+				auto wallStartVS = view.ToViewSpace(*nextWall.start);
+				auto wallEndVS   = view.ToViewSpace(*wall.start);
 
 				auto vFOVMult = ctx.GetVFOVMult();
 				auto hFOVMult = ctx.GetHFOVMult();
@@ -378,6 +382,7 @@ namespace Rendering {
 				,Rendering::Color{0, 0,  64, 255}
 				, portalDepth
 			);
+			auto numSprites = sec.barrow.GetNumSprites();
 			for(auto &dl : deferList) {
 				RenderRoom(dl.view, dl.minX, dl.maxX, MaxPortalDepth, portalDepth + 1);
 			}
@@ -397,6 +402,9 @@ namespace Rendering {
 					portalDepth,
 					true
 				);
+			DrawSprites(view, minX, maxX, sec.lightLevel, ceilHeight, floorHeight, portalDepth);
+			sec.barrow.SetNumSprites(numSprites);
+			//ASSERT(sec.barrow.GetNumSprites() < 2);
 		}
 
 		bool DrawWallSlice(
@@ -453,7 +461,7 @@ namespace Rendering {
 			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
 			Rendering::Texture *floorTex,
 			Rendering::Texture *ceilTex,
-			float lightlevel,
+			btStorageType lightlevel,
 			Rendering::Color tmpceil,
 			Rendering::Color tmpfloor,
 			uint8_t stencil
@@ -596,9 +604,106 @@ namespace Rendering {
 				ceilRenderableTop[x] = ceilRenderableBottom[x];
 				if(ceilTex != nullptr)
 					wallRenderableTop[x] = Maths::max(wallRenderableTop[x], ceilRenderableTop[x]);
-				floorRenderableBottom[x] = floorRenderableTop[x];
+				floorRenderableBottom[x] = floorRenderableTop[x] - 1;
 				if(floorTex != nullptr)
-					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x]);
+					wallRenderableBottom[x] = Maths::min(wallRenderableBottom[x], floorRenderableTop[x] - 1);
+			}
+		}
+
+		void MapRenderer::DrawSprites(
+			View view,
+			int minX, int maxX,
+			btStorageType lightLevel,
+			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
+			int portalDepth
+		) {
+			auto sprites = view.sector->barrow.GetSprites();
+			
+			auto vFOVMult = ctx.GetVFOVMult();
+			auto hFOVMult = ctx.GetHFOVMult();
+			auto ScreenHeight = ctx.GetHeight();
+			auto ScreenWidth = ctx.GetWidth();
+
+			std::sort(sprites.begin(), sprites.end(), [view](::World::Sprite *a, ::World::Sprite *b) {
+				auto u = a->position - view.eye;
+				auto v = b->position - view.eye;
+				return u.LengthSquared() > v.LengthSquared();
+			} );
+
+			for(auto &sprite : sprites) {
+				if(sprite->tex == nullptr)
+					continue;
+				auto height          = Mesi::Meters(sprite->tex->h / Texture::PixelsPerMeter);
+				auto width           = Mesi::Meters(sprite->tex->w / Texture::PixelsPerMeter);
+				auto posVS           = view.ToViewSpace(sprite->position);
+				if(posVS.y < 0.001_m)
+					continue;
+
+				auto texSourceRect   = Rendering::UVRect(
+					{0_fp, 0_fp}, 
+					{Fix16(sprite->tex->w), Fix16(sprite->tex->h)}
+				);
+				auto xLeft  = posVS.x - width / 2.0f;
+				auto xRight = posVS.x + width / 2.0f;
+
+				//Need to check if the sprite crosses any boundaries.
+				//Both left and right might hit a wall/portal
+				//If they hit something, truncate the sprite
+				//If they hit a portal, dupe the sprite into that sector
+				for(auto i = 0u; i < view.sector->GetNumWalls(); ++i) {
+					auto start = view.ToViewSpace(*view.sector->GetWall(i)->start);
+					auto end   = view.ToViewSpace(*view.sector->GetWall((i+1) % view.sector->GetNumWalls())->start);
+
+					//If the y crosses like this, then the wall is a possible intersect - but not definite!
+					if((start.y < posVS.y) != (end.y < posVS.y)) {
+						auto xIntersect = start.x
+							+ (end.x - start.x) * (posVS.y - start.y) / (end.y - start.y);
+						
+						if(xIntersect > xLeft && xIntersect < xRight ) {
+							float dummy;
+							//an intersection means part of the sprite might need to be drawn on the far side of the portal,
+							if(
+								ClipToView(hFOVMult, start, end, dummy, dummy)
+								&& (end.x / end.y > start.x / start.y || sprite->GetSector() != view.sector)
+							) {
+								auto toSec = view.sector->GetWall(i)->portal;
+								toSec->barrow.AddSprite(*sprite);
+								if(((end - start) ^ (PositionVec2(xLeft, posVS.y) - start)) < 0_m2) {
+									// left end to move
+									texSourceRect.pos.x  = Fix16((xIntersect - xLeft).val * Texture::PixelsPerMeter);
+									texSourceRect.size.x = Fix16((xRight - xIntersect).val * Texture::PixelsPerMeter);
+									xLeft = xIntersect;
+								} else {
+									// right end to move
+									texSourceRect.size.x = Fix16((xIntersect - xLeft).val * Texture::PixelsPerMeter);
+									xRight = xIntersect;
+								}
+							}
+						}
+					}
+				}
+
+				auto posSS = posVS;
+				posSS.x.val = (posVS.x.val / posSS.y.val) * hFOVMult * ScreenWidth / 2 + ScreenWidth / 2;
+				auto distScaleV      = vFOVMult * ScreenHeight / posVS.y;
+				auto distScaleH      = hFOVMult * ScreenWidth  / posVS.y / 2.0f; // it horrifies me that I don't know why horizontal needs /2 but vertical doesn't
+				auto spritebottom    = ScreenHeight/2 - posVS.z * distScaleV;
+				auto spritetop       = ScreenHeight/2 - (posVS.z + height) * distScaleV;
+				auto texDestRect     = Rendering::ScreenRect(
+					{int(posSS.x.val + (xLeft - posVS.x)*distScaleH), int(spritetop)},
+					{int((xRight - xLeft) * distScaleH + 1), int(spritebottom - spritetop)} //TODO this +1 is a hack
+				);
+
+				if(texDestRect.size.x > 0)
+					ctx.DrawRectAlphaDepth(
+						texDestRect,
+						sprite->tex,
+						texSourceRect,
+						sprite->GetSector()->lightLevel,
+						portalDepth,
+						minX,
+						maxX
+					);
 			}
 		}
 
@@ -682,13 +787,13 @@ namespace Rendering {
 			}
 
 			//clip to near plane
-			auto const nearDist = 0.001_m;
-			if(start.y < 0_m) {
+			auto const nearDist = 0.00001_m;
+			if(start.y < nearDist) {
 				auto p = (end.y - start.y) / (end.y - nearDist);
 				start.y = nearDist;
 				start.x = end.x + (start.x - end.x) / p;
 			}
-			if(end.y < 0_m) {
+			if(end.y < nearDist) {
 				auto p = (start.y - end.y) / (start.y - nearDist);
 				end.y = nearDist;
 				end.x = start.x + (end.x - start.x) / p;

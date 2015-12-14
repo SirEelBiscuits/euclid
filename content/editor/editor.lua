@@ -39,9 +39,9 @@ function GetEmptyMap()
 end
 
 function Game.Initialise()
-	Textures = { text = Draw.GetTexture("Mecha.png") }
+	Textures = { text = Draw.GetTexture("resources/Mecha.png") }
 
-	Editor.Controls = dofile("editor/editorcontrols.lua")
+	Editor.Controls = dofile("editor/Controls.lua")
 	Game.LoadControls(Editor.Controls)
 	Game.LoadAndWatchFile("editor/DefaultState.lua")
 	Game.LoadAndWatchFile("editor/TypingState.lua")
