@@ -18,8 +18,18 @@ namespace System {
 			MouseUp,
 			MouseMove,
 			TextInput,
+			MouseScroll,
 		};
 
+		enum class MouseButtons {
+			Left       = 1,
+			Middle     = 2,
+			Right      = 3,
+			ScrollUp   = 4,
+			ScrollDown = 5,
+			UnknownStart = 128,
+		};
+		
 		struct Event {
 			union {
 				int key{0};
