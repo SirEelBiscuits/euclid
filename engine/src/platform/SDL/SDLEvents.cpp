@@ -37,7 +37,19 @@ namespace System {
 			case SDL_MOUSEBUTTONUP:
 				ret.type = e.type == SDL_MOUSEBUTTONDOWN? EventType::MouseDown : EventType::MouseUp;
 				ret.repeat = false;
-				ret.button = e.button.button;
+				switch(e.button.button) {
+				case SDL_BUTTON_LEFT:
+					ret.button = (int)MouseButtons::Left;
+					break;
+				case SDL_BUTTON_RIGHT:
+					ret.button = (int)MouseButtons::Right;
+					break;
+				case SDL_BUTTON_MIDDLE:
+					ret.button = (int)MouseButtons::Middle;
+					break;
+				default:
+					ret.button = (int)MouseButtons::UnknownStart + e.button.button;
+				}
 				break;
 			case SDL_MOUSEMOTION:
 				ret.type = EventType::MouseMove;
@@ -45,6 +57,13 @@ namespace System {
 				ret.mouseMovY = e.motion.y;
 				ret.mouseMovXRel = e.motion.xrel;
 				ret.mouseMovYRel = e.motion.yrel;
+				break;
+			case SDL_MOUSEWHEEL:
+				ret.type = EventType::MouseScroll;
+				if(e.motion.y > 0)
+					ret.button = (int)MouseButtons::ScrollUp;
+				else if(e.motion.y < 0)
+					ret.button = (int)MouseButtons::ScrollDown;
 				break;
 			default:
 				ASSERT(false);
@@ -118,6 +137,7 @@ namespace System {
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 				case SDL_MOUSEMOTION:
+				case SDL_MOUSEWHEEL:
 					events.emplace_back(Transform(e));
 					break;
 
@@ -145,8 +165,6 @@ namespace System {
 				case SDL_JOYBUTTONDOWN:
 				case SDL_JOYBUTTONUP:
 				case SDL_MULTIGESTURE:
-					//input we'll want later
-				case SDL_MOUSEWHEEL:
 					break;
 
 				/////////////////////////////////////////////

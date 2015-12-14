@@ -41,15 +41,27 @@ end
 
 -- This MUST match the enum in Events.h
 InputEventType = MakeEnum({
-	None = 0,
-	KeyDown = 1,
-	KeyUp = 2,
-	MouseDown = 3,
-	MouseUp = 4,
-	MouseMove = 5,
-	TextInput = 6,
+	None        = 0,
+	KeyDown     = 1,
+	KeyUp       = 2,
+	MouseDown   = 3,
+	MouseUp     = 4,
+	MouseMove   = 5,
+	TextInput   = 6,
+	MouseScroll = 7,
 	},
 	"InputEventType"
+)
+
+MouseButtonsType = MakeEnum({
+		Left       = 1,
+		Middle     = 2,
+		Right      = 3,
+		ScrollUp   = 4,
+		ScrollDown = 5,
+		UnknownStart = 128,
+	},
+	"MouseButtonsType"
 )
 
 local function char(c)

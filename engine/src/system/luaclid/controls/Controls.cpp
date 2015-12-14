@@ -78,11 +78,15 @@ namespace System {
 									auto str = luaX_return<std::string>(lua);
 									--pushedItems;
 									if(str.compare("left") == 0)
-										Key = 1;
+										Key = (int)System::Input::MouseButtons::Left;
 									else if(str.compare("right") == 0)
-										Key = 3;
+										Key = (int)System::Input::MouseButtons::Right;
 									else if(str.compare("middle") == 0)
-										Key = 2;
+										Key = (int)System::Input::MouseButtons::Middle;
+									else if(str.compare("ScrullUp") == 0)
+										Key = (int)System::Input::MouseButtons::ScrollUp;
+									else if(str.compare("ScrollDown") == 0)
+										Key = (int)System::Input::MouseButtons::ScrollDown;
 									else {
 										lua_pop(lua, pushedItems);
 										ASSERT(false);
