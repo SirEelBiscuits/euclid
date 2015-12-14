@@ -55,13 +55,21 @@ return {
 		Name = "RaiseFloor",
 		ControlType = "button",
 		Key = "f",
-		ShiftPressed = false
+		ShiftPressed = false,
+		CtrlPressed = true
 	},
 	{
 		Name = "LowerFloor",
 		ControlType = "button",
 		Key = "f",
-		ShiftPressed = true
+		ShiftPressed = true,
+		CtrlPressed = true
+	},
+	{
+		Name = "RaiseCamera",
+		ControlType = "axis",
+		PosKey = "r",
+		NegKey = "f"
 	},
 	{
 		Name = "Save",
