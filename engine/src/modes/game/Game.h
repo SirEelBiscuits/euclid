@@ -59,6 +59,7 @@ namespace Modes {
 		unsigned inputqueuePosition{0u};
 
 		//controls configs
-		System::Controls::Config controls;
+		std::unique_ptr<System::Controls::Config> controls          {nullptr};
+		std::unique_ptr<System::Controls::Config> controlsSaveState {nullptr};
 	};
 }

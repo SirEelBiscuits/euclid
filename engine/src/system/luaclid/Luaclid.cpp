@@ -533,7 +533,7 @@ namespace System {
 			lua_pushcfunction(lua,
 				[](lua_State *s) {
 					lua_getfield(s, 1, "_data");
-					auto map = static_cast<World::Map*>(lua_touserdata(s, -1));
+					auto map = luaX_touserdata<World::Map>(s, -1);
 					lua_pop(s, 1);
 					auto secID = lua_tonumber(s, 2) - 1;
 					luaX_push(s,
