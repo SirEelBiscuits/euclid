@@ -63,20 +63,18 @@ luaX_ref luaX_registerClass(lua_State *lua) {
 	return *lxrp;
 }
 
+
 template<typename T>
 class luaX_registerClassMethodSingle {
 public:
 };
 
-template<typename T, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
-	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
-	luaX_registerClassMethod(lua, args...);
-}
+template<typename C, typename T>
+void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* member);
 
-template<typename T>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
-	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
+template<typename C, typename T>
+void luaX_registerClassGetter(lua_State *lua, char const *name, T C::* member) {
+	luaX_registerClassGetter<C, T const>(lua, name, member);
 }
 
 template<typename C, typename T>
@@ -90,6 +88,37 @@ void luaX_registerClassMember(lua_State *lua, char const *name, T const C::*memb
 	luaX_registerClassGetter(lua, name, member);
 }
 
+template<
+	typename T,
+	typename C,
+	typename DepType = typename std::enable_if<!std::is_function<T>::value, T>::type
+>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T C::* member) {
+	luaX_registerClassMember(lua, name, member);
+}
+
+template<typename T, typename C, typename... Args>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T (C::* method)(Args...)) {
+	luaX_registerClassMethodSingle<T (C::*)(Args...)>::Register(lua, name, method);
+}
+
+template<typename T, typename C, typename... Args>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T (C::* method)(Args...) const) {
+	luaX_registerClassMethodSingle<T (C::*)(Args...) const>::Register(lua, name, method);
+}
+
+template<typename T, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
+	luaX_registerClassMethodOrMember(lua, name, member);
+	luaX_registerClassMethod(lua, args...);
+}
+
+template<typename T>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
+	luaX_registerClassMethodOrMember(lua, name, member);
+}
+
+/*
 template<typename C, typename T>
 class luaX_registerClassMethodSingle<T C::*> {
 public:
@@ -97,6 +126,7 @@ public:
 		luaX_registerClassMember(lua, name, member);
 	}
 };
+*/
 
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
@@ -346,7 +376,7 @@ void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMem
 		TypeMagic::apply(callerF, args);
 		return 0;
 	};
-	auto *callInner = luaX_newuserdata<Functype>(lua);
+	auto *callInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
 	new(callInner) FuncType;
 	*callInner = [member](C* data, Args... args) {

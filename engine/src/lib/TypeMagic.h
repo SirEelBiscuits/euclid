@@ -4,6 +4,7 @@ PREAMBLE
 
 PRE_STD_LIB
 #include <utility>
+#include <cstdlib>
 POST_STD_LIB
 
 #define X_TO_POWER(x, power) (TypeMagic::pow<power>::calculate(x))
