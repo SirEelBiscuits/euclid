@@ -36,22 +36,14 @@ namespace System {
 					break;
 				}
 
-				auto controlType = luaX_returnlocal<std::string>(lua, "ControlType");
+				auto input = GetButtonInput(lua);
+				if(input == nullptr)
+					input = GetAxisInput(lua);
+				if(input == nullptr)
+					input = GetMouseInput(lua);
+				ASSERT(input != nullptr);
 
-				if(controlType.compare("button") == 0) {
-					auto buttonInput = GetButtonInput(lua);
-					if(buttonInput != nullptr)
-						inputList.push_back(std::move(buttonInput));
-				} else if(controlType.compare("axis") == 0) {
-					auto axisInput = GetAxisInput(lua);
-					if(axisInput != nullptr)
-						inputList.push_back(std::move(axisInput));
-				} else if(controlType.compare("mouse") == 0) {
-					auto mouseInput = GetMouseInput(lua);
-					if(mouseInput != nullptr) {
-						inputList.push_back(std::move(mouseInput));
-					}
-				}
+				inputList.push_back(std::move(input));
 
 				lua_pop(lua, pushedItems);
 				ASSERT(lua_gettop(lua) == top);
@@ -70,7 +62,7 @@ namespace System {
 			--pushedItems;
 
 			AxisDirection axis;
-			pushedItems += luaX_getlocal(lua, "axis");
+			pushedItems += luaX_getlocal(lua, "MouseAxis");
 			if(lua_type(lua, -1) != LUA_TSTRING) {
 				lua_pop(lua, pushedItems);
 				ASSERT(false);
@@ -88,7 +80,7 @@ namespace System {
 				return std::unique_ptr<IInput>(nullptr);
 			}
 
-			pushedItems += luaX_getlocal(lua, "relative");
+			pushedItems += luaX_getlocal(lua, "Relative");
 			if(lua_type(lua, -1) != LUA_TBOOLEAN) {
 				lua_pop(lua, pushedItems);
 				ASSERT(false);
@@ -97,7 +89,7 @@ namespace System {
 			auto relative = luaX_return<bool>(lua);
 			--pushedItems;
 
-			pushedItems += luaX_getlocal(lua, "scale");
+			pushedItems += luaX_getlocal(lua, "Scale");
 			auto scale = 1.f;
 			if(lua_type(lua, -1) == LUA_TNUMBER) {
 				scale = luaX_return<float>(lua);
@@ -155,7 +147,6 @@ namespace System {
 				break;
 			default:
 				lua_pop(lua, pushedItems);
-				ASSERT(false);
 				return std::unique_ptr<IInput>(nullptr);
 			}
 
@@ -229,13 +220,13 @@ namespace System {
 							isMouse = true;
 							auto str = luaX_return<std::string>(lua);
 							--pushedItems;
-							if(str.compare("left") == 0)
+							if(str.compare("Left") == 0)
 								Key = (int)System::Input::MouseButtons::Left;
-							else if(str.compare("right") == 0)
+							else if(str.compare("Right") == 0)
 								Key = (int)System::Input::MouseButtons::Right;
-							else if(str.compare("middle") == 0)
+							else if(str.compare("Middle") == 0)
 								Key = (int)System::Input::MouseButtons::Middle;
-							else if(str.compare("ScrullUp") == 0)
+							else if(str.compare("ScrollUp") == 0)
 								Key = (int)System::Input::MouseButtons::ScrollUp;
 							else if(str.compare("ScrollDown") == 0)
 								Key = (int)System::Input::MouseButtons::ScrollDown;
@@ -248,7 +239,6 @@ namespace System {
 						break;
 					default:
 						lua_pop(lua, pushedItems);
-						ASSERT(false);
 						return std::unique_ptr<IInput>(nullptr);
 					}
 				}
