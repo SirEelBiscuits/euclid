@@ -1,4 +1,11 @@
-Editor.PreviewState = Editor.PreviewState or {}
+Editor.PreviewState = Editor.PreviewState or {
+	CommandList = {
+		"PreviewRaiseCeiling",
+		"PreviewLowerCeiling",
+		"PreviewRaiseFloor",
+		"PreviewLowerFloor",
+	}
+}
 print("PreviewState reloaded")
 
 function Editor.PreviewState:Enter()
@@ -29,32 +36,27 @@ function Editor.PreviewState:Update(dt)
 		Game.ShowMouse(true)
 	end
 
-	if Game.Controls.RaiseCeiling.pressed then
-		self.sector:set_ceilHeight(self.sector:get_ceilHeight() + 0.1)
-	end
-
-	if Game.Controls.LowerCeiling.pressed then
-		self.sector:set_ceilHeight(self.sector:get_ceilHeight() - 0.1)
-	end
-
-	if Game.Controls.RaiseFloor.pressed then
-		self.sector:set_floorHeight(self.sector:get_floorHeight() + 0.1)
-	end
-
-	if Game.Controls.LowerFloor.pressed then
-		self.sector:set_floorHeight(self.sector:get_floorHeight() - 0.1)
+	for _, v in ipairs(self.CommandList) do
+		local control = Game.Controls[v]
+		if type(control) == "table" and control.pressed and Editor.Commands[v] then
+			Editor.Commands[v](self)
+		end
 	end
 
 	self.eye.z = self.eye.z + Game.Controls.RaiseCamera * dt
-
 	self.angle = self.angle + Game.Controls.Turn
 
-	local targetPos = self.eye + Maths.RotationMatrix(self.angle) 
-		* Maths.Vector:new(Game.Controls.PreviewRight, Game.Controls.PreviewForward, 0) * dt * self.speed
+	local targetPos = self.eye + Maths.RotationMatrix(self.angle)
+		* Maths.Vector:new(Game.Controls.PreviewRight, Game.Controls.PreviewForward, 0)
+		* dt * self.speed
 
 	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos)
-	self.secID, self.eye = Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
-	self.eye.z = math.max(self:CurSec().floorHeight + 0.1, math.min(self:CurSec().ceilHeight - 0.1, self.eye.z))
+	self.secID, self.eye =
+		Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
+	self.eye.z = math.max(
+		self:CurSec().floorHeight + 0.1,
+		math.min(self:CurSec().ceilHeight - 0.1, self.eye.z)
+	)
 	self.sector = Editor.curMap:GetSector(self.secID - 1)
 end
 

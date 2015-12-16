@@ -6,6 +6,10 @@ namespace System {
 	static std::function<void(Events::Types, void*, void*)> EventCallback;
 
 	namespace Input {
+		void Initialise() {
+			SetTextEditingMode(false);
+		}
+
 		void SetMouseShowing(bool show) {
 			SDL_SetRelativeMouseMode(show? SDL_FALSE : SDL_TRUE);
 		}
@@ -141,7 +145,8 @@ namespace System {
 					events.emplace_back(Transform(e));
 					break;
 
-				case SDL_TEXTINPUT: 
+				case SDL_TEXTINPUT:
+					ASSERT(textEditing);
 					if(textEditing){
 						System::Input::Event ret;
 						ret.textInput = e.text.text;
@@ -210,10 +215,10 @@ namespace System {
 
 		void SetTextEditingMode(bool SetOn) {
 			textEditing = SetOn;
-			//if(SetOn)
-			//	SDL_StartTextInput();
-			//else
-			//	SDL_StopTextInput();
+			if(SetOn)
+				SDL_StartTextInput();
+			else
+				SDL_StopTextInput();
 		}
 	}
 

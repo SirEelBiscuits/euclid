@@ -776,13 +776,7 @@ namespace System {
 				lua_setfield(lua, -2, "StoreMap");
 
 				//Game.ShowMouse
-				lua_pushcfunction(lua,
-					[](lua_State *s) {
-						System::Input::SetMouseShowing(luaX_return<bool>(s));
-						return 0;
-					}
-				);
-				lua_setfield(lua, -2, "ShowMouse");
+				luaX_setlocal(lua, "ShowMouse", System::Input::SetMouseShowing);
 
 				lua_pop(lua, 1);
 			}
@@ -791,14 +785,7 @@ namespace System {
 				luaX_getglobal(lua, "Input");
 
 				//Input.SetTextEditingMode
-				luaX_push(lua,
-					static_cast<std::function<void(bool)>>(
-						[](bool SetOn) {
-							System::Input::SetTextEditingMode(SetOn);
-						}
-					)
-				);
-				lua_setfield(lua, -2, "SetTextEditingMode");
+				luaX_setlocal(lua, "SetTextEditingMode", System::Input::SetTextEditingMode);
 
 				lua_pop(lua, 1);
 			}

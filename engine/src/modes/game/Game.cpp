@@ -18,6 +18,7 @@ namespace Modes {
 		, controls(new System::Controls::Config())
 	{
 		System::Luaclid::SetUp(lua, ctx, cfg);
+		System::Input::Initialise();
 		SetUpAdditionalLuaStuff();
 	}
 

@@ -41,6 +41,9 @@ namespace System {
 			bool repeat{false};
 		};
 
+		//Inplemented in platform code
+		void Initialise();
+
 		//Implemented in platform code
 		void SetMouseShowing(bool show);
 

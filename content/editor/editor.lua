@@ -1,7 +1,5 @@
-Editor = Editor or { 
-	State = {}, 
-	TypingState = {}, 
-	DefaultState = {},
+Editor = Editor or {
+	State = {},
 	view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 },
 	Selection = {verts = {}, walls = {}, sectors = {}},
 	Cursor = {},
@@ -43,6 +41,7 @@ function Game.Initialise()
 
 	Editor.Controls = dofile("editor/Controls.lua")
 	Game.LoadControls(Editor.Controls)
+	Game.LoadAndWatchFile("editor/Commands.lua")
 	Game.LoadAndWatchFile("editor/DefaultState.lua")
 	Game.LoadAndWatchFile("editor/TypingState.lua")
 	Game.LoadAndWatchFile("editor/PreviewState.lua")
@@ -301,10 +300,10 @@ function Editor:GetClosestWallIdx(vec, maxDist)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local start = self.curMapData:GetVert(wall.start)
-			local wallEnd = self.curMapData:GetVert(sec.walls[j % #sec.walls + 1].start) 
+			local wallEnd = self.curMapData:GetVert(sec.walls[j % #sec.walls + 1].start)
 			local dist = Maths.PointLineSegDistance(vec, start, wallEnd)
 			if
-				dist < minDist 
+				dist < minDist
 			then
 				minDist = dist
 				secIdx = i
@@ -350,7 +349,7 @@ function Editor:GetSelectionString()
 	local verts = self.Selection:GetSelectedVerts()
 	local walls = self.Selection:GetSelectedWalls()
 	local sectors = self.Selection:GetSelectedSectors()
-	
+
 
 	if #sectors > 0 and #verts == 0 and #walls == 0 then
 		local sect = self.curMapData.sectors[sectors[1]]
@@ -387,9 +386,9 @@ function Editor:GetSelectionString()
 		else
 			workingString = #sectors .. " sectors selected\n"
 		end
-	
-		workingString = workingString 
-			.. "ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n" 
+
+		workingString = workingString
+			.. "ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n"
 			.. "floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. " ] to edit\n"
 			.. "light level: " .. light .. "[" .. (self:GetControlsKey("SetLightLevel") or "???") .. " ] to edit\n"
 		local count = 4
@@ -479,8 +478,8 @@ function Editor:GetSelectionString()
 		return workingString, count, ret
 	else
 		local working = ""
-		if #verts > 0 then 
-			working = working .. #verts .. " vert" 
+		if #verts > 0 then
+			working = working .. #verts .. " vert"
 			if #verts > 1 then
 				working = working .. "s"
 			end

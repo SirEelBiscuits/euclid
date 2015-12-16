@@ -85,6 +85,43 @@ void luaX_push(lua_State *s, std::unique_ptr<T, S> value) {
 	ASSERT(lua_gettop(s) == t + 1);
 }
 
+template<typename T>
+void luaX_push(lua_State *s, std::shared_ptr<T> value) {
+	auto t = lua_gettop(s);
+	
+	using ptrT = std::shared_ptr<T>;
+
+	auto p = luaX_newuserdata<ptrT>(s);
+
+	new(p) ptrT;
+	*p = std::move(value);
+	luaX_push(s, luaX_emptytable());
+	auto f =
+		[]
+		(lua_State *lua) {
+		auto t = lua_gettop(lua);
+			auto s = lua_typename(lua, -1);
+			auto p = luaX_touserdata<ptrT>(lua, -1);
+			p->reset();
+			return 0;
+		};
+	lua_pushcfunction(s, f);
+
+	lua_setfield(s, -2, "__gc");
+	lua_setmetatable(s, -2);
+
+	//The above pushes the shared_ptr, but that's not actually useful to lua.
+	// We need to also push the regular pointer (in the vein of luaX_push(lua_State*, T*))
+	// and if we give it a reference to the shared_ptr, when it and its copies die, the unique object dies too.
+	// hopefully
+
+	luaX_push(s, p->get());
+	lua_insert(s, -2);
+	lua_setfield(s, -2, "__unqptr");
+
+	ASSERT(lua_gettop(s) == t + 1);
+}
+
 template<typename T, typename... Args>
 void luaX_push(lua_State *s, T value, Args... args) {
 	luaX_push(s, value);
@@ -110,6 +147,11 @@ public:
 template<typename Ret, typename... Args>
 void luaX_push(lua_State *s, std::function<Ret(Args...)> f) {
 	luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
+}
+
+template<typename Ret, typename... Args>
+void luaX_push(lua_State *s, Ret (f)(Args...)) {
+		luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
 }
 
 template<typename Ret, typename... Args>
