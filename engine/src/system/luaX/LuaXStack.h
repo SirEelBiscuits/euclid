@@ -150,6 +150,11 @@ void luaX_push(lua_State *s, std::function<Ret(Args...)> f) {
 }
 
 template<typename Ret, typename... Args>
+void luaX_push(lua_State *s, Ret (f)(Args...)) {
+		luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
+}
+
+template<typename Ret, typename... Args>
 void luaX_pushfunction(lua_State *s, std::function<Ret(Args...)> f) {
 	luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
 }
