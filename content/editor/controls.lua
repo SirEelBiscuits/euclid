@@ -40,26 +40,26 @@ return {
 		NegKey = "a",
 	},
 	{
-		Name = "RaiseCeiling",
+		Name = "PreviewRaiseCeiling",
 		ControlType = "button",
 		Key = "c",
 		ShiftPressed = false
 	},
 	{
-		Name = "LowerCeiling",
+		Name = "PreviewLowerCeiling",
 		ControlType = "button",
 		Key = "c",
 		ShiftPressed = true
 	},
 	{
-		Name = "RaiseFloor",
+		Name = "PreviewRaiseFloor",
 		ControlType = "button",
 		Key = "f",
 		ShiftPressed = false,
 		CtrlPressed = true
 	},
 	{
-		Name = "LowerFloor",
+		Name = "PreviewLowerFloor",
 		ControlType = "button",
 		Key = "f",
 		ShiftPressed = true,
@@ -68,8 +68,8 @@ return {
 	{
 		Name = "RaiseCamera",
 		ControlType = "axis",
-		PosKey = "r",
-		NegKey = "f"
+		PosKey = "q",
+		NegKey = "e"
 	},
 	{
 		Name = "Save",
@@ -244,13 +244,13 @@ return {
 		relative = true,
 		scale = 1
 	},
-	{ 
+	{
 		Name = "MouseY",
 		ControlType = "mouse",
 		axis = "y",
 		relative = false
 	},
-	{ 
+	{
 		Name = "MouseYRel",
 		ControlType = "mouse",
 		axis = "y",
@@ -274,7 +274,7 @@ return {
 	},
 
 	-- Undo
-	
+
 	{
 		Name = "Undo",
 		ControlType = "button",
