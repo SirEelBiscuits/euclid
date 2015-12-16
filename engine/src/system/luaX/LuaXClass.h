@@ -118,16 +118,6 @@ void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
 	luaX_registerClassMethodOrMember(lua, name, member);
 }
 
-/*
-template<typename C, typename T>
-class luaX_registerClassMethodSingle<T C::*> {
-public:
-	static void Register(lua_State *lua, char const *name, T C::* member) {
-		luaX_registerClassMember(lua, name, member);
-	}
-};
-*/
-
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
 
