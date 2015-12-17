@@ -365,11 +365,15 @@ namespace System {
 		}
 
 		void Button::SetValue(lua_State *lua) {
-			luaX_push(lua, luaX_emptytable(0, 3));
-			lua_pushboolean(lua, state == Pressed);
-			lua_setfield(lua, -2, "isDown");
-			luaX_setlocal(lua, "pressed", newlyPressed);
-			luaX_setlocal(lua, "released", newlyReleased);
+			lua_getfield(lua, -1, name.c_str());
+			if(lua_isnil(lua, -1)) {
+				lua_pop(lua, 1);
+				luaX_push(lua, luaX_emptytable(0, 3));
+			} else
+				ASSERT(lua_istable(lua, -1));
+			luaX_setlocal(lua, "isDown", (state == Pressed) || luaX_returnlocal<bool>(lua, "isDown"));
+			luaX_setlocal(lua, "pressed", newlyPressed || luaX_returnlocal<bool>(lua, "pressed"));
+			luaX_setlocal(lua, "released", newlyReleased || luaX_returnlocal<bool>(lua, "released"));
 			lua_setfield(lua, -2, name.c_str());
 
 			newlyPressed = false;
@@ -408,7 +412,10 @@ namespace System {
 		}
 
 		void Axis::SetValue(lua_State *lua) {
-			lua_pushnumber(lua, state);
+			auto value = static_cast<float>(state);
+			value += luaX_returnlocal<float>(lua, name.c_str());
+			value = Maths::clamp(value, -1.f, 1.f);
+			lua_pushnumber(lua, value);
 			lua_setfield(lua, -2, name.c_str());
 		}
 
@@ -482,8 +489,10 @@ namespace System {
 		}
 
 		void MouseAxisRel::SetValue(lua_State *lua) {
-			state = Maths::clamp(state, -maxMagnitude, maxMagnitude);
-			lua_pushnumber(lua, state);
+			auto value = state;
+			value += luaX_returnlocal<float>(lua, name.c_str());
+			value = Maths::clamp(value, -maxMagnitude, maxMagnitude);
+			lua_pushnumber(lua, value);
 			lua_setfield(lua, -2, name.c_str());
 
 			state = 0;
