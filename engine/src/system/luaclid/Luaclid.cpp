@@ -535,7 +535,7 @@ namespace System {
 					lua_getfield(s, 1, "_data");
 					auto map = luaX_touserdata<World::Map>(s, -1);
 					lua_pop(s, 1);
-					auto secID = lua_tonumber(s, 2) - 1;
+					auto secID = static_cast<World::IDType>(lua_tointeger(s, 2) - 1);
 					luaX_push(s,
 						map->GetSector(secID)->barrow.CreateSprite(
 							luaX_return<PositionVec3>(s)

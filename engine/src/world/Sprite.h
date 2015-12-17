@@ -54,7 +54,7 @@ namespace World {
 		void                 MoveSprite  (Sprite &sprite, Map &toMap, IDType toSector);
 
 		int                  GetNumSprites() const { return sprites.size(); }
-		void                 SetNumSprites(int num) {
+		void                 SetNumSprites(unsigned num) {
 			if(num < sprites.size())
 				sprites.resize(num);
 		}

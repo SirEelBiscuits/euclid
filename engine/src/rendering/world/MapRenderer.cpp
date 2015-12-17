@@ -390,8 +390,8 @@ namespace Rendering {
 				DrawWallSlice(
 					ctx,
 					dl.x,
-					dl.curtainTop,
-					dl.curtainBottom,
+					(int)dl.curtainTop,
+					(int)dl.curtainBottom,
 					dl.u,
 					dl.vStart,
 					dl.vEnd,
@@ -467,7 +467,7 @@ namespace Rendering {
 			uint8_t stencil
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
-			for(auto y = 0u; y < ScreenHeight; ++y)
+			for(auto y = 0; y < ScreenHeight; ++y)
 				distances[y] = 0_m;
 
 			auto vfovm = ctx.GetVFOVMult();
@@ -517,8 +517,8 @@ namespace Rendering {
 								stripStarted = x;
 							}
 						} else if(stripActive) {
-							auto left = f(stripStarted, distances[y]);
-							auto right = f(x - 1, distances[y]);
+							auto left = f((float)stripStarted, distances[y]);
+							auto right = f((float)x - 1.0f, distances[y]);
 							auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
 							auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 							ctx.DrawHLine(
@@ -534,8 +534,8 @@ namespace Rendering {
 						}
 					}
 					if(stripActive) {
-						auto left = f(stripStarted, distances[y]);
-						auto right = f(maxX, distances[y]);
+						auto left = f((float)stripStarted, distances[y]);
+						auto right = f((float)maxX, distances[y]);
 						auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
 						auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 						ctx.DrawHLine(
@@ -564,8 +564,8 @@ namespace Rendering {
 								stripStarted = x;
 							}
 						} else if(stripActive) {
-							auto left = f(stripStarted, distances[y]);
-							auto right = f(x - 1, distances[y]);
+							auto left = f((float)stripStarted, distances[y]);
+							auto right = f((float)x - 1.0f, distances[y]);
 							auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
 							auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 							ctx.DrawHLine(
@@ -581,8 +581,8 @@ namespace Rendering {
 						}
 					}
 					if(stripActive) {
-						auto left = f(stripStarted, distances[y]);
-						auto right = f(maxX, distances[y]);
+						auto left = f((float)stripStarted, distances[y]);
+						auto right = f((float)maxX, distances[y]);
 						auto leftFix16 = UVVec2(Fix16(left.x.val), Fix16(left.y.val)) * ppmFix16;
 						auto rightFix16 = UVVec2(Fix16(right.x.val), Fix16(right.y.val)) * ppmFix16;
 						ctx.DrawHLine(
@@ -633,8 +633,8 @@ namespace Rendering {
 			for(auto &sprite : sprites) {
 				if(sprite->tex == nullptr)
 					continue;
-				auto height          = Mesi::Meters(sprite->tex->h / Texture::PixelsPerMeter);
-				auto width           = Mesi::Meters(sprite->tex->w / Texture::PixelsPerMeter);
+				auto height          = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h / Texture::PixelsPerMeter));
+				auto width           = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w / Texture::PixelsPerMeter));
 				auto posVS           = view.ToViewSpace(sprite->position);
 				if(posVS.y < 0.001_m)
 					continue;
@@ -804,7 +804,7 @@ namespace Rendering {
 
 		btStorageType DepthMultFromDistance(Mesi::Meters distance, btStorageType ambientLight) {
 			if(distance < 0.001_m)
-				return 0.9 * (1 - ambientLight) + ambientLight;
+				return 0.9f * (1 - ambientLight) + ambientLight;
 			return Maths::clamp(
 				.5f / distance.val,
 				ambientLight,

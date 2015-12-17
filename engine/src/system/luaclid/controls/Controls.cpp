@@ -320,10 +320,10 @@ namespace System {
 			, newlyPressed(false)
 			, newlyReleased(false)
 			, isMouse(isMouse)
-			, requireShiftDown((int)mask & (int)Mask::ShiftDown)
-			, requireShiftUp  ((int)mask & (int)Mask::ShiftUp)
-			, requireCtrlDown ((int)mask & (int)Mask::CtrlDown)
-			, requireCtrlUp   ((int)mask & (int)Mask::CtrlUp)
+			, requireShiftDown(((int)mask & (int)Mask::ShiftDown) != 0)
+			, requireShiftUp  (((int)mask & (int)Mask::ShiftUp)   != 0)
+			, requireCtrlDown (((int)mask & (int)Mask::CtrlDown)  != 0)
+			, requireCtrlUp   (((int)mask & (int)Mask::CtrlUp)    != 0)
 		{}
 
 		void Button::ClearState() {
@@ -434,10 +434,10 @@ namespace System {
 
 			switch(axis) {
 			case AxisDirection::x:
-				state = e.mouseMovX;
+				state = static_cast<float>(e.mouseMovX);
 				break;
 			case AxisDirection::y:
-				state = e.mouseMovY;
+				state = static_cast<float>(e.mouseMovY);
 				break;
 			default:
 				ASSERT(false); //well, you never know
