@@ -19,7 +19,7 @@
 #ifdef _MSC_VER
 #	define PREAMBLE \
 	__pragma(once) \
-	__pragma(warning(disable: 4191 4512 4514 4625 4626 4661 4668 4710 4820 4711 4996 4814 4530 4577))
+	__pragma(warning(disable: 4191 4512 4514 4625 4626 4661 4668 4710 4820 4711 4996 4814 4530 4577 4005))
 
 #	define PRE_STD_LIB\
 	__pragma(warning(push))\
