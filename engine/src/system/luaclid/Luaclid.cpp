@@ -533,9 +533,9 @@ namespace System {
 			lua_pushcfunction(lua,
 				[](lua_State *s) {
 					lua_getfield(s, 1, "_data");
-					auto map = static_cast<World::Map*>(lua_touserdata(s, -1));
+					auto map = luaX_touserdata<World::Map>(s, -1);
 					lua_pop(s, 1);
-					auto secID = lua_tonumber(s, 2) - 1;
+					auto secID = static_cast<World::IDType>(lua_tointeger(s, 2) - 1);
 					luaX_push(s,
 						map->GetSector(secID)->barrow.CreateSprite(
 							luaX_return<PositionVec3>(s)
@@ -747,6 +747,16 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "SetPixel");
 
+				//Draw.SetRenderScale
+				luaX_push(lua,
+					static_cast<std::function<void(unsigned)>>(
+						[ctx](unsigned scale) {
+							ctx->SetRenderScale(scale);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "SetRenderScale");
+
 				lua_pop(lua, 1);
 			}
 
@@ -776,13 +786,7 @@ namespace System {
 				lua_setfield(lua, -2, "StoreMap");
 
 				//Game.ShowMouse
-				lua_pushcfunction(lua,
-					[](lua_State *s) {
-						System::Input::SetMouseShowing(luaX_return<bool>(s));
-						return 0;
-					}
-				);
-				lua_setfield(lua, -2, "ShowMouse");
+				luaX_setlocal(lua, "ShowMouse", System::Input::SetMouseShowing);
 
 				lua_pop(lua, 1);
 			}
@@ -791,14 +795,7 @@ namespace System {
 				luaX_getglobal(lua, "Input");
 
 				//Input.SetTextEditingMode
-				luaX_push(lua,
-					static_cast<std::function<void(bool)>>(
-						[](bool SetOn) {
-							System::Input::SetTextEditingMode(SetOn);
-						}
-					)
-				);
-				lua_setfield(lua, -2, "SetTextEditingMode");
+				luaX_setlocal(lua, "SetTextEditingMode", System::Input::SetTextEditingMode);
 
 				lua_pop(lua, 1);
 			}

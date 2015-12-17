@@ -1,5 +1,5 @@
 
-all: lua SDL2
+all: lua 
 
 lua:
 	make -C lua
@@ -15,5 +15,6 @@ SDL2_image:
 clean:
 	make -C lua clean
 	rm -rf SDL2/bin
+	rm -rf SDL2_image/bin
 
-.PHONY: lua SDL2 all clean
+.PHONY: lua SDL2 all clean SDL2_image

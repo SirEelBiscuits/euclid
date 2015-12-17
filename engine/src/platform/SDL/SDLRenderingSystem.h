@@ -35,9 +35,12 @@ namespace Rendering {
 
 		virtual void Clear(Color c) override;
 		virtual void SetResolution(unsigned Width, unsigned Height) override;
+		virtual void SetRenderScale(unsigned Scale) override;
 		virtual void FlipBuffers() override;
 
 	private:
+
+		unsigned Width, Height;
 
 		winType win{nullptr};
 		renType ren{nullptr};

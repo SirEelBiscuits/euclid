@@ -95,8 +95,23 @@ namespace Rendering {
 
 	void SDLContext::SetResolution(unsigned Width, unsigned Height)
 	{
+		this->Width = Width;
+		this->Height = Height;
 		Context::Width = Width / Scale;
 		Context::Height = Height / Scale;
+		if(nullptr != t) {
+			SDL_UnlockTexture(t);
+			SDL_DestroyTexture(t);
+		}
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
+		int pitch;
+		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
+	}
+
+	void SDLContext::SetRenderScale(unsigned newScale) {
+		Context::Width = this->Width / newScale;
+		Context::Height = this->Height / newScale;
+		this->Scale = newScale;
 		if(nullptr != t) {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);

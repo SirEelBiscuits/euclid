@@ -37,6 +37,8 @@ namespace Rendering {
 		*/
 		virtual void SetResolution(unsigned Width, unsigned Height) = 0;
 
+		virtual void SetRenderScale(unsigned Scale) = 0;
+
 		/**
 			Present the back buffer to the screen
 		*/

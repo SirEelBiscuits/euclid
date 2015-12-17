@@ -63,20 +63,18 @@ luaX_ref luaX_registerClass(lua_State *lua) {
 	return *lxrp;
 }
 
+
 template<typename T>
 class luaX_registerClassMethodSingle {
 public:
 };
 
-template<typename T, typename... Args>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
-	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
-	luaX_registerClassMethod(lua, args...);
-}
+template<typename C, typename T>
+void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* member);
 
-template<typename T>
-void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
-	luaX_registerClassMethodSingle<T>::Register(lua, name, member);
+template<typename C, typename T>
+void luaX_registerClassGetter(lua_State *lua, char const *name, T C::* member) {
+	luaX_registerClassGetter<C, T const>(lua, name, member);
 }
 
 template<typename C, typename T>
@@ -90,13 +88,35 @@ void luaX_registerClassMember(lua_State *lua, char const *name, T const C::*memb
 	luaX_registerClassGetter(lua, name, member);
 }
 
-template<typename C, typename T>
-class luaX_registerClassMethodSingle<T C::*> {
-public:
-	static void Register(lua_State *lua, char const *name, T C::* member) {
-		luaX_registerClassMember(lua, name, member);
-	}
-};
+template<
+	typename T,
+	typename C,
+	typename DepType = typename std::enable_if<!std::is_function<T>::value, T>::type
+>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T C::* member) {
+	luaX_registerClassMember(lua, name, member);
+}
+
+template<typename T, typename C, typename... Args>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T (C::* method)(Args...)) {
+	luaX_registerClassMethodSingle<T (C::*)(Args...)>::Register(lua, name, method);
+}
+
+template<typename T, typename C, typename... Args>
+void luaX_registerClassMethodOrMember(lua_State *lua, char const *name, T (C::* method)(Args...) const) {
+	luaX_registerClassMethodSingle<T (C::*)(Args...) const>::Register(lua, name, method);
+}
+
+template<typename T, typename... Args>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member, Args... args) {
+	luaX_registerClassMethodOrMember(lua, name, member);
+	luaX_registerClassMethod(lua, args...);
+}
+
+template<typename T>
+void luaX_registerClassMethod(lua_State *lua, char const *name, T member) {
+	luaX_registerClassMethodOrMember(lua, name, member);
+}
 
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...));
@@ -161,6 +181,7 @@ public:
 // it's a bug, or non-conformant, and is non-obvious regardless
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* member)(Args...)) {
+	using FuncType = std::function<T(C*, Args...)>;
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
 			return luaL_error(l,
@@ -174,24 +195,23 @@ void luaX_registerClassMethodNonVoid(lua_State *lua, char const *name, T (C::* m
 		lua_getfield(l, 1, "_data");
 		lua_insert(l, 2);
 		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
+		auto callerF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
 		luaX_push(l, TypeMagic::apply(callerF, args));
 		return arity;
 	};
-	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
-	);
+	auto *callInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(callInner) std::function<T(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
+	new(callInner) FuncType;
+	*callInner = [member](C* data, Args... args) {
+		return (data->*member)(args...);
+	};
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }
 
 template<typename C, typename... Args>
 void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* member)(Args...)) {
+	using FuncType = std::function<void(C*, Args...)>;
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
 			return luaL_error(l,
@@ -205,69 +225,65 @@ void luaX_registerClassMethodVoid(lua_State *lua, char const *name, void (C::* m
 		lua_getfield(l, 1, "_data");
 		lua_insert(l, 2);
 		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<void(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
+		auto callerF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
 		TypeMagic::apply(callerF, args);
 		return 0;
 	};
-	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
-	);
+	auto *callInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(callInner) std::function<void(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
+	new(callInner) FuncType;
+	*callInner = [member](C* data, Args... args) {
+		(data->*member)(args...);
+	};
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }
 
 template<typename C, typename T>
 void luaX_registerClassGetter(lua_State *lua, char const *name, T const C::* member) {
-	using functionType = std::function<T(C*)>;
+	using FuncType = std::function<T(C*)>;
 	//expects an argument of lightuserdata, type C*
 	auto getter = [](lua_State *l) {
 		luaX_getlocal(l, "_data");
-		auto member = (*static_cast<functionType*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		))(static_cast<C*>(lua_touserdata(l, -1)));
+		auto member = (*luaX_touserdata<FuncType>(l, lua_upvalueindex(1)))(
+			luaX_touserdata<C>(l, -1)
+		);
 		luaX_push(l, member);
 		return 1;
 	};
 	std::string getterName("get_");
 	getterName.append(name);
 
-	functionType *getInner = static_cast<functionType*>(
-		lua_newuserdata(lua, sizeof(functionType))
-	);
+	auto *getInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(getInner) functionType;
-	*getInner = [member](C* data){return data->*member;};
+	new(getInner) FuncType;
+	*getInner = [member](C* data) {
+		return data->*member;
+	};
 	lua_pushcclosure(lua, getter, 1);
 	lua_setfield(lua, -2, getterName.c_str());
 }
 
 template<typename C, typename T>
 void luaX_registerClassSetter(lua_State *lua, char const *name, T C::* member) {
-	using functionType = std::function<void(C*, T)>;
+	using FuncType = std::function<void(C*, T)>;
 	//expects an argument of lightuserdata, type C*, and the value to set arg1->*member to
 	auto setter = [] (lua_State *l) {
 		//Args list contains: self, val
 		auto val = luaX_return<T>(l);
 		luaX_getlocal(l, "_data");
-		auto memberF = *static_cast<functionType*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
-		memberF(static_cast<C*>(lua_touserdata(l, -1)), val);
+		auto memberF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
+		memberF(luaX_touserdata<C>(l, -1), val);
 		return 0;
 	};
 	std::string setterName("set_");
 	setterName.append(name);
-	functionType *setInner = static_cast<functionType*>(
-		lua_newuserdata(lua, sizeof(functionType))
-	);
+	auto *setInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(setInner) functionType;
-	*setInner = [member](C* data, T val){data->*member = val;};
+	new(setInner) FuncType;
+	*setInner = [member](C* data, T val) {
+		data->*member = val;
+	};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());
 }
@@ -280,51 +296,49 @@ void luaX_registerClassMemberSpecial(lua_State *lua, char const *name, T C::*mem
 
 template<typename C, typename T>
 void luaX_registerClassGetterSpecial(lua_State *lua, char const *name, T C::* member) {
-	using functionType = std::function<T *(C*)>;
+	using FuncType = std::function<T *(C*)>;
 	//expects an argument of lightuserdata, type C*
 	auto getter = [](lua_State *l) {
 		luaX_getlocal(l, "_data");
-		auto member = (*static_cast<functionType*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		))(static_cast<C*>(lua_touserdata(l, -1)));
+		auto member = (*luaX_touserdata<FuncType>(l, lua_upvalueindex(1)))(
+			luaX_touserdata<C>(l, -1)
+		);
 		luaX_push(l, member);
 		return 1;
 	};
 	std::string getterName("get_");
 	getterName.append(name);
 
-	functionType *getInner = static_cast<functionType *>(
-		lua_newuserdata(lua, sizeof(std::function<T*(C*)>))
-	);
+	auto *getInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(getInner) functionType;
-	*getInner = [member](C* data){return &(data->*member);};
+	new(getInner) FuncType;
+	*getInner = [member](C* data) {
+		return &(data->*member);
+	};
 	lua_pushcclosure(lua, getter, 1);
 	lua_setfield(lua, -2, getterName.c_str());
 }
 
 template<typename C, typename T>
 void luaX_registerClassSetterSpecial(lua_State *lua, char const *name, T C::* member) {
-	using functionType = std::function<void(C*, T*)>;
+	using FuncType = std::function<void(C*, T*)>;
 	//expects an argument of lightuserdata, type C*, and the value to set arg1->*member to
 	auto setter = [] (lua_State *l) {
 		//Args list contains: self, val
 		auto val = luaX_return<T*>(l);
 		luaX_getlocal(l, "_data");
-		auto memberF = *static_cast<functionType*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
-		memberF(static_cast<C*>(lua_touserdata(l, -1)), val);
+		auto memberF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
+		memberF(luaX_touserdata<C>(l, -1), val);
 		return 0;
 	};
 	std::string setterName("set_");
 	setterName.append(name);
-	functionType *setInner = static_cast<functionType*>(
-		lua_newuserdata(lua, sizeof(functionType))
-	);
+	auto *setInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(setInner) functionType;
-	*setInner = [member](C* data, T* val){data->*member = *val;};
+	new(setInner) FuncType;
+	*setInner = [member](C* data, T* val) {
+		data->*member = *val;
+	};
 	lua_pushcclosure(lua, setter, 1);
 	lua_setfield(lua, -2, setterName.c_str());
 }
@@ -334,6 +348,7 @@ void luaX_registerClassSetterSpecial(lua_State *lua, char const *name, T C::* me
 
 template<typename C, typename... Args>
 void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMemFunPtrConst<C, Args...> member) {
+	using FuncType = std::function<void(C*, Args...)>;
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
 			return luaL_error(l,
@@ -347,18 +362,16 @@ void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMem
 		lua_getfield(l, 1, "_data");
 		lua_insert(l, 2);
 		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<void(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
+		auto callerF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
 		TypeMagic::apply(callerF, args);
 		return 0;
 	};
-	auto *callInner = static_cast<std::function<void(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<void(C*, Args...)>))
-	);
+	auto *callInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(callInner) std::function<void(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { (data->*member)(args...); };
+	new(callInner) FuncType;
+	*callInner = [member](C* data, Args... args) {
+		(data->*member)(args...);
+	};
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }
@@ -367,6 +380,7 @@ void luaX_registerClassMethodVoidConst(lua_State *lua, char const *name, voidMem
 // it's a bug, or non-conformant, and is non-obvious regardless
 template<typename C, typename T, int arity, typename... Args>
 void luaX_registerClassMethodNonVoidConst(lua_State *lua, char const *name, nonVoidMemFunPtrConst<T, C, Args...> member) {
+	using FuncType = std::function<T(C*, Args...)>;
 	auto caller = [] (lua_State *l) {
 		if(lua_gettop(l) != 1 + sizeof...(Args)) {
 			return luaL_error(l,
@@ -380,18 +394,16 @@ void luaX_registerClassMethodNonVoidConst(lua_State *lua, char const *name, nonV
 		lua_getfield(l, 1, "_data");
 		lua_insert(l, 2);
 		auto args = luaX_returntuplefromstack<C*, Args...>(l);
-		auto callerF = *static_cast<std::function<T(C*, Args...)>*>(
-			lua_touserdata(l, lua_upvalueindex(1))
-		);
+		auto callerF = *luaX_touserdata<FuncType>(l, lua_upvalueindex(1));
 		luaX_push(l, TypeMagic::apply(callerF, args));
 		return arity;
 	};
-	auto *callInner = static_cast<std::function<T(C*, Args...)>*>(
-		lua_newuserdata(lua, sizeof(std::function<T(C*, Args...)>))
-	);
+	auto *callInner = luaX_newuserdata<FuncType>(lua);
 	//This object will be managed by Lua's GC
-	new(callInner) std::function<T(C*, Args...)>;
-	*callInner = [member](C* data, Args... args) { return (data->*member)(args...); };
+	new(callInner) FuncType;
+	*callInner = [member](C* data, Args... args) {
+		return (data->*member)(args...);
+	};
 	lua_pushcclosure(lua, caller, 1);
 	lua_setfield(lua, -2, name);
 }

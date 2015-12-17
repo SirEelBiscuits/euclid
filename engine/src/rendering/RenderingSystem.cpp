@@ -73,6 +73,8 @@ namespace Rendering {
 
 		if(start.x > end.x)
 			std::swap(start, end);
+		if(end.x < 0 || start.x > Width)
+			return;
 		
 		//todo make fixed point
 
@@ -82,16 +84,20 @@ namespace Rendering {
 			start.x = 0;
 		}
 		if(end.x > Width) {
-			float m = ((float)Width - - start.x) / (end.x - start.x);
+			float m = ((float)Width - start.x) / (end.x - start.x);
 			end.y = start.y + (int)std::round(m * (end.y - start.y));
 			end.x = Width;
 		}
 
 		if(start.y < 0) {
+			if(end.y < 0)
+				return;
 			float m = -(float)start.y / (end.y - start.y);
 			start.x += (int)std::round(m * (end.x - start.x));
 			start.y = 0;
 		} else if(start.y > Height) {
+			if(end.y > Height)
+				return;
 			float m = ((float)Height  - end.y) / (start.y - end.y);
 			start.x = end.x + (int)std::round(m * (start.x - end.x));
 			start.y = Height;

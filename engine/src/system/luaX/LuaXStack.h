@@ -8,6 +8,22 @@ POST_STD_LIB
 
 #include <lua.hpp>
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Misc
+
+template<typename T>
+T* luaX_newuserdata(lua_State *lua) {
+	return static_cast<T*>(
+		lua_newuserdata(lua, sizeof(T))
+	);
+}
+
+template<typename T>
+T* luaX_touserdata(lua_State *lua, int index) {
+	return static_cast<T*>(lua_touserdata(lua, index));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Push
 
@@ -38,7 +54,7 @@ void luaX_push(lua_State *s, std::unique_ptr<T, S> value) {
 
 	using ptrT = std::unique_ptr<T, S>;
 
-	auto p = static_cast<ptrT*>(lua_newuserdata(s, sizeof(ptrT)));
+	auto p = luaX_newuserdata<ptrT>(s);
 
 	new(p) ptrT;
 	*p = std::move(value);
@@ -48,7 +64,7 @@ void luaX_push(lua_State *s, std::unique_ptr<T, S> value) {
 		(lua_State *lua) {
 		auto t = lua_gettop(lua);
 			auto s = lua_typename(lua, -1);
-			auto p = static_cast<ptrT*>(lua_touserdata(lua, -1));
+			auto p = luaX_touserdata<ptrT>(lua, -1);
 			p->reset();
 			return 0;
 		};
@@ -60,6 +76,43 @@ void luaX_push(lua_State *s, std::unique_ptr<T, S> value) {
 	//The above pushes the unique_ptr, but that's not actually useful to lua.
 	// We need to also push the regular pointer (in the vein of luaX_push(lua_State*, T*))
 	// and if we give it a reference to the unique_ptr, when it and its copies die, the unique object dies too.
+	// hopefully
+
+	luaX_push(s, p->get());
+	lua_insert(s, -2);
+	lua_setfield(s, -2, "__unqptr");
+
+	ASSERT(lua_gettop(s) == t + 1);
+}
+
+template<typename T>
+void luaX_push(lua_State *s, std::shared_ptr<T> value) {
+	auto t = lua_gettop(s);
+	
+	using ptrT = std::shared_ptr<T>;
+
+	auto p = luaX_newuserdata<ptrT>(s);
+
+	new(p) ptrT;
+	*p = std::move(value);
+	luaX_push(s, luaX_emptytable());
+	auto f =
+		[]
+		(lua_State *lua) {
+		auto t = lua_gettop(lua);
+			auto s = lua_typename(lua, -1);
+			auto p = luaX_touserdata<ptrT>(lua, -1);
+			p->reset();
+			return 0;
+		};
+	lua_pushcfunction(s, f);
+
+	lua_setfield(s, -2, "__gc");
+	lua_setmetatable(s, -2);
+
+	//The above pushes the shared_ptr, but that's not actually useful to lua.
+	// We need to also push the regular pointer (in the vein of luaX_push(lua_State*, T*))
+	// and if we give it a reference to the shared_ptr, when it and its copies die, the unique object dies too.
 	// hopefully
 
 	luaX_push(s, p->get());
@@ -97,6 +150,11 @@ void luaX_push(lua_State *s, std::function<Ret(Args...)> f) {
 }
 
 template<typename Ret, typename... Args>
+void luaX_push(lua_State *s, Ret (f)(Args...)) {
+		luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
+}
+
+template<typename Ret, typename... Args>
 void luaX_pushfunction(lua_State *s, std::function<Ret(Args...)> f) {
 	luaX_registerfunction<std::function<Ret(Args...)>, TypeMagic::arity<Ret>::value>::Register(s, f);
 }
@@ -118,11 +176,11 @@ public:
 				);
 			}
 			auto args = luaX_returntuplefromstack<Args...>(l);
-			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			auto innerF = *luaX_touserdata<F>(l, lua_upvalueindex(1));
 			TypeMagic::apply(innerF, args);
 			return 0;
 		};
-		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		auto *callInner = luaX_newuserdata<F>(s);
 		new(callInner) F;
 		*callInner = f;
 		lua_pushcclosure(s, wrapper, 1);
@@ -143,11 +201,11 @@ public:
 				);
 			}
 			auto args = luaX_returntuplefromstack<Args...>(l);
-			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			auto innerF = *luaX_touserdata<F>(l, lua_upvalueindex(1));
 			luaX_push(l, TypeMagic::apply(innerF, args));
 			return arity;
 		};
-		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		auto *callInner = luaX_newuserdata<F>(s);
 		new(callInner) F;
 		*callInner = f;
 		lua_pushcclosure(s, wrapper, 1);
@@ -167,11 +225,11 @@ public:
 					0
 				);
 			}
-			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			auto innerF = *luaX_touserdata<F>(l, lua_upvalueindex(1));
 			innerF();
 			return 0;
 		};
-		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		auto *callInner = luaX_newuserdata<F>(s);
 		new(callInner) F;
 		*callInner = f;
 		lua_pushcclosure(s, wrapper, 1);
@@ -191,11 +249,11 @@ public:
 					0
 				);
 			}
-			auto innerF = *static_cast<F*>(lua_touserdata(l, lua_upvalueindex(1)));
+			auto innerF = *luaX_touserdata<F>(l, lua_upvalueindex(1));
 			luaX_push(l, innerF());
 			return arity;
 		};
-		auto *callInner = static_cast<F*>(lua_newuserdata(s, sizeof(F)));
+		auto *callInner = luaX_newuserdata<F>(s);
 		new(callInner) F;
 		*callInner = f;
 		lua_pushcclosure(s, wrapper, 1);

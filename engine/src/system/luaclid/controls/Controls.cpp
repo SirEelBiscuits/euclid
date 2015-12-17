@@ -17,6 +17,10 @@ namespace System {
 		bool KeyIsReasonable(char c) {
 			return true;
 		}
+		
+		std::unique_ptr<IInput> GetMouseInput(lua_State *lua);
+		std::unique_ptr<IInput> GetAxisInput(lua_State *lua);
+		std::unique_ptr<IInput> GetButtonInput(lua_State *lua);
 
 		void Config::LoadControls(lua_State *lua) {
 			if(lua_istable(lua, -1) == false)
@@ -32,245 +36,14 @@ namespace System {
 					break;
 				}
 
-				auto controlType = luaX_returnlocal<std::string>(lua, "ControlType");
+				auto input = GetButtonInput(lua);
+				if(input == nullptr)
+					input = GetAxisInput(lua);
+				if(input == nullptr)
+					input = GetMouseInput(lua);
+				ASSERT(input != nullptr);
 
-				if(controlType.compare("button") == 0) {
-					pushedItems += luaX_getlocal(lua, "Name");
-					if(lua_type(lua, -1) != LUA_TSTRING) {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-					auto Name = luaX_return<std::string>(lua);
-					--pushedItems;
-
-					pushedItems += luaX_getlocal(lua, "Key");
-					auto isMouse = false;
-					auto Key = 0;
-					switch(lua_type(lua, -1)) {
-					case LUA_TSTRING: {
-							auto str = luaX_return<std::string>(lua);
-							--pushedItems;
-							if(str.length() != 1) {
-								lua_pop(lua, pushedItems);
-								ASSERT(false); //does this work right?
-								++id;
-								continue;
-							}
-							if(KeyIsReasonable(str[0]))
-								Key = str[0];
-						}
-						break;
-					case LUA_TNUMBER: {
-							Key = luaX_return<int>(lua); //if the number is rubbish, that's your problem
-							--pushedItems;
-						}
-						break;
-					default:
-						lua_pop(lua, 1);
-						--pushedItems;
-						{
-							pushedItems += luaX_getlocal(lua, "MouseButton");
-							switch(lua_type(lua, -1)) {
-							case LUA_TSTRING: {
-									isMouse = true;
-									auto str = luaX_return<std::string>(lua);
-									--pushedItems;
-									if(str.compare("left") == 0)
-										Key = (int)System::Input::MouseButtons::Left;
-									else if(str.compare("right") == 0)
-										Key = (int)System::Input::MouseButtons::Right;
-									else if(str.compare("middle") == 0)
-										Key = (int)System::Input::MouseButtons::Middle;
-									else if(str.compare("ScrullUp") == 0)
-										Key = (int)System::Input::MouseButtons::ScrollUp;
-									else if(str.compare("ScrollDown") == 0)
-										Key = (int)System::Input::MouseButtons::ScrollDown;
-									else {
-										lua_pop(lua, pushedItems);
-										ASSERT(false);
-										++id;
-										continue;
-									}
-								}
-								break;
-							default:
-								lua_pop(lua, pushedItems);
-								ASSERT(false);
-								++id;
-								continue;
-							}
-						}
-						break;
-					}
-
-					//here we grab the shift/ctrl must be up/down/don't care values
-					Mask mask = Mask::None;
-					pushedItems += luaX_getlocal(lua, "ShiftPressed");
-					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
-						if(luaX_return<bool>(lua)) {
-							mask = (Mask)((int)mask | (int)Mask::ShiftDown);
-						} else {
-							mask = (Mask)((int)mask | (int)Mask::ShiftUp);
-						}
-					} else {
-						ASSERT(lua_type(lua, -1) == LUA_TNIL);
-						lua_pop(lua, 1);
-					}
-					--pushedItems;
-					pushedItems += luaX_getlocal(lua, "CtrlPressed");
-					if(lua_type(lua, -1) == LUA_TBOOLEAN) {
-						if(luaX_return<bool>(lua)) {
-							mask = (Mask)((int)mask | (int)Mask::CtrlDown);
-						} else {
-							mask = (Mask)((int)mask | (int)Mask::CtrlUp);
-						}
-					} else {
-						ASSERT(lua_type(lua, -1) == LUA_TNIL);
-						lua_pop(lua, 1);
-					}
-					--pushedItems;
-
-					inputList.emplace_back(std::make_unique<Button>(Name, Key, isMouse, mask));
-				}
-
-				else if(controlType.compare("axis") == 0) {
-					pushedItems += luaX_getlocal(lua, "Name");
-					if(lua_type(lua, -1) != LUA_TSTRING) {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-					auto Name = luaX_return<std::string>(lua);
-					--pushedItems;
-
-					pushedItems += luaX_getlocal(lua, "PosKey");
-					auto PosKey = 0;
-					switch(lua_type(lua, -1)) {
-					case LUA_TSTRING: {
-							auto str = luaX_return<std::string>(lua);
-							--pushedItems;
-							if(str.length() != 1) {
-								lua_pop(lua, pushedItems);
-								ASSERT(false); //does this work right?
-								++id;
-								continue;
-							}
-							if(KeyIsReasonable(str[0]))
-								PosKey = str[0];
-						}
-						break;
-					case LUA_TNUMBER: {
-							PosKey = luaX_return<int>(lua); //if the number is rubbish, that's your problem
-							--pushedItems;
-						}
-						break;
-					default:
-						lua_pop(lua, pushedItems);
-						ASSERT(false); //just once I need to check this continue goes to the right place!
-						++id;
-						continue;
-					}
-
-					pushedItems += luaX_getlocal(lua, "NegKey");
-					auto NegKey = 0;
-					switch(lua_type(lua, -1)) {
-					case LUA_TSTRING: {
-							auto str = luaX_return<std::string>(lua);
-							--pushedItems;
-							if(str.length() != 1) {
-								lua_pop(lua, pushedItems);
-								ASSERT(false); //does this work right?
-								++id;
-								continue;
-							}
-							if(KeyIsReasonable(str[0]))
-								NegKey = str[0];
-							break;
-						}
-					case LUA_TNUMBER: {
-							NegKey = luaX_return<int>(lua); //if the number is rubbish, that's your problem
-							--pushedItems;
-						}
-					default:
-						lua_pop(lua, pushedItems);
-						ASSERT(false); //just once I need to check this continue goes to the right place!
-						++id;
-						continue;
-					}
-
-					inputList.emplace_back(std::make_unique<Axis>(Name, PosKey, NegKey));
-				}
-
-				else if(controlType.compare("mouse") == 0) {
-					pushedItems += luaX_getlocal(lua, "Name");
-					if(lua_type(lua, -1) != LUA_TSTRING) {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-					auto name = luaX_return<std::string>(lua);
-					--pushedItems;
-
-					AxisDirection axis;
-					pushedItems += luaX_getlocal(lua, "axis");
-					if(lua_type(lua, -1) != LUA_TSTRING) {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-					auto axisString = luaX_return<std::string>(lua);
-					--pushedItems;
-					if(axisString.compare("x") == 0)
-						axis = AxisDirection::x;
-					else if(axisString.compare("y") == 0)
-						axis = AxisDirection::y;
-					else {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-
-					pushedItems += luaX_getlocal(lua, "relative");
-					if(lua_type(lua, -1) != LUA_TBOOLEAN) {
-						lua_pop(lua, pushedItems);
-						ASSERT(false);
-						++id;
-						continue;
-					}
-					auto relative = luaX_return<bool>(lua);
-					--pushedItems;
-
-					pushedItems += luaX_getlocal(lua, "scale");
-					auto scale = 1.f;
-					if(lua_type(lua, -1) == LUA_TNUMBER) {
-						scale = luaX_return<float>(lua);
-						--pushedItems;
-					} else {
-						lua_pop(lua, 1);
-						--pushedItems;
-					}
-
-					pushedItems += luaX_getlocal(lua, "maxMagnitude");
-					auto maxMag = FLT_MAX;
-					if(lua_type(lua, -1) == LUA_TNUMBER) {
-						maxMag = luaX_return<float>(lua);
-						--pushedItems;
-					} else {
-						lua_pop(lua, 1);
-						--pushedItems;
-					}
-
-					if(relative)
-						inputList.emplace_back(std::make_unique<MouseAxisRel>(name, axis, scale, maxMag));
-					else
-						inputList.emplace_back(std::make_unique<MouseAxis>(name, axis, scale, maxMag));
-				}
+				inputList.push_back(std::move(input));
 
 				lua_pop(lua, pushedItems);
 				ASSERT(lua_gettop(lua) == top);
@@ -278,11 +51,252 @@ namespace System {
 			} while(true);
 		}
 
+		std::unique_ptr<IInput> GetMouseInput(lua_State *lua) {
+			auto pushedItems = luaX_getlocal(lua, "Name");
+			if(lua_type(lua, -1) != LUA_TSTRING) {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+			auto name = luaX_return<std::string>(lua);
+			--pushedItems;
+
+			AxisDirection axis;
+			pushedItems += luaX_getlocal(lua, "MouseAxis");
+			if(lua_type(lua, -1) != LUA_TSTRING) {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+			auto axisString = luaX_return<std::string>(lua);
+			--pushedItems;
+			if(axisString.compare("x") == 0)
+				axis = AxisDirection::x;
+			else if(axisString.compare("y") == 0)
+				axis = AxisDirection::y;
+			else {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+
+			pushedItems += luaX_getlocal(lua, "Relative");
+			if(lua_type(lua, -1) != LUA_TBOOLEAN) {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+			auto relative = luaX_return<bool>(lua);
+			--pushedItems;
+
+			pushedItems += luaX_getlocal(lua, "Scale");
+			auto scale = 1.f;
+			if(lua_type(lua, -1) == LUA_TNUMBER) {
+				scale = luaX_return<float>(lua);
+				--pushedItems;
+			} else {
+				lua_pop(lua, 1);
+				--pushedItems;
+			}
+
+			pushedItems += luaX_getlocal(lua, "maxMagnitude");
+			auto maxMag = FLT_MAX;
+			if(lua_type(lua, -1) == LUA_TNUMBER) {
+				maxMag = luaX_return<float>(lua);
+				--pushedItems;
+			} else {
+				lua_pop(lua, 1);
+				--pushedItems;
+			}
+
+			lua_pop(lua, pushedItems);
+			if(relative)
+				return std::make_unique<MouseAxisRel>(name, axis, scale, maxMag);
+			return std::make_unique<MouseAxis>(name, axis, scale, maxMag);
+		}
+
+		std::unique_ptr<IInput> GetAxisInput(lua_State *lua) {
+			auto pushedItems = luaX_getlocal(lua, "Name");
+			if(lua_type(lua, -1) != LUA_TSTRING) {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+			auto Name = luaX_return<std::string>(lua);
+			--pushedItems;
+
+			pushedItems += luaX_getlocal(lua, "PosKey");
+			auto PosKey = 0;
+			switch(lua_type(lua, -1)) {
+			case LUA_TSTRING: {
+					auto str = luaX_return<std::string>(lua);
+					--pushedItems;
+					if(str.length() != 1) {
+						lua_pop(lua, pushedItems);
+						ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+					}
+					if(KeyIsReasonable(str[0]))
+						PosKey = str[0];
+				}
+				break;
+			case LUA_TNUMBER: {
+					PosKey = luaX_return<int>(lua); //if the number is rubbish, that's your problem
+					--pushedItems;
+				}
+				break;
+			default:
+				lua_pop(lua, pushedItems);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+
+			pushedItems += luaX_getlocal(lua, "NegKey");
+			auto NegKey = 0;
+			switch(lua_type(lua, -1)) {
+			case LUA_TSTRING: {
+					auto str = luaX_return<std::string>(lua);
+					--pushedItems;
+					if(str.length() != 1) {
+						lua_pop(lua, pushedItems);
+						ASSERT(false); 
+				return std::unique_ptr<IInput>(nullptr);
+					}
+					if(KeyIsReasonable(str[0]))
+						NegKey = str[0];
+					break;
+				}
+			case LUA_TNUMBER: {
+					NegKey = luaX_return<int>(lua);
+					--pushedItems;
+				}
+			default:
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+
+			lua_pop(lua, pushedItems);
+			return std::make_unique<Axis>(Name, PosKey, NegKey);
+		}
+
+		std::unique_ptr<IInput> GetButtonInput(lua_State *lua) {
+			auto pushedItems = luaX_getlocal(lua, "Name");
+			if(lua_type(lua, -1) != LUA_TSTRING) {
+				lua_pop(lua, pushedItems);
+				ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+			}
+			auto Name = luaX_return<std::string>(lua);
+			--pushedItems;
+
+			pushedItems += luaX_getlocal(lua, "Key");
+			auto isMouse = false;
+			auto Key = 0;
+			switch(lua_type(lua, -1)) {
+			case LUA_TSTRING: {
+					auto str = luaX_return<std::string>(lua);
+					--pushedItems;
+					if(str.length() != 1) {
+						lua_pop(lua, pushedItems);
+						ASSERT(false);
+				return std::unique_ptr<IInput>(nullptr);
+					}
+					if(KeyIsReasonable(str[0]))
+						Key = str[0];
+				}
+				break;
+			case LUA_TNUMBER: {
+					Key = luaX_return<int>(lua); //if the number is rubbish, that's your problem
+					--pushedItems;
+				}
+				break;
+			default:
+				lua_pop(lua, 1);
+				--pushedItems;
+				{
+					pushedItems += luaX_getlocal(lua, "MouseButton");
+					switch(lua_type(lua, -1)) {
+					case LUA_TSTRING: {
+							isMouse = true;
+							auto str = luaX_return<std::string>(lua);
+							--pushedItems;
+							if(str.compare("Left") == 0)
+								Key = (int)System::Input::MouseButtons::Left;
+							else if(str.compare("Right") == 0)
+								Key = (int)System::Input::MouseButtons::Right;
+							else if(str.compare("Middle") == 0)
+								Key = (int)System::Input::MouseButtons::Middle;
+							else if(str.compare("ScrollUp") == 0)
+								Key = (int)System::Input::MouseButtons::ScrollUp;
+							else if(str.compare("ScrollDown") == 0)
+								Key = (int)System::Input::MouseButtons::ScrollDown;
+							else {
+								lua_pop(lua, pushedItems);
+								ASSERT(false);
+								return std::unique_ptr<IInput>(nullptr);
+							}
+						}
+						break;
+					default:
+						lua_pop(lua, pushedItems);
+						return std::unique_ptr<IInput>(nullptr);
+					}
+				}
+				break;
+			}
+
+			//here we grab the shift/ctrl must be up/down/don't care values
+			Mask mask = Mask::None;
+			pushedItems += luaX_getlocal(lua, "ShiftPressed");
+			if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+				if(luaX_return<bool>(lua)) {
+					mask = (Mask)((int)mask | (int)Mask::ShiftDown);
+				} else {
+					mask = (Mask)((int)mask | (int)Mask::ShiftUp);
+				}
+			} else {
+				ASSERT(lua_type(lua, -1) == LUA_TNIL);
+				lua_pop(lua, 1);
+			}
+			--pushedItems;
+			pushedItems += luaX_getlocal(lua, "CtrlPressed");
+			if(lua_type(lua, -1) == LUA_TBOOLEAN) {
+				if(luaX_return<bool>(lua)) {
+					mask = (Mask)((int)mask | (int)Mask::CtrlDown);
+				} else {
+					mask = (Mask)((int)mask | (int)Mask::CtrlUp);
+				}
+			} else {
+				ASSERT(lua_type(lua, -1) == LUA_TNIL);
+				lua_pop(lua, 1);
+			}
+			--pushedItems;
+
+			lua_pop(lua, pushedItems);
+			return std::make_unique<Button>(Name, Key, isMouse, mask);
+		}
+
 		void Config::PushInputInfo(lua_State *lua) {
 			luaX_push(lua, luaX_emptytable(0, inputList.size()));
 			for(auto &i : inputList) {
 				i->SetValue(lua);
 			}
+		}
+
+		void Config::ClearInputState() {
+			for(auto &i : inputList) {
+				i->ClearState();
+			}
+		};
+
+		std::unique_ptr<Config> Config::Copy() {
+			auto ret = std::make_unique<Config>();
+			for(auto &i : inputList) {
+				auto ip = std::unique_ptr<IInput>(i->Copy());
+				ret->inputList.push_back(std::move(ip));
+			}
+
+			return ret;
 		}
 
 		bool isMouseEvent(Input::Event e) {
@@ -306,11 +320,21 @@ namespace System {
 			, newlyPressed(false)
 			, newlyReleased(false)
 			, isMouse(isMouse)
-			, requireShiftDown((int)mask & (int)Mask::ShiftDown)
-			, requireShiftUp  ((int)mask & (int)Mask::ShiftUp)
-			, requireCtrlDown ((int)mask & (int)Mask::CtrlDown)
-			, requireCtrlUp   ((int)mask & (int)Mask::CtrlUp)
+			, requireShiftDown(((int)mask & (int)Mask::ShiftDown) != 0)
+			, requireShiftUp  (((int)mask & (int)Mask::ShiftUp)   != 0)
+			, requireCtrlDown (((int)mask & (int)Mask::CtrlDown)  != 0)
+			, requireCtrlUp   (((int)mask & (int)Mask::CtrlUp)    != 0)
 		{}
+
+		void Button::ClearState() {
+			state = UnPressed;
+			newlyPressed = false;
+			newlyReleased = false;
+		}
+
+		std::unique_ptr<IInput> Button::Copy() {
+			return std::make_unique<Button>(*this);
+		}
 
 		void Button::HandleEvent(Input::Event e) {
 			if(
@@ -341,11 +365,15 @@ namespace System {
 		}
 
 		void Button::SetValue(lua_State *lua) {
-			luaX_push(lua, luaX_emptytable(0, 3));
-			lua_pushboolean(lua, state == Pressed);
-			lua_setfield(lua, -2, "isDown");
-			luaX_setlocal(lua, "pressed", newlyPressed);
-			luaX_setlocal(lua, "released", newlyReleased);
+			lua_getfield(lua, -1, name.c_str());
+			if(lua_isnil(lua, -1)) {
+				lua_pop(lua, 1);
+				luaX_push(lua, luaX_emptytable(0, 3));
+			} else
+				ASSERT(lua_istable(lua, -1));
+			luaX_setlocal(lua, "isDown", (state == Pressed) || luaX_returnlocal<bool>(lua, "isDown"));
+			luaX_setlocal(lua, "pressed", newlyPressed || luaX_returnlocal<bool>(lua, "pressed"));
+			luaX_setlocal(lua, "released", newlyReleased || luaX_returnlocal<bool>(lua, "released"));
 			lua_setfield(lua, -2, name.c_str());
 
 			newlyPressed = false;
@@ -358,6 +386,14 @@ namespace System {
 			, negKey(negKey)
 			, state(0)
 		{}
+
+		void Axis::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> Axis::Copy() {
+			return std::make_unique<Axis>(*this);
+		}
 
 		void Axis::HandleEvent(Input::Event e) {
 			if((e.key != posKey && e.key != negKey) || isMouseEvent(e) || e.repeat)
@@ -376,7 +412,10 @@ namespace System {
 		}
 
 		void Axis::SetValue(lua_State *lua) {
-			lua_pushnumber(lua, state);
+			auto value = static_cast<float>(state);
+			value += luaX_returnlocal<float>(lua, name.c_str());
+			value = Maths::clamp(value, -1.f, 1.f);
+			lua_pushnumber(lua, value);
 			lua_setfield(lua, -2, name.c_str());
 		}
 
@@ -388,16 +427,24 @@ namespace System {
 			, state(0)
 		{}
 
+		void MouseAxis::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> MouseAxis::Copy() {
+			return std::make_unique<MouseAxis>(*this);
+		}
+
 		void MouseAxis::HandleEvent(Input::Event e) {
 			if(e.type != System::Input::EventType::MouseMove)
 				return;
 
 			switch(axis) {
 			case AxisDirection::x:
-				state = e.mouseMovX;
+				state = static_cast<float>(e.mouseMovX);
 				break;
 			case AxisDirection::y:
-				state = e.mouseMovY;
+				state = static_cast<float>(e.mouseMovY);
 				break;
 			default:
 				ASSERT(false); //well, you never know
@@ -417,6 +464,14 @@ namespace System {
 			, state(0)
 		{}
 
+		void MouseAxisRel::ClearState() {
+			state = 0;
+		}
+
+		std::unique_ptr<IInput> MouseAxisRel::Copy() {
+			return std::make_unique<MouseAxisRel>(*this);
+		}
+
 		void MouseAxisRel::HandleEvent(Input::Event e) {
 			if(e.type != System::Input::EventType::MouseMove)
 				return;
@@ -434,8 +489,10 @@ namespace System {
 		}
 
 		void MouseAxisRel::SetValue(lua_State *lua) {
-			state = Maths::clamp(state, -maxMagnitude, maxMagnitude);
-			lua_pushnumber(lua, state);
+			auto value = state;
+			value += luaX_returnlocal<float>(lua, name.c_str());
+			value = Maths::clamp(value, -maxMagnitude, maxMagnitude);
+			lua_pushnumber(lua, value);
 			lua_setfield(lua, -2, name.c_str());
 
 			state = 0;
