@@ -747,6 +747,16 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "SetPixel");
 
+				//Draw.SetRenderScale
+				luaX_push(lua,
+					static_cast<std::function<void(unsigned)>>(
+						[ctx](unsigned scale) {
+							ctx->SetRenderScale(scale);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "SetRenderScale");
+
 				lua_pop(lua, 1);
 			}
 
