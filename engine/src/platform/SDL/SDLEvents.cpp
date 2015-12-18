@@ -64,9 +64,9 @@ namespace System {
 				break;
 			case SDL_MOUSEWHEEL:
 				ret.type = EventType::MouseScroll;
-				if(e.motion.y > 0)
+				if(e.wheel.y > 0)
 					ret.button = (int)MouseButtons::ScrollUp;
-				else if(e.motion.y < 0)
+				else if(e.wheel.y < 0)
 					ret.button = (int)MouseButtons::ScrollDown;
 				break;
 			default:
