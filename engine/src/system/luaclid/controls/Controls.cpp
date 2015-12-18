@@ -303,6 +303,7 @@ namespace System {
 			switch(e.type) {
 			case System::Input::EventType::MouseDown:
 			case System::Input::EventType::MouseUp:
+			case System::Input::EventType::MouseScroll:
 				return true;
 			case System::Input::EventType::KeyDown:
 			case System::Input::EventType::KeyUp:
@@ -358,6 +359,9 @@ namespace System {
 			case System::Input::EventType::MouseUp:
 				newlyReleased = state == Pressed;
 				state = UnPressed;
+				break;
+			case System::Input::EventType::MouseScroll:
+				newlyPressed = newlyReleased = true;
 				break;
 			default:
 				ASSERT(false);
