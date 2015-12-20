@@ -694,7 +694,7 @@ namespace Rendering {
 					{int((xRight - xLeft) * distScaleH + 1), int(spritebottom - spritetop)} //TODO this +1 is a hack
 				);
 
-				if(texDestRect.size.x > 0)
+				if(texDestRect.size.x > 0 && texDestRect.size.y > 0)
 					ctx.DrawRectAlphaDepth(
 						texDestRect,
 						sprite->tex,
