@@ -194,7 +194,7 @@ namespace Rendering {
 
 					vEndTop    = wall.topTex.uvStart.y + Fix16(ceilHeight.val - nCeilHeight.val);
 					vEndMain   = wall.mainTex.uvStart.y + Fix16( Maths::min(ceilHeight.val, nCeilHeight.val) - Maths::max(floorHeight.val, nFloorHeight.val) );
-					vEndBottom = wall.bottomTex.uvStart.y + Fix16(floorHeight.val - nFloorHeight.val);
+					vEndBottom = wall.bottomTex.uvStart.y + Fix16(nFloorHeight.val - floorHeight.val);
 				}
 
 				//initialise for inner loop
