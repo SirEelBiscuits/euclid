@@ -394,7 +394,7 @@ namespace Rendering {
 		auto const yTarget = dest.pos.y + dest.size.y;
 		auto ax = src.pos.x;
 
-		auto const m = static_cast<unsigned>(bitmult * colorMult);
+		auto const m = static_cast<unsigned>(bitmult);
 
 		//handle dest.pos starting beyond the left of the screen
 		auto x = dest.pos.x;
@@ -424,9 +424,9 @@ namespace Rendering {
 				Color c = tex->pixel((unsigned)ax, (unsigned)ay);
 #endif
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
-				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
-				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
-				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
+				c.r = ((uint8_t)Maths::interp(dst.r, c.r * colorMult, interpolant) * bitmult) >> bitShift;
+				c.g = ((uint8_t)Maths::interp(dst.g, c.g * colorMult, interpolant) * bitmult) >> bitShift;
+				c.b = ((uint8_t)Maths::interp(dst.b, c.b * colorMult, interpolant) * bitmult) >> bitShift;
 				c.a = stencil;
 				ScreenPixel(x, y) = c.a <= dst.a ? c : dst;
 			}

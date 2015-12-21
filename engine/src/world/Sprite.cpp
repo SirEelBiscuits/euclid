@@ -41,9 +41,11 @@ namespace World {
 	}
 
 	void SpriteBarrow::MoveSprite(Sprite &sprite, Map &toMap, IDType toSector) {
+		auto &targetBarrow = toMap.GetSector(toSector)->barrow;
+		if(&targetBarrow == this)
+			return;
 		auto itr = std::find(sprites.begin(), sprites.end(), &sprite);
 		if(itr != sprites.end()) {
-			auto targetBarrow = toMap.GetSector(toSector)->barrow;
 			sprite.sector = targetBarrow.owner;
 			targetBarrow.sprites.push_back(*itr);
 			std::remove(sprites.begin(), sprites.end(), &sprite);

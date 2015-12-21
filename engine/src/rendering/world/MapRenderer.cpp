@@ -633,8 +633,8 @@ namespace Rendering {
 			for(auto &sprite : sprites) {
 				if(sprite->tex == nullptr)
 					continue;
-				auto height          = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h / Texture::PixelsPerMeter));
-				auto width           = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w / Texture::PixelsPerMeter));
+				auto height          = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h / (btStorageType)Texture::PixelsPerMeter));
+				auto width           = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w / (btStorageType)Texture::PixelsPerMeter));
 				auto posVS           = view.ToViewSpace(sprite->position);
 				if(posVS.y < 0.001_m)
 					continue;
