@@ -117,9 +117,6 @@
     <ClInclude Include="src\system\luaX\LuaXClass.h">
       <Filter>src\system\luaX</Filter>
     </ClInclude>
-    <ClInclude Include="src\rendering\RenderList.h">
-      <Filter>src\rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\system\luaclid\Luaclid.h">
       <Filter>src\system\luaclid</Filter>
     </ClInclude>

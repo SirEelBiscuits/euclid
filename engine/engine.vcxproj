@@ -270,7 +270,6 @@
     <ClInclude Include="src\rendering\world\TopDownMapRenderer.h" />
     <ClInclude Include="src\system\luaclid\controls\Controls.h" />
     <ClInclude Include="src\system\Files.h" />
-    <ClInclude Include="src\rendering\RenderList.h" />
     <ClInclude Include="src\system\luaclid\Luaclid.h" />
     <ClInclude Include="src\system\luaX\LuaXClass.h" />
     <ClInclude Include="src\system\luaX\luaXClasses.h" />
