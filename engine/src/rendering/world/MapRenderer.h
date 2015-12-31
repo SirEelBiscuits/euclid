@@ -3,11 +3,16 @@
 PREAMBLE
 
 PRE_STD_LIB
+#include <vector>
 POST_STD_LIB
 
 #include "rendering/RenderingPrimitives.h"
 #include "lib/BasicTypes.h"
 #include "MapRenderingShared.h"
+
+namespace World {
+	class Sprite;
+}
 
 namespace Rendering {
 	
@@ -41,17 +46,21 @@ namespace Rendering {
 				Rendering::Texture *ceilTex,
 				btStorageType lightlevel,
 				Rendering::Color tmpceil,
-				Rendering::Color tmpfloor,
-				uint8_t stencil
+				Rendering::Color tmpfloor
 			);
 
-			void DrawSprites(
+			void AddDeferedSpriteDraw(
 				View view,
-				int minX, int maxX,
 				btStorageType lightLevel,
-				Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
-				int portalDepth
+				::World::Sprite *sprite
 			);
+
+			void CollectSprites(
+				View view,
+				btStorageType lightLevel
+			);
+
+			void DrawSprites();
 
 			//////////
 			// Data //
@@ -68,6 +77,14 @@ namespace Rendering {
 			int *ceilRenderableTop;
 			int *ceilRenderableBottom;
 			Mesi::Meters *distances;
+
+			struct SpriteDefer {
+				SpriteDefer(View v, btStorageType ll, ::World::Sprite *s) : view(v), lightLevel(ll), sprite(s) {}
+				View view;
+				btStorageType lightLevel;
+				::World::Sprite *sprite;
+			};
+			std::vector<SpriteDefer> spriteDeferList;
 		};
 	}
 }

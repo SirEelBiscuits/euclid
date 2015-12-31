@@ -7,6 +7,7 @@ PRE_STD_LIB
 POST_STD_LIB
 
 using btStorageType = float;
+#define BTST_MAX FLT_MAX
 #define MESI_LITERAL_TYPE btStorageType
 #include "Mesitype.h"
 #include "Matrix.h"
