@@ -145,8 +145,7 @@ namespace Rendering {
 			Texture const *tex,          // texture to draw
 			UVRect src,                  // subtexture to be stretched over the region dest on screen
 			btStorageType colorMult,     // will scale the color from the texture
-			btStorageType depth,         // depth
-			unsigned minX, unsigned maxX // TODO remove these >:|
+			btStorageType depth          // depth
 		);
 
 		btStorageType GetVFOV() const { return vFOV; }

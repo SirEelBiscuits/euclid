@@ -407,9 +407,7 @@ namespace Rendering
 		Texture const *tex,
 		UVRect src,
 		btStorageType colorMult,
-		btStorageType depth,
-		unsigned minX,
-		unsigned maxX
+		btStorageType depth
 	) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
@@ -417,7 +415,7 @@ namespace Rendering
 
 		auto const dx = src.size.x / Fix16(dest.size.x);
 		auto const dy = src.size.y / Fix16(dest.size.y);
-		auto const xTarget = Maths::min(dest.pos.x + dest.size.x, (int)maxX + 1);
+		auto const xTarget = dest.pos.x + dest.size.x;
 		auto const yTarget = dest.pos.y + dest.size.y;
 		auto ax = src.pos.x;
 
@@ -425,10 +423,9 @@ namespace Rendering
 
 		//handle dest.pos starting beyond the left of the screen
 		auto x = dest.pos.x;
-		if(dest.pos.x < (int)minX) {
-			ax += Fix16(minX - dest.pos.x) * dx;
-			x = minX;
-
+		if(dest.pos.x < 0) {
+			ax -= Fix16(dest.pos.x) * dx;
+			x = 0;
 		}
 
 		for(; x < xTarget && static_cast<unsigned>(x) < GetWidth(); x +=1, ax += dx) {

@@ -54,14 +54,12 @@ namespace World {
 		void                 MoveSprite  (Sprite &sprite, Map &toMap, IDType toSector);
 
 		int                  GetNumSprites() const { return sprites.size(); }
-		void                 SetNumSprites(unsigned num) {
-			if(num < sprites.size())
-				sprites.resize(num);
-		}
 		void                 AddSprite(Sprite &sprite) {
 			//TODO find out why this is still needed
 			if(std::find(sprites.begin(), sprites.end(), &sprite) == sprites.end())
 				sprites.push_back(&sprite);
+			else
+				ASSERT(false);
 		}
 	private:
 		Sector *owner;
