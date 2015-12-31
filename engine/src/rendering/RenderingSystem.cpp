@@ -15,7 +15,8 @@
 #	define DEBUG_RENDERING()
 #endif
 
-namespace Rendering {
+namespace Rendering 
+{ // namespace highlighting is broken if this is put on the correct line
 
 	Context::Context(unsigned Width, unsigned Height, unsigned Scale, bool shouldAllocateScreenBuffer)
 		: Width(Width)
@@ -32,6 +33,12 @@ namespace Rendering {
 		if(x < 0 || x >= GetWidth() || y < 0 || y >= GetHeight())
 			return Dummy;
 		return ScreenPixel(x, y);
+	}
+		
+	btStorageType & Context::DepthPixel_slow(unsigned x, unsigned y) {
+		if(x < 0 || x >= GetWidth() || y < 0 || y >= GetHeight())
+			return DummyDepth;
+		return DepthPixel(x, y);
 	}
 
 	void Context::DrawVLine(unsigned x, unsigned yTop, unsigned yBottom, Color c) {
@@ -258,7 +265,7 @@ namespace Rendering {
 		Texture const *tex,
 		UVVec2 start, UVVec2 end,
 		btStorageType colorMult,
-		uint8_t stencil
+		btStorageType depth
 	) {
 		auto xLen = static_cast<Fix16>(xRight - xLeft);
 		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
@@ -276,14 +283,20 @@ namespace Rendering {
 				(unsigned)uvCur.y
 			) * colorMult;
 #endif
-			ScreenPixel(x, y).a = stencil;
+			DepthPixel(x, y) = depth;
 			uvCur += deltaUV;
 		}
 
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawRect(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
+	void Context::DrawRect(
+		ScreenRect dest,
+		Texture const *tex,
+		UVRect src,
+		btStorageType colorMult,
+		btStorageType depth
+	) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -324,15 +337,21 @@ namespace Rendering {
 				c.r = (uint8_t)((Fix16)c.r * m);
 				c.g = (uint8_t)((Fix16)c.g * m);
 				c.b = (uint8_t)((Fix16)c.b * m);
-				c.a = stencil;
 				ScreenPixel(x, y) = c;
+				DepthPixel(x, y) = depth;
 			}
 
 			DEBUG_RENDERING();
 		}
 	}
 
-	void Context::DrawRectAlpha(ScreenRect dest, Texture const * tex, UVRect src, btStorageType colorMult, uint8_t stencil) {
+	void Context::DrawRectAlpha(
+		ScreenRect dest,
+		Texture const * tex,
+		UVRect src,
+		btStorageType colorMult,
+		btStorageType depth
+	) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -375,15 +394,23 @@ namespace Rendering {
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b, interpolant) * m) >> bitShift;
-				c.a = stencil;
 				ScreenPixel(x, y) = c;
+				DepthPixel(x, y) = depth;
 			}
 
 			DEBUG_RENDERING();
 		}
 	}
 
-	void Context::DrawRectAlphaDepth(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil, unsigned minX, unsigned maxX) {
+	void Context::DrawRectAlphaDepth(
+		ScreenRect dest,
+		Texture const *tex,
+		UVRect src,
+		btStorageType colorMult,
+		btStorageType depth,
+		unsigned minX,
+		unsigned maxX
+	) {
 		//todo: use actual fixed point type?
 		auto const bitShift = 16u;
 		auto const bitmult = 1 << bitShift;
@@ -427,8 +454,9 @@ namespace Rendering {
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r * colorMult, interpolant) * bitmult) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g * colorMult, interpolant) * bitmult) >> bitShift;
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b * colorMult, interpolant) * bitmult) >> bitShift;
-				c.a = stencil;
-				ScreenPixel(x, y) = c.a <= dst.a ? c : dst;
+				auto &oldDepth = DepthPixel(x, y);
+				ScreenPixel(x, y) = depth <= oldDepth ? c : dst;
+				oldDepth = depth < oldDepth ? depth : oldDepth;
 			}
 
 			DEBUG_RENDERING();

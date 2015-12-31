@@ -17,20 +17,28 @@ namespace Rendering {
 		virtual ~Context();
 
 		//inline because they need to be fast fast fast!
-		unsigned  GetWidth()  const                         { return Width; };
-		unsigned  GetHeight() const                         { return Height; };
-		unsigned  GetWindowWidth()  const                   { return Width * Scale; };
-		unsigned  GetWindowHeight() const                   { return Height * Scale; };
-		unsigned  GetScale()  const                         { return Scale; };
-		Color    &ScreenPixel(unsigned x, unsigned y)       { return screen[x + Width * y]; };
-		Color    &ScreenPixel(ScreenVec2 pos)               { return ScreenPixel(pos.x, pos.y); };
-		Color    &ScreenPixel_slow(unsigned x, unsigned y);
-		Color    &ScreenPixel_slow(ScreenVec2 pos)          { return ScreenPixel_slow(pos.x, pos.y); };
+		unsigned       GetWidth()  const                         { return Width; };
+		unsigned       GetHeight() const                         { return Height; };
+		unsigned       GetWindowWidth()  const                   { return Width * Scale; };
+		unsigned       GetWindowHeight() const                   { return Height * Scale; };
+		unsigned       GetScale()  const                         { return Scale; };
+		Color         &ScreenPixel(unsigned x, unsigned y)       { return screen[x + Width * y]; };
+		Color         &ScreenPixel(ScreenVec2 pos)               { return ScreenPixel(pos.x, pos.y); };
+		Color         &ScreenPixel_slow(unsigned x, unsigned y);
+		Color         &ScreenPixel_slow(ScreenVec2 pos)          { return ScreenPixel_slow(pos.x, pos.y); };
+		btStorageType &DepthPixel(unsigned x, unsigned y)        { return depth[x + Width * y]; };
+		btStorageType &DepthPixel(ScreenVec2 pos)                { return DepthPixel(pos.x, pos.y); };
+		btStorageType &DepthPixel_slow(unsigned x, unsigned y);
+		btStorageType &DepthPixel_slow(ScreenVec2 pos)           { return DepthPixel_slow(pos.x, pos.y); };
 
 		/**
 			Clear the screen to the given colour
 		 */
 		virtual void Clear(Color c) = 0;
+		/**
+			Clear the depth buffer to the given depth
+		 */
+		virtual void ClearDepth() = 0;
 
 		/**
 			Set the resolution to the specified values
@@ -94,32 +102,52 @@ namespace Rendering {
 
 		/**
 			Draw horizontal line.
-
-			xLeft, xRight, y are inclusive screen co-ordinates.
-			start, end, are inclusive texture co-ordinates.
-			colorMult will scale the color coming from the texture
 		*/
-		void DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Texture const *tex, UVVec2 start, UVVec2 end, btStorageType colorMult, uint8_t stencil);
+		void DrawHLine(
+			unsigned xLeft,           // \ 
+			unsigned xRight,          //  > Inclusive screen co-ordinates
+			unsigned y,               // /
+			Texture const *tex,       // texture to draw
+			UVVec2 start, UVVec2 end, // inclusive texture co-ordinates
+			btStorageType colorMult,  // will scale the color from the texture
+			btStorageType stencil     // depth
+		);
 		
 		/**
 			Draw texture to screen rectangle
-
-			src represents the subtexture to be stretched over the region dest on screen.
 		 */
-		void DrawRect(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil);
+		void DrawRect(
+			ScreenRect dest,         // screen rect to draw to
+			Texture const *tex,      // texture to draw
+			UVRect src,              // subtexture to be stretched over the region dest on screen
+			btStorageType colorMult, // will scale the color from the texture
+			btStorageType depth      // depth
+		);
 
 		/**
 			Draw texture to screen rectangle, respecting the texture alpha.
 
-			src represents the subtexture to be stretched over the region dest on screen.
 		*/
-		void DrawRectAlpha(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil);
+		void DrawRectAlpha(
+			ScreenRect dest,         // screen rect to draw to
+			Texture const *tex,      // texture to draw
+			UVRect src,              // subtexture to be stretched over the region dest on screen
+			btStorageType colorMult, // will scale the color from the texture
+			btStorageType depth      // depth
+		);
 		
 		/**
 			Draw a texture to screen rectangle, respecting the texture alpha, minx and maxx values,
 			and only drawing over pixels whose stencil value is equal or greater than the listed value
 		 */
-		void DrawRectAlphaDepth(ScreenRect dest, Texture const *tex, UVRect src, btStorageType colorMult, uint8_t stencil, unsigned minX, unsigned maxX);
+		void DrawRectAlphaDepth( // TODO this is named badly
+			ScreenRect dest,             // screen rect to draw to
+			Texture const *tex,          // texture to draw
+			UVRect src,                  // subtexture to be stretched over the region dest on screen
+			btStorageType colorMult,     // will scale the color from the texture
+			btStorageType depth,         // depth
+			unsigned minX, unsigned maxX // TODO remove these >:|
+		);
 
 		btStorageType GetVFOV() const { return vFOV; }
 		btStorageType GetVFOVMult() const { return vFOVMult; };
@@ -136,10 +164,11 @@ namespace Rendering {
 		//////////
 	
 	protected:
-		Color*   screen{nullptr};
-		unsigned Height{0u};
-		unsigned Width {0u};
-		unsigned Scale {0u};
+		Color         *screen{nullptr};
+		btStorageType *depth {nullptr};
+		unsigned       Height{0u};
+		unsigned       Width {0u};
+		unsigned       Scale {0u};
 
 		btStorageType vFOV{45}, vFOVMult{1};
 		btStorageType hFOV{45}, hFOVMult{1};
@@ -147,6 +176,7 @@ namespace Rendering {
 	private:
 		//used to redirect bad writes to
 		Color Dummy;
+		float DummyDepth;
 
 		bool debugRendering{false};
 	};

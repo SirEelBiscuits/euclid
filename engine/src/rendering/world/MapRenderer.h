@@ -41,8 +41,7 @@ namespace Rendering {
 				Rendering::Texture *ceilTex,
 				btStorageType lightlevel,
 				Rendering::Color tmpceil,
-				Rendering::Color tmpfloor,
-				uint8_t stencil
+				Rendering::Color tmpfloor
 			);
 
 			void DrawSprites(

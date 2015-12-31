@@ -24,7 +24,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,      ///< viewslot, will be used to clip the render
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
-			uint8_t stencil,
+			btStorageType depth,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
@@ -114,7 +114,8 @@ namespace Rendering {
 				int                 viewSlotTop;
 				int                 viewSlotBottom;
 				Rendering::Texture *tex;
-				btStorageType       invDist;
+				btStorageType       dist;
+				btStorageType       shadeAmount;
 			};
 			auto curtainDeferList = std::vector<CurtainRenderDefer>();
 
@@ -296,7 +297,7 @@ namespace Rendering {
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.topTex.tex,
 								depthShadeVal,
-								portalDepth
+								dist.val
 							);
 						}
 
@@ -311,6 +312,7 @@ namespace Rendering {
 									wallRenderableTop[x],
 									wallRenderableBottom[x],
 									wall.mainTex.tex,
+									dist.val,
 									depthShadeVal
 								}
 							);
@@ -328,7 +330,7 @@ namespace Rendering {
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.bottomTex.tex,
 								depthShadeVal,
-								portalDepth
+								dist.val
 							);
 						}
 
@@ -350,7 +352,7 @@ namespace Rendering {
 							wallRenderableTop[x], wallRenderableBottom[x],
 							wall.mainTex.tex,
 							depthShadeVal,
-							portalDepth
+							dist.val
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -380,7 +382,6 @@ namespace Rendering {
 				sec.lightLevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
-				, portalDepth
 			);
 			auto numSprites = sec.barrow.GetNumSprites();
 			for(auto &dl : deferList) {
@@ -398,8 +399,8 @@ namespace Rendering {
 					dl.viewSlotTop,
 					dl.viewSlotBottom,
 					dl.tex,
-					dl.invDist,
-					portalDepth,
+					dl.shadeAmount,
+					dl.dist,
 					true
 				);
 			DrawSprites(view, minX, maxX, sec.lightLevel, ceilHeight, floorHeight, portalDepth);
@@ -416,7 +417,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,
 			Rendering::Texture *tex,
 			btStorageType colorScale,
-			uint8_t stencil,
+			btStorageType depth,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
@@ -445,9 +446,9 @@ namespace Rendering {
 				if((wallBottom - wallTop) + 1 > 0) {
 					Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
 					if(useAlpha)
-						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
+						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, depth);
 					else
-						ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+						ctx.DrawRect(dstR, tex, srcR, colorScale, depth);
 				} else {
 					return false;
 				}
@@ -463,8 +464,7 @@ namespace Rendering {
 			Rendering::Texture *ceilTex,
 			btStorageType lightlevel,
 			Rendering::Color tmpceil,
-			Rendering::Color tmpfloor,
-			uint8_t stencil
+			Rendering::Color tmpfloor
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
 			for(auto y = 0; y < ScreenHeight; ++y)
@@ -528,7 +528,7 @@ namespace Rendering {
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x, rightFix16.y),
 								depthMult,
-								stencil
+								distances[y].val
 							);
 							stripActive = false;
 						}
@@ -545,7 +545,7 @@ namespace Rendering {
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult,
-							stencil
+							distances[y].val
 						);
 					}
 				}
@@ -575,7 +575,7 @@ namespace Rendering {
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x,rightFix16.y),
 								depthMult,
-								stencil
+								distances[y].val
 							);
 							stripActive = false;
 						}
@@ -592,7 +592,7 @@ namespace Rendering {
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult,
-							stencil
+							distances[y].val
 						);
 					}
 				}
@@ -700,7 +700,7 @@ namespace Rendering {
 						sprite->tex,
 						texSourceRect,
 						sprite->GetSector()->lightLevel,
-						portalDepth,
+						posVS.y.val,
 						minX,
 						maxX
 					);
