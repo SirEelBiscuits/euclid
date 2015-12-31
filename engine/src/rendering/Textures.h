@@ -28,7 +28,7 @@ namespace Rendering {
 			ASSERT((this->w & wMask) == 0);
 			ASSERT((this->h & hMask) == 0);
 
-			pixels = std::make_unique<Color[]>(w * h);
+			pixels = std::make_unique<Color[]>(this->w * this->h);
 		}
 
 		unsigned const w, h;

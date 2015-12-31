@@ -6,7 +6,6 @@ namespace Rendering {
 	namespace TextureStore {
 		TextureRef LoadTexture(char const *filename) {
 			auto surface = IMG_Load(filename);
-			ASSERT(surface);
 			if(!surface)
 				return TextureRef(nullptr);
 			auto tex = std::make_shared<Texture>(surface->w, surface->h);

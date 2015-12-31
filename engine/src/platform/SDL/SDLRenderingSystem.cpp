@@ -89,8 +89,16 @@ namespace Rendering {
 
 	void SDLContext::Clear(Color c) {
 		for(auto y = 0u; y < GetHeight(); ++y)
-			for(auto x = 0u; x < GetWidth(); ++x)
+			for(auto x = 0u; x < GetWidth(); ++x) {
 				ScreenPixel(x, y) = c;
+				DepthPixel(x, y) = BTST_MAX;
+			}
+	}
+
+	void SDLContext::ClearDepth() {
+		for(auto y = 0u; y < GetHeight(); ++y)
+			for(auto x = 0ul; x < GetWidth(); ++x)
+				DepthPixel(x, y) = BTST_MAX;
 	}
 
 	void SDLContext::SetResolution(unsigned Width, unsigned Height)
@@ -106,6 +114,11 @@ namespace Rendering {
 		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
+
+		if(nullptr != depth) {
+			delete[] depth;
+		}
+		depth = new btStorageType[GetWidth() * GetHeight()];
 	}
 
 	void SDLContext::SetRenderScale(unsigned newScale) {
@@ -119,6 +132,11 @@ namespace Rendering {
 		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
+
+		if(nullptr != depth) {
+			delete[] depth;
+		}
+		depth = new btStorageType[GetWidth() * GetHeight()];
 	}
 
 	void SDLContext::FlipBuffers()

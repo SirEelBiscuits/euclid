@@ -15,7 +15,8 @@ namespace World {
 	}
 
 	void Sprite::Deleter::operator()(Sprite * s) {
-		s->sector->barrow.DeleteSprite(*s);
+		if(s->sector)
+			s->sector->barrow.DeleteSprite(*s);
 	}
 
 	SpriteBarrow::SpriteBarrow(Sector &owner)
@@ -37,16 +38,23 @@ namespace World {
 	}
 
 	void SpriteBarrow::DeleteSprite(Sprite &sprite) {
-		std::remove(sprites.begin(), sprites.end(), &sprite);
+		auto num = sprites.size();
+		sprites.erase(std::remove(sprites.begin(), sprites.end(), &sprite), sprites.end());
+		sprite.sector = nullptr;
+		ASSERT(sprites.size() < num);
 	}
 
 	void SpriteBarrow::MoveSprite(Sprite &sprite, Map &toMap, IDType toSector) {
+		auto &targetBarrow = toMap.GetSector(toSector)->barrow;
+		if(&targetBarrow == this)
+			return;
 		auto itr = std::find(sprites.begin(), sprites.end(), &sprite);
 		if(itr != sprites.end()) {
-			auto targetBarrow = toMap.GetSector(toSector)->barrow;
+			auto num = targetBarrow.sprites.size() + sprites.size();
 			sprite.sector = targetBarrow.owner;
 			targetBarrow.sprites.push_back(*itr);
-			std::remove(sprites.begin(), sprites.end(), &sprite);
-		}
+			sprites.erase(std::remove(sprites.begin(), sprites.end(), &sprite), sprites.end());
+			ASSERT(num == targetBarrow.sprites.size() + sprites.size());
+		} else ASSERT(false);
 	}
 }

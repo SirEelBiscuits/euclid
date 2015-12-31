@@ -24,7 +24,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,      ///< viewslot, will be used to clip the render
 			Rendering::Texture *tex,                  ///< texture to use
 			btStorageType colorScale,                 ///< used to darken the texture
-			uint8_t stencil,
+			btStorageType depth,
 			bool useAlpha = false                     ///< whether to use see-through rendering
 		);
 
@@ -89,7 +89,9 @@ namespace Rendering {
 			}
 			//distances doesn't get zeroed here
 
+			spriteDeferList.clear();
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
+			DrawSprites();
 		}
 
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
@@ -114,7 +116,8 @@ namespace Rendering {
 				int                 viewSlotTop;
 				int                 viewSlotBottom;
 				Rendering::Texture *tex;
-				btStorageType       invDist;
+				btStorageType       dist;
+				btStorageType       shadeAmount;
 			};
 			auto curtainDeferList = std::vector<CurtainRenderDefer>();
 
@@ -194,7 +197,7 @@ namespace Rendering {
 
 					vEndTop    = wall.topTex.uvStart.y + Fix16(ceilHeight.val - nCeilHeight.val);
 					vEndMain   = wall.mainTex.uvStart.y + Fix16( Maths::min(ceilHeight.val, nCeilHeight.val) - Maths::max(floorHeight.val, nFloorHeight.val) );
-					vEndBottom = wall.bottomTex.uvStart.y + Fix16(floorHeight.val - nFloorHeight.val);
+					vEndBottom = wall.bottomTex.uvStart.y + Fix16(nFloorHeight.val - floorHeight.val);
 				}
 
 				//initialise for inner loop
@@ -296,7 +299,7 @@ namespace Rendering {
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.topTex.tex,
 								depthShadeVal,
-								portalDepth
+								dist.val
 							);
 						}
 
@@ -311,6 +314,7 @@ namespace Rendering {
 									wallRenderableTop[x],
 									wallRenderableBottom[x],
 									wall.mainTex.tex,
+									dist.val,
 									depthShadeVal
 								}
 							);
@@ -328,7 +332,7 @@ namespace Rendering {
 								wallRenderableTop[x], wallRenderableBottom[x],
 								wall.bottomTex.tex,
 								depthShadeVal,
-								portalDepth
+								dist.val
 							);
 						}
 
@@ -350,7 +354,7 @@ namespace Rendering {
 							wallRenderableTop[x], wallRenderableBottom[x],
 							wall.mainTex.tex,
 							depthShadeVal,
-							portalDepth
+							dist.val
 						);
 
 						wallRenderableTop[x] = ScreenHeight;
@@ -380,7 +384,6 @@ namespace Rendering {
 				sec.lightLevel
 				,Rendering::Color{0, 0, 128, 255}
 				,Rendering::Color{0, 0,  64, 255}
-				, portalDepth
 			);
 			auto numSprites = sec.barrow.GetNumSprites();
 			for(auto &dl : deferList) {
@@ -398,13 +401,11 @@ namespace Rendering {
 					dl.viewSlotTop,
 					dl.viewSlotBottom,
 					dl.tex,
-					dl.invDist,
-					portalDepth,
+					dl.shadeAmount,
+					dl.dist,
 					true
 				);
-			DrawSprites(view, minX, maxX, sec.lightLevel, ceilHeight, floorHeight, portalDepth);
-			sec.barrow.SetNumSprites(numSprites);
-			//ASSERT(sec.barrow.GetNumSprites() < 2);
+			CollectSprites(view, sec.lightLevel);
 		}
 
 		bool DrawWallSlice(
@@ -416,7 +417,7 @@ namespace Rendering {
 			int viewSlotTop, int viewSlotBottom,
 			Rendering::Texture *tex,
 			btStorageType colorScale,
-			uint8_t stencil,
+			btStorageType depth,
 			bool useAlpha /* = false */
 		) {
 			if(wallTop > viewSlotBottom || wallBottom < viewSlotTop)
@@ -445,9 +446,9 @@ namespace Rendering {
 				if((wallBottom - wallTop) + 1 > 0) {
 					Rendering::ScreenRect dstR(ScreenVec2{x, wallTop}, ScreenVec2{1, (wallBottom - wallTop) + 1});
 					if(useAlpha)
-						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, stencil);
+						ctx.DrawRectAlpha(dstR, tex, srcR, colorScale, depth);
 					else
-						ctx.DrawRect(dstR, tex, srcR, colorScale, stencil);
+						ctx.DrawRect(dstR, tex, srcR, colorScale, depth);
 				} else {
 					return false;
 				}
@@ -463,8 +464,7 @@ namespace Rendering {
 			Rendering::Texture *ceilTex,
 			btStorageType lightlevel,
 			Rendering::Color tmpceil,
-			Rendering::Color tmpfloor,
-			uint8_t stencil
+			Rendering::Color tmpfloor
 		) {
 			auto const ScreenHeight = (int)ctx.GetHeight();
 			for(auto y = 0; y < ScreenHeight; ++y)
@@ -528,7 +528,7 @@ namespace Rendering {
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x, rightFix16.y),
 								depthMult,
-								stencil
+								distances[y].val
 							);
 							stripActive = false;
 						}
@@ -545,7 +545,7 @@ namespace Rendering {
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult,
-							stencil
+							distances[y].val
 						);
 					}
 				}
@@ -575,7 +575,7 @@ namespace Rendering {
 								UVVec2(leftFix16.x, leftFix16.y),
 								UVVec2(rightFix16.x,rightFix16.y),
 								depthMult,
-								stencil
+								distances[y].val
 							);
 							stripActive = false;
 						}
@@ -592,7 +592,7 @@ namespace Rendering {
 							UVVec2(leftFix16.x, leftFix16.y),
 							UVVec2(rightFix16.x,rightFix16.y),
 							depthMult,
-							stencil
+							distances[y].val
 						);
 					}
 				}
@@ -610,32 +610,41 @@ namespace Rendering {
 			}
 		}
 
-		void MapRenderer::DrawSprites(
+		void MapRenderer::AddDeferedSpriteDraw(
 			View view,
-			int minX, int maxX,
 			btStorageType lightLevel,
-			Mesi::Meters ceilHeight, Mesi::Meters floorHeight,
-			int portalDepth
+			::World::Sprite *sprite
+		) {
+			spriteDeferList.emplace_back(view, lightLevel, sprite);
+		}
+
+		void MapRenderer::CollectSprites(
+			View view,
+			btStorageType lightLevel
 		) {
 			auto sprites = view.sector->barrow.GetSprites();
-			
+			for(auto &sprite : sprites)
+				AddDeferedSpriteDraw(view, lightLevel, sprite);
+		}
+
+		void MapRenderer::DrawSprites() {
 			auto vFOVMult = ctx.GetVFOVMult();
 			auto hFOVMult = ctx.GetHFOVMult();
 			auto ScreenHeight = ctx.GetHeight();
 			auto ScreenWidth = ctx.GetWidth();
 
-			std::sort(sprites.begin(), sprites.end(), [view](::World::Sprite *a, ::World::Sprite *b) {
-				auto u = a->position - view.eye;
-				auto v = b->position - view.eye;
-				return u.LengthSquared() > v.LengthSquared();
-			} );
-
-			for(auto &sprite : sprites) {
+			for(auto &spriteCmd : spriteDeferList) {
+				auto &view = spriteCmd.view;
+				auto &lightLevel = spriteCmd.lightLevel;
+				auto &sprite = spriteCmd.sprite;
 				if(sprite->tex == nullptr)
 					continue;
-				auto height          = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h / Texture::PixelsPerMeter));
-				auto width           = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w / Texture::PixelsPerMeter));
-				auto posVS           = view.ToViewSpace(sprite->position);
+				auto height = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h
+					/ (btStorageType)Texture::PixelsPerMeter));
+				auto width  = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w
+					/ (btStorageType)Texture::PixelsPerMeter));
+				auto posVS  = view.ToViewSpace(sprite->position);
+
 				if(posVS.y < 0.001_m)
 					continue;
 
@@ -645,43 +654,6 @@ namespace Rendering {
 				);
 				auto xLeft  = posVS.x - width / 2.0f;
 				auto xRight = posVS.x + width / 2.0f;
-
-				//Need to check if the sprite crosses any boundaries.
-				//Both left and right might hit a wall/portal
-				//If they hit something, truncate the sprite
-				//If they hit a portal, dupe the sprite into that sector
-				for(auto i = 0u; i < view.sector->GetNumWalls(); ++i) {
-					auto start = view.ToViewSpace(*view.sector->GetWall(i)->start);
-					auto end   = view.ToViewSpace(*view.sector->GetWall((i+1) % view.sector->GetNumWalls())->start);
-
-					//If the y crosses like this, then the wall is a possible intersect - but not definite!
-					if((start.y < posVS.y) != (end.y < posVS.y)) {
-						auto xIntersect = start.x
-							+ (end.x - start.x) * (posVS.y - start.y) / (end.y - start.y);
-						
-						if(xIntersect > xLeft && xIntersect < xRight ) {
-							float dummy;
-							//an intersection means part of the sprite might need to be drawn on the far side of the portal,
-							if(
-								ClipToView(hFOVMult, start, end, dummy, dummy)
-								&& (end.x / end.y > start.x / start.y || sprite->GetSector() != view.sector)
-							) {
-								auto toSec = view.sector->GetWall(i)->portal;
-								toSec->barrow.AddSprite(*sprite);
-								if(((end - start) ^ (PositionVec2(xLeft, posVS.y) - start)) < 0_m2) {
-									// left end to move
-									texSourceRect.pos.x  = Fix16((xIntersect - xLeft).val * Texture::PixelsPerMeter);
-									texSourceRect.size.x = Fix16((xRight - xIntersect).val * Texture::PixelsPerMeter);
-									xLeft = xIntersect;
-								} else {
-									// right end to move
-									texSourceRect.size.x = Fix16((xIntersect - xLeft).val * Texture::PixelsPerMeter);
-									xRight = xIntersect;
-								}
-							}
-						}
-					}
-				}
 
 				auto posSS = posVS;
 				posSS.x.val = (posVS.x.val / posSS.y.val) * hFOVMult * ScreenWidth / 2 + ScreenWidth / 2;
@@ -694,15 +666,13 @@ namespace Rendering {
 					{int((xRight - xLeft) * distScaleH + 1), int(spritebottom - spritetop)} //TODO this +1 is a hack
 				);
 
-				if(texDestRect.size.x > 0)
+				if(texDestRect.size.x > 0 && texDestRect.size.y > 0)
 					ctx.DrawRectAlphaDepth(
 						texDestRect,
 						sprite->tex,
 						texSourceRect,
 						sprite->GetSector()->lightLevel,
-						portalDepth,
-						minX,
-						maxX
+						posVS.y.val
 					);
 			}
 		}

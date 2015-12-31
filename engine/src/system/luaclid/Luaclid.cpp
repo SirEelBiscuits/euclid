@@ -532,6 +532,7 @@ namespace System {
 			);
 			lua_pushcfunction(lua,
 				[](lua_State *s) {
+					//args(self, sectorID, position)
 					lua_getfield(s, 1, "_data");
 					auto map = luaX_touserdata<World::Map>(s, -1);
 					lua_pop(s, 1);
@@ -545,6 +546,21 @@ namespace System {
 				}
 			);
 			lua_setfield(lua, -2, "CreateSprite");
+
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					//args: (self, sprite)
+					lua_getfield(s, 1, "_data");
+					auto map = luaX_touserdata<World::Map>(s, -1);
+					lua_pop(s, 1);
+					lua_getfield(s, 2, "_data");
+					auto spr = luaX_touserdata<World::Sprite>(s, -1);
+					spr->GetSector()->barrow.DeleteSprite(*spr);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "DeleteSprite");
+
 			lua_pop(lua, 1);
 
 			/////////////////////////////////
