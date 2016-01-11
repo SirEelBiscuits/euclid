@@ -773,6 +773,16 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "SetRenderScale");
 
+				//Draw.GetRenderScale
+				luaX_push(lua,
+					static_cast<std::function<int()>>(
+						[ctx]() {
+							return ctx->GetScale();
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetRenderScale");
+
 				lua_pop(lua, 1);
 			}
 
