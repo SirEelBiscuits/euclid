@@ -62,13 +62,12 @@ namespace World {
 		Rendering::Texture * GetTexture(btStorageType angle = 0) {
 			if(textures.size() == 0)
 				return nullptr;
-			auto tex = textures[0].tex;
-			for(auto i = 1u; i < textures.size(); ++i)
-				if(textures[i].angle >= angle)
-					break;
-				else
-					tex = textures[i].tex;
-			return tex;
+			if(textures.size() == 1)
+				return textures[0].tex;
+			for(auto i = textures.size() - 1u; i >= 0u ; --i)
+				if(angle >= textures[i].angle)
+					return textures[i].tex;
+			return textures[textures.size() - 1].tex;
 		}
 
 		private:

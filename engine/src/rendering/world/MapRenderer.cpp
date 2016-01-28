@@ -640,16 +640,22 @@ namespace Rendering {
 
 				// getting the angle the sprite is being viewed from
 				auto posRel = sprite->position - view.eye;
-				auto angle = atan2(posRel.y.val, posRel.x.val);
+				auto posVS  = view.ToViewSpace(sprite->position);
 
-				auto *tex = sprite->GetTexture(angle - sprite->angle);
+				auto viewAngleToSprite = atan2(posVS.y.val, posVS.x.val);
+				auto relAngleToSprite  = atan2(posRel.y.val, posRel.x.val);
+
+				auto anglerel = relAngleToSprite - sprite->angle - 0.5*viewAngleToSprite;
+				while(anglerel > PI) anglerel -= PI * 2;
+				while(anglerel < -PI) anglerel += PI * 2;
+
+				auto *tex = sprite->GetTexture(anglerel);
 				if(tex == nullptr)
 					continue;
 				auto height = Mesi::Meters(static_cast<btStorageType>(tex->h
 					/ (btStorageType)Texture::PixelsPerMeter));
 				auto width  = Mesi::Meters(static_cast<btStorageType>(tex->w
 					/ (btStorageType)Texture::PixelsPerMeter));
-				auto posVS  = view.ToViewSpace(sprite->position);
 
 				if(posVS.y < 0.001_m)
 					continue;
