@@ -645,7 +645,7 @@ namespace Rendering {
 				auto viewAngleToSprite = atan2(posVS.y.val, posVS.x.val);
 				auto relAngleToSprite  = atan2(posRel.y.val, posRel.x.val);
 
-				auto anglerel = relAngleToSprite - sprite->angle - 0.5*viewAngleToSprite;
+				auto anglerel = relAngleToSprite - sprite->angle - 0.5*viewAngleToSprite - PI*0.25;
 				while(anglerel > PI) anglerel -= PI * 2;
 				while(anglerel < -PI) anglerel += PI * 2;
 
