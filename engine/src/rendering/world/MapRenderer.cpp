@@ -636,21 +636,33 @@ namespace Rendering {
 			for(auto &spriteCmd : spriteDeferList) {
 				auto &view = spriteCmd.view;
 				auto &lightLevel = spriteCmd.lightLevel;
-				auto &sprite = spriteCmd.sprite;
-				if(sprite->tex == nullptr)
-					continue;
-				auto height = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h
-					/ (btStorageType)Texture::PixelsPerMeter));
-				auto width  = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w
-					/ (btStorageType)Texture::PixelsPerMeter));
+				auto *sprite = spriteCmd.sprite;
+
+				// getting the angle the sprite is being viewed from
+				auto posRel = sprite->position - view.eye;
 				auto posVS  = view.ToViewSpace(sprite->position);
+
+				auto viewAngleToSprite = atan2(posVS.y.val, posVS.x.val);
+				auto relAngleToSprite  = atan2(posRel.y.val, posRel.x.val);
+
+				auto anglerel = relAngleToSprite - sprite->angle - 0.5*viewAngleToSprite - PI*0.25;
+				while(anglerel > PI) anglerel -= PI * 2;
+				while(anglerel < -PI) anglerel += PI * 2;
+
+				auto *tex = sprite->GetTexture(anglerel);
+				if(tex == nullptr)
+					continue;
+				auto height = Mesi::Meters(static_cast<btStorageType>(tex->h
+					/ (btStorageType)Texture::PixelsPerMeter));
+				auto width  = Mesi::Meters(static_cast<btStorageType>(tex->w
+					/ (btStorageType)Texture::PixelsPerMeter));
 
 				if(posVS.y < 0.001_m)
 					continue;
 
 				auto texSourceRect   = Rendering::UVRect(
 					{0_fp, 0_fp}, 
-					{Fix16(sprite->tex->w), Fix16(sprite->tex->h)}
+					{Fix16(tex->w), Fix16(tex->h)}
 				);
 				auto xLeft  = posVS.x - width / 2.0f;
 				auto xRight = posVS.x + width / 2.0f;
@@ -669,7 +681,7 @@ namespace Rendering {
 				if(texDestRect.size.x > 0 && texDestRect.size.y > 0)
 					ctx.DrawRectAlphaDepth(
 						texDestRect,
-						sprite->tex,
+						tex,
 						texSourceRect,
 						sprite->GetSector()->lightLevel,
 						posVS.y.val

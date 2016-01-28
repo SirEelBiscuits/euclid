@@ -27,6 +27,7 @@ namespace World {
 		auto spr = Sprite::Ptr(new Sprite());
 		spr->sector = owner;
 		spr->position = pos;
+		spr->angle = 0;
 
 		sprites.push_back(spr.get());
 

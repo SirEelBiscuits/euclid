@@ -566,10 +566,10 @@ namespace System {
 			/////////////////////////////////
 			// Sprite
 			auto luaSprite = luaX_registerClass<World::Sprite>(lua
-				, "_Move",             &World::Sprite::Move
-				, "texture",          &World::Sprite::tex
+				, "_Move",            &World::Sprite::Move
 				, "height",           &World::Sprite::height
 				, "position",         &World::Sprite::position
+				, "angle",            &World::Sprite::angle
 			);
 			luaSprite.push();
 			
@@ -584,6 +584,31 @@ namespace System {
 				}
 			);
 			lua_setfield(lua, -2, "Move");
+
+			//set_texture(self, texture)
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					auto tex = luaX_return<Rendering::Texture*>(s);
+					lua_getfield(s, 1, "_data");
+					auto spr = luaX_touserdata<World::Sprite>(s, -1);
+					spr->SetTexture(tex);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "set_texture");
+
+			//set_textureAngle(self, texture, angle)
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					auto angle = luaX_return<btStorageType>(s);
+					auto tex = luaX_return<Rendering::Texture*>(s);
+					lua_getfield(s, 1, "_data");
+					auto spr = luaX_touserdata<World::Sprite>(s, -1);
+					spr->SetTextureAngle(tex, angle);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "set_textureAngle");
 
 			lua_pop(lua, 1);
 
