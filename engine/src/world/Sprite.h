@@ -23,9 +23,16 @@ namespace World {
 
 	class Sprite {
 	public:
-		Rendering::Texture *tex;
 		Mesi::Meters height;
 		PositionVec3 position;
+		btStorageType angle;
+
+		struct angleTexture {
+			Rendering::Texture *tex;
+			btStorageType angle;
+		};
+
+		std::vector<angleTexture> textures {};
 
 		Sector* GetSector() { return sector; }
 
@@ -37,6 +44,32 @@ namespace World {
 		using Ptr = std::unique_ptr<Sprite, Deleter>;
 
 		void Move(Map *map, IDType toSector);
+
+		void SetTexture(Rendering::Texture *tex) {
+			textures.resize(1);
+			textures[0].tex = tex;
+			textures[0].angle = 0;
+		}
+
+		void SetTextureAngle(Rendering::Texture *tex, btStorageType angle) {
+			auto it = textures.cbegin();
+			for(; it < textures.cend(); ++it)
+				if(it->angle > angle)
+					break;
+			textures.insert(it, {tex, angle});
+		}
+
+		Rendering::Texture * GetTexture(btStorageType angle = 0) {
+			if(textures.size() == 0)
+				return nullptr;
+			auto tex = textures[0].tex;
+			for(auto i = 1u; i < textures.size(); ++i)
+				if(textures[i].angle >= angle)
+					break;
+				else
+					tex = textures[i-1].tex;
+			return tex;
+		}
 
 		private:
 			Sector *sector;
