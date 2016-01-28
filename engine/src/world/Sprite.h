@@ -67,7 +67,7 @@ namespace World {
 				if(textures[i].angle >= angle)
 					break;
 				else
-					tex = textures[i-1].tex;
+					tex = textures[i].tex;
 			return tex;
 		}
 
