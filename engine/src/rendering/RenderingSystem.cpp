@@ -452,8 +452,8 @@ namespace Rendering
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g * colorMult, interpolant) * bitmult) >> bitShift;
 				c.b = ((uint8_t)Maths::interp(dst.b, c.b * colorMult, interpolant) * bitmult) >> bitShift;
 				auto &oldDepth = DepthPixel(x, y);
-				ScreenPixel(x, y) = depth <= oldDepth ? c : dst;
-				oldDepth = depth < oldDepth ? depth : oldDepth;
+				ScreenPixel(x, y) = depth <= oldDepth ? (c.a > 0 ? c : dst) : dst;
+				oldDepth = depth < oldDepth ? (c.a > 0 ? depth : oldDepth) : oldDepth;
 			}
 
 			DEBUG_RENDERING();
