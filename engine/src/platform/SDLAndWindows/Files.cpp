@@ -11,9 +11,9 @@ static std::map<std::string, std::pair<FILETIME, handler_type>> filenames;
 
 FILETIME GetLastWriteTime(char const *filename) {
 	//TODO error handling, aliased filenames
-	WIN32_FIND_DATA dummy;
-	auto file = FindFirstFile(filename, &dummy);
-	return dummy.ftLastWriteTime;
+	WIN32_FIND_DATA findinfo;
+	FindClose(FindFirstFile(filename, &findinfo));
+	return findinfo.ftLastWriteTime;
 }
 
 bool RegisterFileToWatch(char const *filename, handler_type handler) {
