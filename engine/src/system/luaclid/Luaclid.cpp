@@ -451,22 +451,22 @@ namespace System {
 		void RegisterTypes(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			// we need to pre-declare these classes, as there are some circular references within some of them
-			auto luaPosVec = luaX_registerClass<PositionVec2>(lua
+			auto luaPosVec = luaX_registerClass<PositionVec2>(lua, "PositionVec2"
 				, "x", &PositionVec2::x
 				, "y", &PositionVec2::y
 			);
-			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
+			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua, "Texture"
 				, "width", &Rendering::Texture::w
 				, "height", &Rendering::Texture::h
 			);
-			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua
+			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua, "TextureInfo"
 				, "tex", &Rendering::TextureInfo::tex
 				, "uvStart", &Rendering::TextureInfo::uvStart
 			);
 
 			////////////////////////////////////
 			// Wall
-			auto luaWall = luaX_registerClass<World::Wall>(lua
+			auto luaWall = luaX_registerClass<World::Wall>(lua, "Wall"
 				, "portal", &World::Wall::portal
 				, "start" , &World::Wall::start);
 			luaWall.push();
@@ -482,7 +482,7 @@ namespace System {
 
 			////////////////////////////////////
 			// Sector
-			auto luaSector = luaX_registerClass<World::Sector>(lua
+			auto luaSector = luaX_registerClass<World::Sector>(lua, "Sector"
 					, "ceilHeight",        &World::Sector::ceilHeight
 					, "floorHeight",       &World::Sector::floorHeight
 					, "lightLevel",        &World::Sector::lightLevel
@@ -512,7 +512,7 @@ namespace System {
 
 			////////////////////////////////////
 			// Map
-			auto luaMap = luaX_registerClass<World::Map>(lua
+			auto luaMap = luaX_registerClass<World::Map>(lua, "Map"
 				, "GetNumSectors",       &World::Map::GetNumSectors
 				, "GetSectorID",         &World::Map::GetSectorID
 				, "AddNewSector",        &World::Map::AddNewSector
@@ -565,7 +565,7 @@ namespace System {
 
 			/////////////////////////////////
 			// Sprite
-			auto luaSprite = luaX_registerClass<World::Sprite>(lua
+			auto luaSprite = luaX_registerClass<World::Sprite>(lua, "Sprite"
 				, "_Move",            &World::Sprite::Move
 				, "height",           &World::Sprite::height
 				, "position",         &World::Sprite::position
