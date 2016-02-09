@@ -189,7 +189,7 @@ namespace System {
 				auto ret = luaX_dofile(lua, filename);
 				ASSERT(ret);
 			};
-			for(auto s : {"luaclid.lua", "luaclid/maths.lua"}) {
+			for(auto s : {"luaclid.lua"}) {
 				auto ret = luaX_dofile(lua, s);
 				CRITICAL_ASSERT(ret);
 				System::Events::RegisterFileToWatch(s, reloader);
@@ -201,6 +201,9 @@ namespace System {
 
 			RegisterTypes(lua);
 			RegisterFunctions(lua, &ctx, reloader);
+
+			if(luaX_dofile(lua, "luaclid-late.lua"))
+				System::Events::RegisterFileToWatch("luaclid-late.lua", reloader);
 
 			auto startscript = cfg.GetValue<std::string>("startscript");
 			auto ret = luaX_dofile(lua, startscript.c_str());

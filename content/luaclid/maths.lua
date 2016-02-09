@@ -1,6 +1,6 @@
 Maths = Maths or {
-	Vector = CreateNewClass(),
-	Matrix = CreateNewClass(),
+	Vector = CreateNewClass("Vector"),
+	Matrix = CreateNewClass("Matrix"),
 
 	RotationMatrix = function(angle)
 		local c = math.cos(math.rad(angle))

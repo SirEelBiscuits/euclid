@@ -1,5 +1,8 @@
+-- Things in this file are needed before native-side code setup happens.
+-- If you dick with this file, bad things can happen. I'm not kidding.
+
 function MakeEnum(table, name)
-	return setmetatable({}, {
+	return NameObject(setmetatable({}, {
 		__index = table,
 		__newindex = function()
 			if name then
@@ -9,11 +12,41 @@ function MakeEnum(table, name)
 			end
 		end,
 		__metatable = false
-	})
+	}), name or "unknown enum")
 end
 
-function CreateNewClass(baseClass)
-	local Class = {}
+local WeakMetaTable = { __mode = "v" }
+local WeakKeyMetaTable = { __mode = "k" }
+
+function NewWeakTable(o)
+	return setmetatable(o or {}, WeakMetaTable)
+end
+
+function NewWeakKeyTable(o)
+	return setmetatable(o or {}, WeakKeyMetaTable)
+end
+
+local Names = NewWeakKeyTable()
+
+function NameObject(o, name)
+	Names[o] = name
+	return o
+end
+
+function GetName(o)
+	return Names[o] or tostring(o)
+end
+
+ClassType = {}
+NameObject(ClassType, "Class")
+
+function CreateNewClass(baseClass, name)
+	if type(baseClass) == "string" and name == nil then
+		baseClass, name = name, baseClass
+	end
+	local Class = {Super = baseClass}
+	setmetatable(Class, ClassType)
+	NameObject(Class, name)
 	Class.__index = Class
 
 	function Class:new(o)
@@ -21,6 +54,11 @@ function CreateNewClass(baseClass)
 		setmetatable(NewInst, Class)
 		if(NewInst.ctor) then
 			NewInst:ctor()
+		end
+		if o and o.name then
+			NameObject(NewInst, o.name)
+		elseif name then
+			NameObject(NewInst, name .. ":" .. tostring(NewInst))
 		end
 		return NewInst
 	end
@@ -31,8 +69,13 @@ function CreateNewClass(baseClass)
 	return Class
 end
 
-function CreateNativeClass()
+NativeClassType = {}
+NameObject(NativeClassType, "Native class?")
+
+function CreateNativeClass(name)
 	local Class = CreateNewClass()
+	NameObject(Class, name or "Unknown Native Class")
+	setmetatable(Class, NativeClassType)
 	Class.fromData = function(self, data)
 		return self:new({_data = data})
 	end
@@ -41,139 +84,20 @@ end
 
 -- This MUST match the enum in Events.h
 InputEventType = MakeEnum({
-	None        = 0,
-	KeyDown     = 1,
-	KeyUp       = 2,
-	MouseDown   = 3,
-	MouseUp     = 4,
-	MouseMove   = 5,
-	TextInput   = 6,
-	MouseScroll = 7,
+	None = 0,
+	KeyDown = 1,
+	KeyUp = 2,
+	MouseDown = 3,
+	MouseUp = 4,
+	MouseMove = 5,
+	TextInput = 6,
 	},
 	"InputEventType"
 )
 
-MouseButtonsType = MakeEnum({
-		Left       = 1,
-		Middle     = 2,
-		Right      = 3,
-		ScrollUp   = 4,
-		ScrollDown = 5,
-		UnknownStart = 128,
-	},
-	"MouseButtonsType"
-)
-
-local function char(c)
-	return ("\\%03d"):format(c:byte())
-end
-
-local function isArray(t)
-	local i = 0
-	for _ in pairs(t) do
-		i = i+1
-		if t[i] == nil then
-			return false
-		end
-	end
-	return true
-end
-
-function DeepCopy(obj, lookup)
-	lookup = lookup or {}
-	local objType = type(obj)
-	local copy
-	if objType == "table" then
-		if lookup[obj] ~= nil then
-			return lookup[obj]
-		end
-
-		copy = {}
-		for k,v in pairs(obj) do
-			copy[k] = DeepCopy(v, lookup)
-		end
-		setmetatable(copy, getmetatable(obj))
-		lookup[obj] = copy
-	else
-		copy = obj
-	end
-	return copy
-end
-
-local function serializeInner (o, indent)
-  local ret = ""
-  indent = indent or ""
-  if type(o) == "number" then
-    return tostring(o)
-
-	elseif type(o) == "boolean" then
-    return tostring(o)
-
-  elseif type(o) == "string" then
-    return ('"%s"'):format(o:gsub("[^ !#-~]", char))
-
-  elseif type(o) == "table" then
-		local isArr = isArray(o)
-    ret = ret .. ("{\n")
-    for k,v in pairs(o) do
-			if type(k) == "string" then
-				ret = ret .. indent .. k .. " = "
-			elseif isArr then
-				ret = ret .. indent
-			else
-	      ret = ret .. indent .. "[" .. serializeInner(k) .. "]" .. " = "
-			end
-      ret = ret .. serializeInner(v, "  " .. indent)
-      ret = ret .. ",\n"
-    end
-    ret = ret .. string.sub(indent,3) .. "}"
-
-  elseif type(o) == "nil" then
-    ret = ret .. "nil"
-
-  else
-    error("cannot serialize a " .. type(o))
-  end
-  return ret
-end
-
--- returns a string which will be a lua statement returning data of that value
--- if it can serialise it at all, that is
-function serialise(o)
-  return "return " .. serializeInner(o, "  ") .. "\n"
-end
-
-function Describe(t, indent)
-	indent = indent or ""
-	print(indent..type(t)..":")
-	if type(t) == "table" then
-		local k,v
-		for k,v in pairs(t) do
-			print("  " .. k .. "=")
-			print(v, indent .. "  ")
-		end
-
-		local mt = getmetatable(t)
-		if mt ~= nil then
-			print(indent .. "metatable:")
-			Describe(mt, indent .. "  ")
-		end
-	else
-		print(t)
-	end
-end
-
-function TableSize(foo)
-	local acc = 0
-	for _ in pairs(foo) do
-		acc = acc + 1
-	end
-	return acc
-end
-
-Game = {}
-Draw = {}
-Game.Input={}
-Input = {}
+Game       = NameObject({}, "Game")
+Draw       = NameObject({}, "Draw")
+Game.Input = NameObject({}, "Game.Input")
+Input      = NameObject({}, "Input")
 
 print("luaclid.lua loaded")
