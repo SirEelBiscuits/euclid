@@ -23,6 +23,10 @@ bool RegisterFileToWatch(char const *filename, handler_type handler) {
 	return true;
 }
 
+bool IsFileBeingWatched(char const *filename) {
+	return filenames.find(filename) != filenames.end();
+}
+
 bool cmpFileTime(FILETIME a, FILETIME b) {
 	return a.dwHighDateTime != b.dwHighDateTime
 		|| a.dwLowDateTime != b.dwLowDateTime;

@@ -629,6 +629,8 @@ namespace System {
 				//TODO: this cast is ugly but necessary in VS2015. what do?
 				static_cast<std::function<void(std::string)>>(
 					[lua, reloader](std::string filename) {
+						if(System::Events::IsFileBeingWatched(filename.c_str()))
+							return;
 						auto ret = luaX_dofile(lua, filename.c_str());
 						ASSERT(ret);
 						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
