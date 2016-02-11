@@ -172,3 +172,7 @@ end
 function TypeStats()
 	Describe(type_count())
 end
+
+function Explore(o)
+	Game.StateMachine:PushState(Editor.EditDataState, o)
+end

@@ -205,10 +205,19 @@ namespace System {
 			if(luaX_dofile(lua, "luaclid-late.lua"))
 				System::Events::RegisterFileToWatch("luaclid-late.lua", reloader);
 
-			auto startscript = cfg.GetValue<std::string>("startscript");
-			auto ret = luaX_dofile(lua, startscript.c_str());
-			CRITICAL_ASSERT(ret);
-			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
+			{
+				auto Gamelua = "Game.lua";
+				auto ret = luaX_dofile(lua, Gamelua);
+				CRITICAL_ASSERT(ret);
+				System::Events::RegisterFileToWatch(Gamelua, reloader);
+			}
+
+			{
+				auto startscript = cfg.GetValue<std::string>("startscript");
+				auto ret = luaX_dofile(lua, startscript.c_str());
+				CRITICAL_ASSERT(ret);
+				System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
+			}
 		}
 
 		std::unique_ptr<World::Map> LoadMap(lua_State *lua, char const *filename) {
@@ -406,12 +415,13 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void GameInitialise(lua_State *lua) {
+		void GameInitialise(lua_State *lua, System::Config &cfg) {
 			auto x = lua_gettop(lua);
 			auto pushed = luaX_getglobal(lua, "Game", "Initialise");
 			lua_gettop(lua);
 			if(2 == pushed && lua_isfunction(lua, -1)) {
-				if(LUA_OK == luaX_pcall(lua, 0, 0) )
+				luaX_push(lua, cfg.IsValueSet("startstate") ? cfg.GetValue<std::string>("startstate") : "" );
+				if(LUA_OK == luaX_pcall(lua, 1, 0) )
 					--pushed;
 			}
 			lua_pop(lua, pushed);

@@ -1,80 +1,125 @@
-Editor.DefaultState = Editor.DefaultState or {
-	CommandList = {
-		"reinit",
-		"Quit",
-		"OpenMap",
-		"Preview",
-		"Save",
-		"Undo",
-		"Redo",
-		"AddSelect",
-		"ExclusiveSelect",
-		"DeleteObject",
-		"SplitWall",
-		"JoinSectors",
-		"EnterDrawSectorMode",
-		"SetCeilHeight",
-		"SetFloorHeight",
-		"SetLightLevel",
-		"SetCeilTexture",
-		"SetFloorTexture",
-		"SetTopTexture",
-		"SetMainTexture",
-		"SetBottomTexture"
-	}
+Editor.DefaultState = Editor.DefaultState or CreateNewClass("EditorDefaultState")
+Editor.DefaultState.CommandList = {
+	"reinit",
+	"Quit",
+	"OpenMap",
+	"Save",
+	"Undo",
+	"Redo",
+	"Copy",
+	"Paste",
+	"CopyProperties",
+	"PasteProperties",
+	"AddSelect",
+	"ExclusiveSelect",
+	"DeleteObject",
+	"SplitWall",
+	"JoinSectors",
+	"EnterDrawSectorMode",
+	"SetCeilHeight",
+	"SetFloorHeight",
+	"AdjustCeilHeight",
+	"AdjustFloorHeight",
+	"SetLightLevel",
+	"SetCeilTexture",
+	"SetFloorTexture",
+	"SetTopTexture",
+	"SetMainTexture",
+	"SetBottomTexture",
+	"ZoomIn",
+	"ZoomOut",
+	"SetStartSector",
+	"SetGroup",
+	"SelectGroup",
+	"SetOutdoors",
+	"SetIndoors",
+	"SetOutdoorLevel",
+	"CreateSprite",
+	"EditThing",
+	"Preview",
 }
 
 print("DefaultState reloaded")
 
-function Editor.DefaultState:Enter(skipClear)
-	skipClear = skipClear or false
+local InfoString
+local InfoStringHeight
+local InfoStringTextures
+
+function Editor.DefaultState:OnEnter()
 	print("entering default state")
-	if not skipClear then
-		Editor.Selection:Clear(self.OnSelectionChanged)
-	else
-		self.OnSelectionChanged()
-	end
-	Editor.State = self
+	self.OnSelectionChanged = function()
+		InfoString, InfoStringHeight, InfoStringTextures
+			= self.machine.owner:GetSelectionString()
+		end
+
+	self.machine.owner.Selection:Clear(self.OnSelectionChanged)
 end
 
-function Editor.DefaultState.OnSelectionChanged()
-	Editor.DefaultState.InfoString, Editor.DefaultState.InfoStringHeight, Editor.DefaultState.InfoStringTextures = Editor:GetSelectionString()
+function Editor.DefaultState:OnExit()
+end
+
+function Editor.DefaultState:OnPushed()
+end
+
+function Editor.DefaultState:OnPopped()
+	self.OnSelectionChanged()
+end
+
+function Editor.DefaultState.OnSelectionChanged(editor)
+	InfoString, InfoStringHeight, InfoStringTextures
+		= editor:GetSelectionString()
 end
 
 function Editor.DefaultState:Render()
-	Editor:DrawTopDownMap(Editor.Colors)
+	self.machine.owner:DrawTopDownMap(self.machine.owner.Colors)
 
 	if Textures.text then
-		local CursorString = tostring(Editor.Cursor.x) .. ", " .. tostring(Editor.Cursor.y)
-		Draw.Text({x = Draw.GetWidth() - 8 * #CursorString - 4, y = Draw.GetHeight() - 20}, Textures.text, CursorString)
-		self:SelectionInfo()
-	end
-end
-
-function Editor.DefaultState:SelectionInfo()
-	local drawPos = Maths.Vector:new(4, Draw.GetHeight() - 16 * self.InfoStringHeight - 4)
-	Draw.Text(drawPos, Textures.text, self.InfoString)
-	for i, info in ipairs(self.InfoStringTextures) do
-		local pos = drawPos + info.pos
-		pos.w, pos.h = info.pos.w, info.pos.h
-		Draw.RectTextured(pos, Draw.GetTexture(info.tex))
+		local CursorString = tostring(self.machine.owner.Cursor.x) .. ", "
+			.. tostring(self.machine.owner.Cursor.y)
+		Draw.Text(
+			{x = Draw.GetWidth() - 8 * #CursorString - 4, y = Draw.GetHeight() - 20},
+			Textures.text,
+			CursorString
+		)
+		local drawPos = Maths.Vector:new(4, Draw.GetHeight() - 16 * InfoStringHeight - 4)
+		Draw.Text(drawPos, Textures.text, InfoString)
+		for i, info in ipairs(InfoStringTextures) do
+			local pos = drawPos + info.pos
+			pos.w, pos.h = info.pos.w, info.pos.h
+			Draw.RectTextured(pos, Draw.GetTexture(info.tex))
+		end
 	end
 end
 
 function Editor.DefaultState:Update(dt)
+	local editor = self.machine.owner
 	if Game.Controls.DragObject.isDown then
-		Editor.History:RegisterSnapshot()
-		Editor.DragObjectState:Enter()
+		self.machine.owner.History:RegisterSnapshot()
+		editor:PushState(Editor.DragObjectState)
+		return
 	end
 
 	if Game.Controls.DragCamera.isDown then
-		Editor.CameraDragState:Enter()
+		editor:PushState(Editor.CameraDragState)
+		return
+	end
+
+	if Game.Controls.ScaleObject.isDown then
+		self.machine.owner.History:RegisterSnapshot()
+		editor:PushState(Editor.ScaleSelectionState)
+		return
+	end
+
+	if Game.Controls.RotateObject.isDown then
+		self.machine.owner.History:RegisterSnapshot()
+		editor:PushState(Editor.RotateSelectionState)
+		return
 	end
 
 	for _, v in ipairs(self.CommandList) do
 		local control = Game.Controls[v]
 		if type(control) == "table" and control.pressed and Editor.Commands[v] then
-			Editor.Commands[v]()
+			Editor.Commands[v](self.machine.owner)
 		end
 	end
 end
