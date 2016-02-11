@@ -10,7 +10,7 @@ function Selection:Clear(callback)
 		end
 	end
 	self.OnSelectionChange = callback or function() end
-	self.OnSelectionChange(self.owner)
+	self.OnSelectionChange()
 end
 
 function Selection:Select(...)
@@ -39,7 +39,7 @@ function Selection:DeselectInner(kind, subkind, ...)
 		self[kind][subkind] = nil
 	else
 		--fucking with 'self'
-		self.Select(self[kind], subkind, ...)
+		self.Deselect(self[kind], subkind, ...)
 	end
 end
 
@@ -54,7 +54,7 @@ function Selection:ToggleSelectInner(kind, subkind, ...)
 		self[kind][subkind] = self[kind][subkind] == nil or nil
 	else
 		--fucking with 'self'
-		Selection.ToggleSelect(self[kind], subkind, ...)
+		Selection.ToggleSelectInner(self[kind], subkind, ...)
 	end
 end
 
@@ -70,15 +70,8 @@ end
 
 function Selection:GetSelected(kind)
 	local ret = {}
-	-- new version
 	self:GetSelectedInner(ret, nil, kind)
 	do return ret end
-
-	-- old version
-	for i in pairs(self[kind]) do
-		table.insert(ret, i)
-	end
-	return ret
 end
 
 function Selection:GetSelectedInner(ret, base, kind)

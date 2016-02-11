@@ -21,7 +21,7 @@ end
 
 function Editor.Commands.Preview(editor)
 	Draw.SetRenderScale(4)
-	editor.machine:PushState(StateList.SFA)
+	editor.machine:PushState(StateList.SFA, editor.curMapData)
 end
 
 function Editor.Commands.Save(editor)
@@ -107,7 +107,7 @@ function Editor.Commands.AddSelect(editor)
 end
 
 function Editor.Commands.ExclusiveSelect(editor)
-	editor.Selection:Clear(editor.StateMachine.OnSelectionChanged)
+	editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
 
 	local kind, num, val = GetClicked(editor)
 	if kind == "verts" then
