@@ -29,7 +29,7 @@ namespace System {
 		//wrappers for Lua functions
 		bool GameUpdate(lua_State *lua, double dt);
 		void GameQuit(lua_State *lua);
-		void GameInitialise(lua_State *lua);
+		void GameInitialise(lua_State *lua, System::Config &cfg);
 
 		void GameSaveState(lua_State *lua);
 		void GameLoadState(lua_State *lua);

@@ -52,9 +52,6 @@
     <ClCompile Include="src\lib\BasicTypes.cpp">
       <Filter>src\lib</Filter>
     </ClCompile>
-    <ClCompile Include="src\modes\editor\Editor.cpp">
-      <Filter>src\modes\editor</Filter>
-    </ClCompile>
     <ClCompile Include="src\system\luaclid\controls\Controls.cpp">
       <Filter>src\system\luaclid\controls</Filter>
     </ClCompile>
@@ -137,9 +134,6 @@
     </ClInclude>
     <ClInclude Include="src\lib\gargamel.h">
       <Filter>src\lib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\modes\editor\Editor.h">
-      <Filter>src\modes\editor</Filter>
     </ClInclude>
     <ClInclude Include="src\rendering\world\MapRenderer.h">
       <Filter>src\rendering\world</Filter>

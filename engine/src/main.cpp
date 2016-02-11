@@ -52,9 +52,6 @@ std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg) {
 		exit(EXIT_SUCCESS);
 	}
 
-	if(Gargamel::ArgumentValues[(int)CLArgs::Editor].isArgumentPresent)
-		cfg.SetValue(stringFromCLArgs(CLArgs::RenderScale), 1);
-
 	auto width = cfg.GetValue<int>(stringFromCLArgs(CLArgs::Width));
 	auto height = cfg.GetValue<int>(stringFromCLArgs(CLArgs::Height));
 
@@ -97,8 +94,7 @@ void OverrideConfigWithCommandLineArguments(System::Config &cfg) {
 		cfg.SetValue(stringFromCLArgs(CLArgs::Fullscreen), true);
 }
 
+//TODO delete this shit?
 std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg) {
-	if(Gargamel::ArgumentValues[(int)CLArgs::Editor].isArgumentPresent)
-		return std::make_unique<Modes::Editor>(ctx, cfg);
 	return std::make_unique<Modes::Game>(ctx, cfg);
 }

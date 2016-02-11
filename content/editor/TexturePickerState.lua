@@ -1,12 +1,10 @@
-Editor.TexturePickerState = Editor.TexturePickerState or {}
+Editor.TexturePickerState = Editor.TexturePickerState or
+	CreateNewClass("TexturePickerState")
 
-function Editor.TexturePickerState:Enter(prompt, callback)
+function Editor.TexturePickerState:OnEnter(prompt, callback)
 	print("Entering texture picker state")
 
-	if type(prompt) == "boolean" and prompt == false then
-		Editor.State = self
-		return 
-	end
+	local editor = self.machine.owner
 
 	self.prompt = prompt
 	self.callback = callback
@@ -15,7 +13,7 @@ function Editor.TexturePickerState:Enter(prompt, callback)
 
 	self.textures = {[""] = Draw.GetTexture("")}
 
-	for i, sec in ipairs(Editor.curMapData.sectors) do
+	for i, sec in ipairs(editor.curMapData.sectors) do
 		local texName
 		if sec.floorTex ~= nil then
 			texName = sec.floorTex.tex
@@ -56,21 +54,22 @@ function Editor.TexturePickerState:Enter(prompt, callback)
 
 	local numTex = TableSize(self.textures)
 	print (numTex .. " textures collected")
-
-	Editor.State = self
 end
 
 function Editor.TexturePickerState:Update()
+	if self.State then self.State:Update() return end
 	if Game.Controls.CancelTexturePick.pressed then
 		self.callback(false)
 	end
 
+	local editor = self.machine.owner
+
 	if Game.Controls.TexturePickerAddNew.pressed then
-		Editor.TypingState:Enter("Filename of new texture", "Try again",
+		self:PushState(editor.TypingState, "Filename of new texture", "Try again",
 			function(string)
 				self.textures[string] = Draw.GetTexture(string)
 
-				self:Enter(false)
+				self:PopState()
 			end
 		)
 	end
@@ -104,7 +103,7 @@ function Editor.TexturePickerState:Update()
 	if Game.Controls.TexturePickerPageDown.pressed then
 		self.cursor = self.cursor + entriesPerPage
 	end
-	
+
 	local size = TableSize(self.textures)
 	if size > 0 then
 		while self.cursor < 1 do

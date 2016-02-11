@@ -1,69 +1,73 @@
-return {
+local GeneralControls = {
 	{
 		Name = "Quit",
 		Key = 27
 	},
 	{
 		Name = "reinit",
-		Key = "r"
+		Key = "r",
+		CtrlPressed = true,
+		ShiftPressed = true
+	},
+	{
+		Name = "DragCamera",
+		MouseButton = "Right",
+		CtrlPressed = false,
 	},
 	{
 		Name = "OpenMap",
 		Key = "o",
-		CtrlPressed = true
-	},
-	{
-		Name = "Preview",
-		Key = "p"
-	},
-	{
-		Name = "Turn",
-		MouseAxis = "x",
-		Relative = true,
-		Scale = -0.1
-	},
-	{
-		Name = "PreviewForward",
-		PosKey = "w",
-		NegKey = "s",
-	},
-	{
-		Name = "PreviewRight",
-		PosKey = "d",
-		NegKey = "a",
-	},
-	{
-		Name = "PreviewRaiseCeiling",
-		Key = "c",
-		ShiftPressed = false
-	},
-	{
-		Name = "PreviewLowerCeiling",
-		Key = "c",
-		ShiftPressed = true
-	},
-	{
-		Name = "PreviewRaiseFloor",
-		Key = "f",
+		CtrlPressed = true,
 		ShiftPressed = false,
-		CtrlPressed = true
-	},
-	{
-		Name = "PreviewLowerFloor",
-		Key = "f",
-		ShiftPressed = true,
-		CtrlPressed = true
-	},
-	{
-		Name = "RaiseCamera",
-		PosKey = "q",
-		NegKey = "e"
 	},
 	{
 		Name = "Save",
 		Key = "s",
 		CtrlPressed = true
 	},
+	{
+		Name = "Undo",
+		Key = "z",
+		CtrlPressed = true,
+		ShiftPressed = false,
+	},
+	{
+		Name = "Redo",
+		Key = "z",
+		CtrlPressed = true,
+		ShiftPressed = true,
+	},
+	{
+		Name = "Copy",
+		Key = "c",
+		CtrlPressed = true,
+		ShiftPressed = false
+	},
+	{
+		Name = "Paste",
+		Key = "v",
+		CtrlPressed = true,
+		ShiftPressed = false
+	},
+	{
+		Name = "CopyProperties",
+		Key = "c",
+		CtrlPressed = true,
+		ShiftPressed = true,
+	},
+	{
+		Name = "PasteProperties",
+		Key = "v",
+		CtrlPressed = true,
+		ShiftPressed = true
+	},
+	{
+		Name = "Preview",
+		Key = "p",
+	},
+}
+
+local BasicManipulationControls = {
 	{
 		Name = "AddSelect",
 		MouseButton = "Left",
@@ -76,24 +80,27 @@ return {
 	},
 	{
 		Name = "DragObject",
-		MouseButton = "Middle"
+		MouseButton = "Middle",
+		CtrlPressed = false,
 	},
 	{
-		Name = "DragCamera",
+		Name = "ScaleObject",
 		MouseButton = "Right",
+		CtrlPressed = true,
+	},
+	{
+		Name = "RotateObject",
+		MouseButton = "Middle",
+		CtrlPressed = true,
 	},
 	{
 		Name = "DeleteObject",
 		Key = 127 -- delete key
 	},
-	{
-		Name = "SplitWall",
-		Key = "s"
-	},
-	{
-		Name = "JoinSectors",
-		Key = "j"
-	},
+
+}
+
+local DrawSectorControls = {
 	{
 		Name = "EnterDrawSectorMode",
 		Key = "n"
@@ -114,29 +121,150 @@ return {
 		Name = "DrawSectorModeCancel",
 		Key = 27
 	},
+}
+
+local AdvancedManipulationControls = {
+	{
+		Name = "SplitWall",
+		Key = "s",
+		CtrlPressed = false,
+	},
+	{
+		Name = "JoinSectors",
+		Key = "j"
+	},
 	{
 		Name = "SetCeilHeight",
-		Key = "c",
-		ShiftPressed = false
+		Key = "r",
+		ShiftPressed = false,
+		CtrlPressed  = false
 	},
 	{
 		Name = "SetFloorHeight",
 		Key = "f",
-		ShiftPressed = false
+		ShiftPressed = false,
+		CtrlPressed  = false,
+	},
+	{
+		Name = "AdjustCeilHeight",
+		Key = "r",
+		ShiftPressed = true,
+		CtrlPressed  = false,
+	},
+	{
+		Name = "AdjustFloorHeight",
+		Key = "f",
+		ShiftPressed = true,
+		CtrlPressed  = false,
 	},
 	{
 		Name = "SetLightLevel",
 		Key = "l"
 	},
 	{
-		Name = "SetCeilTexture",
-		Key = "c",
+		Name = "SetStartSector",
+		Key = "g",
+		ShiftPressed = false,
+		CtrlPressed = false
+	},
+	{
+		Name = "SetGroup",
+		Key = "g",
+		ShiftPressed = true,
+		CtrlPressed = false,
+	},
+	{
+		Name = "SelectGroup",
+		Key = "g",
+		CtrlPressed = true,
 		ShiftPressed = true
+	},
+	{
+		Name = "SetOutdoors",
+		Key = "o",
+		ShiftPressed = false,
+		CtrlPressed = false
+	},
+	{
+		Name = "SetIndoors",
+		Key = "o",
+		ShiftPressed = true,
+		CtrlPressed = false,
+	},
+	{
+		Name = "SetOutdoorLevel",
+		Key = "o",
+		ShiftPressed = true,
+		CtrlPressed = true
+	}
+}
+
+local SpriteControls = {
+	{
+		Name = "CreateSprite",
+		Key = "e",
+		ShiftPressed = false,
+	},
+	{
+		Name = "EditThing",
+		Key = "e",
+		ShiftPressed = true,
+	},
+}
+
+local DataEditControls = {
+	{
+		Name = "DataMoveDown",
+		Key = "s",
+		ShiftPressed = false,
+	},
+	{
+		Name = "DataMoveUp",
+		Key = "w",
+	},
+	{
+		Name = "DataEdit",
+		Key = "e",
+		ShiftPressed = false
+	},
+	{
+		Name = "DataNewTable",
+		Key = "t",
+	},
+	{
+		Name = "DataNewNumber",
+		Key = "n",
+	},
+	{
+		Name = "DataNewString",
+		Key = "s",
+		ShiftPressed = true,
+	},
+	{
+		Name = "DataNewBool",
+		Key = "b",
+	},
+	{
+		Name = "DataBack",
+		Key = 27,
+	},
+	{
+		Name = "DataDelete",
+		Key = 127,
+	}
+}
+
+local TexturingControls = {
+	{
+		Name = "SetCeilTexture",
+		Key = "r",
+		ShiftPressed = false,
+		CtrlPressed = true
 	},
 	{
 		Name = "SetFloorTexture",
 		Key = "f",
-		ShiftPressed = true
+		CtrlPressed = true
 	},
 	{
 		Name = "SetTopTexture",
@@ -186,9 +314,9 @@ return {
 		Name = "TexturePickerSelect",
 		Key = 13
 	},
+}
 
-	-- Mouse Input
-
+local MouseControls = {
 	{
 		Name = "MouseX",
 		MouseAxis = "x",
@@ -223,20 +351,39 @@ return {
 		Name = "MClick",
 		MouseButton = "Middle"
 	},
-
-	-- Undo
-
 	{
-		Name = "Undo",
-		Key = "z",
-		CtrlPressed = true,
-		ShiftPressed = false,
+		Name = "ZoomIn",
+		MouseButton = "ScrollUp",
 	},
 	{
-		Name = "Redo",
-		Key = "z",
-		CtrlPressed = true,
-		ShiftPressed = true,
+		Name = "ZoomOut",
+		MouseButton = "ScrollDown",
 	},
 }
 
+local function Concat(a, b, ...)
+	if not a then
+		return Concat(b, ...)
+	end
+	if not b then
+		return Concat(a, ...)
+	end
+	for i, v in ipairs(b) do
+		a[#a + 1] = v
+	end
+	if ... then
+		return Concat(a, ...)
+	end
+	return a
+end
+
+return Concat(
+	GeneralControls,
+	MouseControls,
+	BasicManipulationControls,
+	AdvancedManipulationControls,
+	TexturingControls,
+	DrawSectorControls,
+	SpriteControls,
+	DataEditControls
+)

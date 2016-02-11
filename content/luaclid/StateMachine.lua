@@ -1,5 +1,18 @@
 StateMachine = StateMachine or CreateNewClass("State Machine")
 
+function StateMachine:ctor()
+
+	-- This is done because the class dicks around with its metatable
+	-- force setting these functions like this will prevent that breaking
+	-- However! This will screw up file reloading if this file changes
+
+	self.EnterState = StateMachine.EnterState
+	self.PushState  = StateMachine.PushState
+	self.PopState   = StateMachine.PopState
+	self._SetState  = StateMachine._SetState
+	self.State = {}
+end
+
 local EnterState = function(self, ...)
 	return self.machine:EnterState(...)
 end
@@ -19,20 +32,15 @@ function StateMachine:EnterState(state, ...)
 		self.State:OnExit()
 	end
 
-	--[[
-	-- It might be possible to use the __index and __newindex overloads to
-	-- redirect things from the state machine to the current state. This would
-	-- simplify the interface a lot!
-	]]--
-
-	self:SetState(setmetatable({
+	self:_SetState(state:new({
 		machine = self,
-		EnterState = EnterState,
-		PushState = PushState,
-		PopState = PopState
-	}, {__index = state}))
+		EnterState = state.EnterState or EnterState,
+		PushState  = state.PushState or PushState,
+		PopState   = state.PopState or PopState
+	}))
 	if self.State.OnEnter then
 		self.State:OnEnter(...)
+	else
 	end
 end
 
@@ -42,12 +50,12 @@ function StateMachine:PushState(state, ...)
 	if self.State.OnPushed then
 		self.State:OnPushed()
 	end
-	self:SetState(setmetatable({
+	self:_SetState(state:new({
 		machine = self,
-		EnterState = EnterState,
-		PushState = PushState,
-		PopState = PopState
-	}, {__index = state}))
+		EnterState = state.EnterState or EnterState,
+		PushState  = state.PushState  or PushState,
+		PopState   = state.PopState   or PopState
+	}))
 	if self.State.OnEnter then
 		self.State:OnEnter(...)
 	end
@@ -57,14 +65,20 @@ function StateMachine:PopState(...)
 	if self.State.OnExit then
 		self.State:OnExit()
 	end
-	self.SetState(table.remove(self.StateStack))
+	self:_SetState(table.remove(self.StateStack))
 	if self.State.OnPopped then
 		self.State:OnPopped(...)
 	end
 end
 
-function StateMachine:SetState(state)
+function StateMachine:_SetState(state)
 	self.State = state
-	setmetatable(self, {__index = self.State, __newindex = self.State})
 end
 
+function StateMachine:Update(dt)
+	return self.State:Update(dt)
+end
+
+function StateMachine:Render(dt)
+	self.State:Render(dt)
+end

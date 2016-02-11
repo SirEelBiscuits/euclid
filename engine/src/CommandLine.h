@@ -11,7 +11,6 @@ enum class CLArgs {
 	Width,
 	Height,
 	RenderScale,
-	Editor,
 	StartScript,
 	FOV,
 	Config,
@@ -42,8 +41,8 @@ Gargamel::ArgumentList Arguments {
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Width,             "width",        RequiredArgument, "1024",     "Width to render"),
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Height,            "height",       RequiredArgument, "768",      "Height to render"),
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::RenderScale,       "render-scale", RequiredArgument, "4",        "Scale down the render"),
-	GGM_DESCRIBE_ARG        (CLArgs::Editor,      'e',  "editor",       NoArgument,                   "Launch the editor"),
 	GGM_DESCRIBE_ARG        (CLArgs::StartScript, '\0', "start-script", RequiredArgument,             "The script to launch"),
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::FOV,               "fov",          RequiredArgument, "30",       "The vertical FOV to use"),
 	GGM_DESCRIBE_ARG_DEFAULT(CLArgs::Config,            "config",       RequiredArgument, "game.cfg", "The game config to use"),
+	GGM_DESCRIBE_ARG        (CLArgs::Unknown,      0,   "",             NoArgument,                   "Any string passed as a final argument will be the config to use, if config isn't specified. '.cfg' will be appended automatically")
 };
