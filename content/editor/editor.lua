@@ -64,7 +64,7 @@ function Editor:Quit()
 	Game.quit = true
 end
 
-function Editor:OnEnter()
+function Editor:OnEnter(map)
 	Textures = { text = Draw.GetTexture("resources/Mecha.png") }
 
 	self.Controls = dofile("editor/Controls.lua")
@@ -73,7 +73,10 @@ function Editor:OnEnter()
 	MapUtility.__index = MapUtility
 
 	self.StateMachine:EnterState(Editor.DefaultState)
-	self.curMapData = self.GetEmptyMap()
+	if type(map) == "string" then
+		map = dofile(map)
+	end
+	self.curMapData = map or self.GetEmptyMap()
 	self.History:Clear()
 
 	Game.quit = false

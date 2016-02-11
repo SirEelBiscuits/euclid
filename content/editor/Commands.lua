@@ -6,8 +6,8 @@ function Editor.Commands.reinit()
 	Game.Initialise()
 end
 
-function Editor.Commands.Quit()
-	Game.quit = true
+function Editor.Commands.Quit(editor)
+	Game.StateMachine:PopState("edited", editor.curMapData)
 end
 
 function Editor.Commands.OpenMap(editor)
