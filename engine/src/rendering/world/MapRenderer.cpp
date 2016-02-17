@@ -89,7 +89,7 @@ namespace Rendering {
 			}
 			//distances doesn't get zeroed here
 
-			spriteDeferList.clear();
+			spriteDefers.clear();
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
 			DrawSprites();
 		}
@@ -615,7 +615,7 @@ namespace Rendering {
 			btStorageType lightLevel,
 			::World::Sprite *sprite
 		) {
-			spriteDeferList.emplace_back(view, lightLevel, sprite);
+			spriteDefers.emplace_back(view, lightLevel, sprite);
 		}
 
 		void MapRenderer::CollectSprites(
@@ -633,7 +633,16 @@ namespace Rendering {
 			auto ScreenHeight = ctx.GetHeight();
 			auto ScreenWidth = ctx.GetWidth();
 
-			for(auto &spriteCmd : spriteDeferList) {
+			SpriteDeferCompare cmp;
+			std::sort(spriteDefers.begin(), spriteDefers.end(), cmp);
+			for(int i = spriteDefers.size() - 1; i > 0; --i) {
+				auto & a = spriteDefers[i];
+				auto & b = spriteDefers[i-1];
+				if(!cmp(a, b) && !cmp(b, a))
+					spriteDefers.erase(spriteDefers.begin() + i);
+			}
+
+			for(auto &spriteCmd : spriteDefers) {
 				auto &view = spriteCmd.view;
 				auto &lightLevel = spriteCmd.lightLevel;
 				auto *sprite = spriteCmd.sprite;
