@@ -68,15 +68,13 @@ namespace Rendering {
 		private:
 			Rendering::Context &ctx;
 
-			unsigned widthUsed;
-			unsigned heightUsed;
-			int *wallRenderableTop;
-			int *wallRenderableBottom;
-			int *floorRenderableTop;
-			int *floorRenderableBottom;
-			int *ceilRenderableTop;
-			int *ceilRenderableBottom;
-			Mesi::Meters *distances;
+			std::vector<int> wallRenderableTop{};
+			std::vector<int> wallRenderableBottom{};
+			std::vector<int> floorRenderableTop{};
+			std::vector<int> floorRenderableBottom{};
+			std::vector<int> ceilRenderableTop{};
+			std::vector<int> ceilRenderableBottom{};
+			std::vector<Mesi::Meters> distances{};
 
 
 			struct SpriteDefer {
