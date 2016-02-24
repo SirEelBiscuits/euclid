@@ -34,50 +34,20 @@ namespace Rendering {
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
-			, widthUsed(ctx.GetWidth())
-			, heightUsed(ctx.GetHeight())
-			, wallRenderableTop(new int[widthUsed])
-			, wallRenderableBottom(new int[widthUsed])
-			, floorRenderableTop(new int[widthUsed])
-			, floorRenderableBottom(new int[widthUsed])
-			, ceilRenderableTop(new int[widthUsed])
-			, ceilRenderableBottom(new int[widthUsed])
-			, distances(new Mesi::Meters[heightUsed])
-		{
-		
-		}
+		{}
 
 		MapRenderer::~MapRenderer() {
-			delete[] wallRenderableTop;
-			delete[] wallRenderableBottom;
-			delete[] floorRenderableTop;
-			delete[] floorRenderableBottom;
-			delete[] ceilRenderableTop;
-			delete[] ceilRenderableBottom;
-			delete[] distances;
 		}
 
 		void MapRenderer::Render(View const &view) {
-			if(ctx.GetWidth() > widthUsed) {
-				widthUsed = ctx.GetWidth();
-				delete[] wallRenderableTop;
-				delete[] wallRenderableBottom;
-				delete[] floorRenderableTop;
-				delete[] floorRenderableBottom;
-				delete[] ceilRenderableTop;
-				delete[] ceilRenderableBottom;
-				wallRenderableTop     = new int[widthUsed];
-				wallRenderableBottom  = new int[widthUsed];
-				floorRenderableTop    = new int[widthUsed];
-				floorRenderableBottom = new int[widthUsed];
-				ceilRenderableTop     = new int[widthUsed];
-				ceilRenderableBottom  = new int[widthUsed];
-			}
-			if(ctx.GetHeight() > heightUsed) {
-				heightUsed = ctx.GetHeight();
-				delete[] distances;
-				distances = new Mesi::Meters[heightUsed];
-			}
+			auto widthUsed = ctx.GetWidth();
+			wallRenderableTop.resize(widthUsed);
+			wallRenderableBottom.resize(widthUsed);
+			floorRenderableTop.resize(widthUsed);
+			floorRenderableBottom.resize(widthUsed);
+			ceilRenderableTop.resize(widthUsed);
+			ceilRenderableBottom.resize(widthUsed);
+			distances.resize(ctx.GetHeight());
 
 			for(auto x = 0u; x < ctx.GetWidth(); ++x) {
 				wallRenderableTop[x] = 0;
@@ -97,7 +67,6 @@ namespace Rendering {
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
 			if(portalDepth == MaxPortalDepth || minX > maxX || view.sector == nullptr)
 				return;
-			ASSERT(maxX < (int)widthUsed);
 
 			struct RoomRenderDefer {
 				View view;
@@ -474,7 +443,7 @@ namespace Rendering {
 
 			//todo: is it really worth doing this double loop?
 			//for(auto x = minX; x <= maxX; ++x) {
-				for(auto y = 0; y <= ScreenHeight; ++y) {
+				for(auto y = 0; y < ScreenHeight; ++y) {
 					if(distances[y] == 0_m) {
 						auto p = y - ScreenHeight / 2.f;
 						auto pp = -p / (ScreenHeight * vfovm);
