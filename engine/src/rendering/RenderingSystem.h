@@ -69,7 +69,7 @@ namespace Rendering {
 
 			xLeft, xRight, y are inclusive screen co-ordinates
 		*/
-		void DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Color c);
+		void DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Color c, bool useAlpha = false);
 
 		/**
 			Draw a neat line
@@ -81,7 +81,7 @@ namespace Rendering {
 		/**
 			Draw a filled rectangle
 		*/
-		void DrawRect(ScreenRect dest, Color c);
+		void DrawRect(ScreenRect dest, Color c, bool useAlpha = false);
 
 		/**
 			Draw a filled rectangle

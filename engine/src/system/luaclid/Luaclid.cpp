@@ -16,7 +16,12 @@ Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
 	ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
 	ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
 	ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
-	ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
+	luaX_getlocal(lua, "a");
+	if(lua_type(lua, -1) == LUA_TNIL) {
+		ret.a = 255;
+		lua_pop(lua, 1);
+	} else
+		ret.a = static_cast<int>(luaX_return<int>(lua));
 	lua_pop(lua, 1);
 	return ret;
 }
@@ -670,6 +675,16 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "Rect");
+
+				//Draw.RectAlpha
+				luaX_push(lua,
+					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Color)>>(
+						[ctx](Rendering::ScreenRect rec, Rendering::Color c) {
+							ctx->DrawRect(rec, c, true);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "RectAlpha");
 
 				//Draw.RectTextured
 				luaX_push(lua,

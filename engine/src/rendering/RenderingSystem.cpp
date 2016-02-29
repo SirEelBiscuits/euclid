@@ -48,9 +48,24 @@ namespace Rendering
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Color c) {
-		for(auto x = xLeft; x <= xRight; ++x)
-			ScreenPixel(x, y) = c;
+	void Context::DrawHLine(unsigned xLeft, unsigned xRight, unsigned y, Color c, bool useAlpha /* = false */) {
+		if(useAlpha) {
+			/*
+				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
+				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
+				*/
+			auto interpolant = Maths::reverseInterp(0.0f, 255.f, c.a);
+			for(auto x = xLeft; x <= xRight; ++x) {
+				auto &dst = ScreenPixel(x, y);
+				dst.r = (uint8_t)Maths::interp(dst.r, c.r, interpolant);
+				dst.g = (uint8_t)Maths::interp(dst.g, c.g, interpolant);
+				dst.b = (uint8_t)Maths::interp(dst.b, c.b, interpolant);
+			}
+		} else {
+			for(auto x = xLeft; x <= xRight; ++x)
+				ScreenPixel(x, y) = c;
+		}
+
 
 		DEBUG_RENDERING();
 	}
@@ -195,7 +210,7 @@ namespace Rendering
 		DEBUG_RENDERING();
 	}
 
-	void Context::DrawRect(ScreenRect rect, Color c) {
+	void Context::DrawRect(ScreenRect rect, Color c, bool useAlpha /* = false */ ) {
 		if(rect.size.x < 0) {
 			rect.pos.x += rect.size.x;
 			rect.size.x = -rect.size.x;
@@ -223,7 +238,7 @@ namespace Rendering
 		auto right = Maths::min(GetWidth(), static_cast<unsigned>(left + rect.size.x - 1));
 		unsigned bottom = rect.pos.y + rect.size.y;
 		for(unsigned y = rect.pos.y; y < bottom && y < GetHeight(); ++y)
-			DrawHLine(left, right, y, c);
+			DrawHLine(left, right, y, c, useAlpha);
 	}
 
 	void Context::DrawRect(ScreenVec2 topLeft, ScreenVec2 topRight, Color c) {
