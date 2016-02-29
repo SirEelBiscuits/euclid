@@ -854,6 +854,9 @@ namespace System {
 				//Game.ShowMouse
 				luaX_setlocal(lua, "ShowMouse", System::Input::SetMouseShowing);
 
+				//Game.IsMouseShowing
+				luaX_setlocal(lua, "IsMouseShowing", System::Input::GetMouseShowing);
+
 				lua_pop(lua, 1);
 			}
 
