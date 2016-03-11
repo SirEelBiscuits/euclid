@@ -426,7 +426,12 @@ namespace System {
 			lua_gettop(lua);
 			if(2 == pushed && lua_isfunction(lua, -1)) {
 				luaX_push(lua, cfg.IsValueSet("startstate") ? cfg.GetValue<std::string>("startstate") : "" );
-				if(LUA_OK == luaX_pcall(lua, 1, 0) )
+
+				// If 'extradata' was provided, this needs to be copied into a table for the last
+				// parameter. Copying between two lua instances is a bastard though!
+				cfg.PushExtraDataToLuaStack(lua);
+
+				if(LUA_OK == luaX_pcall(lua, 2, 0) )
 					--pushed;
 			}
 			lua_pop(lua, pushed);

@@ -1,4 +1,4 @@
-Game.LoadAndWatchFile("game/SFA.lua")
+Game.LoadAndWatchFile("editor/PreviewState.lua")
 
 Editor.Commands = Editor.Commands or {}
 
@@ -21,7 +21,14 @@ end
 
 function Editor.Commands.Preview(editor)
 	Draw.SetRenderScale(4)
-	editor.machine:PushState(StateList.SFA, editor.curMapData)
+	if editor.extradata.previewfile then
+		Game.LoadAndWatchFile(editor.extradata.previewfile)
+	end
+	if editor.extradata.previewstate then
+		editor.machine:PushState(ClassFromName(editor.extradata.previewstate), editor.curMapData)
+	else
+		editor.machine:PushState(Editor.PreviewState, editor)
+	end
 end
 
 function Editor.Commands.Save(editor)

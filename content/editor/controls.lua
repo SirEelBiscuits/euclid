@@ -386,6 +386,30 @@ local MouseControls = {
 	},
 }
 
+local PreviewControls = {
+	{
+		Name = "RaiseCamera",
+		PosKey = "q",
+		NegKey = "e"
+	},
+	{
+		Name = "Turn",
+		MouseAxis = "x",
+		Relative = true,
+		Scale = -0.1,
+	},
+	{
+		Name = "PreviewForward",
+		PosKey = "w",
+		NegKey = "s",
+	},
+	{
+		Name = "PreviewRight",
+		PosKey = "d",
+		NegKey = "a",
+	},
+}
+
 local function Concat(a, b, ...)
 	if not a then
 		return Concat(b, ...)
@@ -410,5 +434,6 @@ return Concat(
 	TexturingControls,
 	DrawSectorControls,
 	SpriteControls,
-	DataEditControls
+	DataEditControls,
+	PreviewControls
 )

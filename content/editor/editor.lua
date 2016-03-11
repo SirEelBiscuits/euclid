@@ -69,10 +69,11 @@ function Editor:Quit()
 	Game.quit = true
 end
 
-function Editor:OnEnter(map)
+function Editor:OnEnter(map, extradata)
 	Textures = { text = Draw.GetTexture("resources/Mecha.png") }
 
 	self.Controls = dofile("editor/Controls.lua")
+	self.extradata = extradata
 	Game.LoadControls(self.Controls)
 
 	MapUtility.__index = MapUtility

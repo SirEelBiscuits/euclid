@@ -21,11 +21,14 @@ NameObject(Game.data.UpdateList, "Update List")
 NameObject(Game.data.UpdateWhenPausedList, "Update when paused List")
 NameObject(Game.data.KeepAliveList, "Keepalive List")
 
-function Game.Initialise(startstate)
+function Game.Initialise(startstate, extradata)
+	print("extra data: ", type(extradata))
+	Describe(extradata)
+	print("end")
 	Game.StateMachine = StateMachine:new()
 	Game.StateMachine:EnterState(StateList.QuitState)
 
-	Game.StateMachine:PushState(_G[startstate])
+	Game.StateMachine:PushState(_G[startstate], nil, extradata)
 
 	Game.Text = Draw.GetTexture("resources/Mecha.png")
 
