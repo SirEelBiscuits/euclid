@@ -16,6 +16,7 @@ namespace Rendering {
 		uint8_t a;
 	};
 	Color operator*(Color c, float s);
+	Color operator*(Color c, Fix16 s);
 
 	template<typename StorageType>
 	struct Rect {
