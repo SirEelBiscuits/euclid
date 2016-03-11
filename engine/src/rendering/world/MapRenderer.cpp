@@ -34,50 +34,20 @@ namespace Rendering {
 
 		MapRenderer::MapRenderer(Rendering::Context &ctx) 
 			: ctx(ctx)
-			, widthUsed(ctx.GetWidth())
-			, heightUsed(ctx.GetHeight())
-			, wallRenderableTop(new int[widthUsed])
-			, wallRenderableBottom(new int[widthUsed])
-			, floorRenderableTop(new int[widthUsed])
-			, floorRenderableBottom(new int[widthUsed])
-			, ceilRenderableTop(new int[widthUsed])
-			, ceilRenderableBottom(new int[widthUsed])
-			, distances(new Mesi::Meters[heightUsed])
-		{
-		
-		}
+		{}
 
 		MapRenderer::~MapRenderer() {
-			delete[] wallRenderableTop;
-			delete[] wallRenderableBottom;
-			delete[] floorRenderableTop;
-			delete[] floorRenderableBottom;
-			delete[] ceilRenderableTop;
-			delete[] ceilRenderableBottom;
-			delete[] distances;
 		}
 
 		void MapRenderer::Render(View const &view) {
-			if(ctx.GetWidth() > widthUsed) {
-				widthUsed = ctx.GetWidth();
-				delete[] wallRenderableTop;
-				delete[] wallRenderableBottom;
-				delete[] floorRenderableTop;
-				delete[] floorRenderableBottom;
-				delete[] ceilRenderableTop;
-				delete[] ceilRenderableBottom;
-				wallRenderableTop     = new int[widthUsed];
-				wallRenderableBottom  = new int[widthUsed];
-				floorRenderableTop    = new int[widthUsed];
-				floorRenderableBottom = new int[widthUsed];
-				ceilRenderableTop     = new int[widthUsed];
-				ceilRenderableBottom  = new int[widthUsed];
-			}
-			if(ctx.GetHeight() > heightUsed) {
-				heightUsed = ctx.GetHeight();
-				delete[] distances;
-				distances = new Mesi::Meters[heightUsed];
-			}
+			auto widthUsed = ctx.GetWidth();
+			wallRenderableTop.resize(widthUsed);
+			wallRenderableBottom.resize(widthUsed);
+			floorRenderableTop.resize(widthUsed);
+			floorRenderableBottom.resize(widthUsed);
+			ceilRenderableTop.resize(widthUsed);
+			ceilRenderableBottom.resize(widthUsed);
+			distances.resize(ctx.GetHeight());
 
 			for(auto x = 0u; x < ctx.GetWidth(); ++x) {
 				wallRenderableTop[x] = 0;
@@ -89,7 +59,7 @@ namespace Rendering {
 			}
 			//distances doesn't get zeroed here
 
-			spriteDeferList.clear();
+			spriteDefers.clear();
 			RenderRoom(view, 0, ctx.GetWidth() - 1);
 			DrawSprites();
 		}
@@ -97,7 +67,6 @@ namespace Rendering {
 		void MapRenderer::RenderRoom(View const &view, int minX, int maxX, int MaxPortalDepth, int portalDepth) {
 			if(portalDepth == MaxPortalDepth || minX > maxX || view.sector == nullptr)
 				return;
-			ASSERT(maxX < (int)widthUsed);
 
 			struct RoomRenderDefer {
 				View view;
@@ -474,7 +443,7 @@ namespace Rendering {
 
 			//todo: is it really worth doing this double loop?
 			//for(auto x = minX; x <= maxX; ++x) {
-				for(auto y = 0; y <= ScreenHeight; ++y) {
+				for(auto y = 0; y < ScreenHeight; ++y) {
 					if(distances[y] == 0_m) {
 						auto p = y - ScreenHeight / 2.f;
 						auto pp = -p / (ScreenHeight * vfovm);
@@ -615,7 +584,7 @@ namespace Rendering {
 			btStorageType lightLevel,
 			::World::Sprite *sprite
 		) {
-			spriteDeferList.emplace_back(view, lightLevel, sprite);
+			spriteDefers.emplace_back(view, lightLevel, sprite);
 		}
 
 		void MapRenderer::CollectSprites(
@@ -633,24 +602,45 @@ namespace Rendering {
 			auto ScreenHeight = ctx.GetHeight();
 			auto ScreenWidth = ctx.GetWidth();
 
-			for(auto &spriteCmd : spriteDeferList) {
+			SpriteDeferCompare cmp;
+			std::sort(spriteDefers.begin(), spriteDefers.end(), cmp);
+			for(int i = spriteDefers.size() - 1; i > 0; --i) {
+				auto & a = spriteDefers[i];
+				auto & b = spriteDefers[i-1];
+				if(!cmp(a, b) && !cmp(b, a))
+					spriteDefers.erase(spriteDefers.begin() + i);
+			}
+
+			for(auto &spriteCmd : spriteDefers) {
 				auto &view = spriteCmd.view;
 				auto &lightLevel = spriteCmd.lightLevel;
-				auto &sprite = spriteCmd.sprite;
-				if(sprite->tex == nullptr)
-					continue;
-				auto height = Mesi::Meters(static_cast<btStorageType>(sprite->tex->h
-					/ (btStorageType)Texture::PixelsPerMeter));
-				auto width  = Mesi::Meters(static_cast<btStorageType>(sprite->tex->w
-					/ (btStorageType)Texture::PixelsPerMeter));
+				auto *sprite = spriteCmd.sprite;
+
+				// getting the angle the sprite is being viewed from
+				auto posRel = sprite->position - view.eye;
 				auto posVS  = view.ToViewSpace(sprite->position);
+
+				auto viewAngleToSprite = atan2(posVS.y.val, posVS.x.val);
+				auto relAngleToSprite  = atan2(posRel.y.val, posRel.x.val);
+
+				auto anglerel = relAngleToSprite - sprite->angle - 0.5*viewAngleToSprite - PI*0.25;
+				while(anglerel > PI) anglerel -= PI * 2;
+				while(anglerel < -PI) anglerel += PI * 2;
+
+				auto *tex = sprite->GetTexture(anglerel);
+				if(tex == nullptr)
+					continue;
+				auto height = Mesi::Meters(static_cast<btStorageType>(tex->h
+					/ (btStorageType)Texture::PixelsPerMeter));
+				auto width  = Mesi::Meters(static_cast<btStorageType>(tex->w
+					/ (btStorageType)Texture::PixelsPerMeter));
 
 				if(posVS.y < 0.001_m)
 					continue;
 
 				auto texSourceRect   = Rendering::UVRect(
 					{0_fp, 0_fp}, 
-					{Fix16(sprite->tex->w), Fix16(sprite->tex->h)}
+					{Fix16(tex->w), Fix16(tex->h)}
 				);
 				auto xLeft  = posVS.x - width / 2.0f;
 				auto xRight = posVS.x + width / 2.0f;
@@ -669,7 +659,7 @@ namespace Rendering {
 				if(texDestRect.size.x > 0 && texDestRect.size.y > 0)
 					ctx.DrawRectAlphaDepth(
 						texDestRect,
-						sprite->tex,
+						tex,
 						texSourceRect,
 						sprite->GetSector()->lightLevel,
 						posVS.y.val

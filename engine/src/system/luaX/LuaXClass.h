@@ -26,7 +26,7 @@ POST_STD_LIB
 	Additionally after registration, calling luaX_push(T) with the registered type will push the lua wrapper.
 	*/
 template<typename T, typename... Args>
-luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
+luaX_ref luaX_registerClass(lua_State *lua, std::string name, Args... args) {
 	auto x = lua_gettop(lua);
 	auto flxr = luaX_typeTable.find(typeid(T));
 	if(flxr != luaX_typeTable.end()) {
@@ -34,7 +34,8 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 		return *flxr->second;
 	}
 	luaX_getglobal(lua, "CreateNativeClass");
-	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
+	luaX_push(lua, name);
+	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 1, 1, 0));
 	luaX_registerClassMethod(lua, args...);
 
 	auto lxr = std::make_unique<luaX_ref>(lua);
@@ -45,7 +46,7 @@ luaX_ref luaX_registerClass(lua_State *lua, Args... args) {
 }
 
 template<typename T, typename... Args>
-luaX_ref luaX_registerClass(lua_State *lua) {
+luaX_ref luaX_registerClass(lua_State *lua, std::string name) {
 	auto x = lua_gettop(lua);
 	auto flxr = luaX_typeTable.find(typeid(T));
 	if(flxr != luaX_typeTable.end()) {
@@ -53,8 +54,9 @@ luaX_ref luaX_registerClass(lua_State *lua) {
 		return *flxr->second;
 	}
 	luaX_getglobal(lua, "CreateNativeClass");
+	luaX_push(lua, name);
 
-	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 0, 1, 0));
+	CRITICAL_ASSERT(LUA_OK == lua_pcall(lua, 1, 1, 0));
 
 	auto lxr = std::make_unique<luaX_ref>(lua); // this pops the object
 	auto lxrp = lxr.get();

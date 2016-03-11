@@ -26,7 +26,7 @@ namespace Modes {
 	}
 
 	void Game::Run() {
-		System::Luaclid::GameInitialise(lua);
+		System::Luaclid::GameInitialise(lua, cfg);
 		System::Events::SetHandlers(
 			[this](System::Events::Types type, void *p1, void *p2) {
 				HandleEvents(type, p1, p2);

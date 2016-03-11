@@ -68,15 +68,14 @@ namespace Rendering {
 		private:
 			Rendering::Context &ctx;
 
-			unsigned widthUsed;
-			unsigned heightUsed;
-			int *wallRenderableTop;
-			int *wallRenderableBottom;
-			int *floorRenderableTop;
-			int *floorRenderableBottom;
-			int *ceilRenderableTop;
-			int *ceilRenderableBottom;
-			Mesi::Meters *distances;
+			std::vector<int> wallRenderableTop{};
+			std::vector<int> wallRenderableBottom{};
+			std::vector<int> floorRenderableTop{};
+			std::vector<int> floorRenderableBottom{};
+			std::vector<int> ceilRenderableTop{};
+			std::vector<int> ceilRenderableBottom{};
+			std::vector<Mesi::Meters> distances{};
+
 
 			struct SpriteDefer {
 				SpriteDefer(View v, btStorageType ll, ::World::Sprite *s) : view(v), lightLevel(ll), sprite(s) {}
@@ -84,7 +83,22 @@ namespace Rendering {
 				btStorageType lightLevel;
 				::World::Sprite *sprite;
 			};
-			std::vector<SpriteDefer> spriteDeferList;
+
+			class SpriteDeferCompare {
+			public:
+				bool operator()(SpriteDefer const a, SpriteDefer const b) const {
+					return a.sprite < b.sprite || (a.sprite == b.sprite &&
+						a.view.sector < b.view.sector || (a.view.sector == b.view.sector &&
+						a.lightLevel < b.lightLevel || ( a.lightLevel == b.lightLevel &&
+						a.view.eye.x < b.view.eye.x || ( a.view.eye.x == b.view.eye.x &&
+						a.view.eye.y < b.view.eye.y || ( a.view.eye.y == b.view.eye.y &&
+						a.view.eye.z < b.view.eye.z
+					)))))
+					;
+				}
+			};
+
+			std::vector<SpriteDefer> spriteDefers;
 		};
 	}
 }

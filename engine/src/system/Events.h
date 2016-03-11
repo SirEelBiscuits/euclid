@@ -48,6 +48,9 @@ namespace System {
 		void SetMouseShowing(bool show);
 
 		//Implemented in platform code
+		bool GetMouseShowing();
+
+		//Implemented in platform code
 		bool ReturnOnKeyInput();
 		
 		//implemented in platform code

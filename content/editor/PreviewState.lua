@@ -1,45 +1,50 @@
-Editor.PreviewState = Editor.PreviewState or {
-	CommandList = {
-		"PreviewRaiseCeiling",
-		"PreviewLowerCeiling",
-		"PreviewRaiseFloor",
-		"PreviewLowerFloor",
-	}
+Editor.PreviewState = Editor.PreviewState or CreateNewClass("DragObjectState")
+
+
+Editor.PreviewState.CommandList = {
+	"PreviewRaiseCeiling",
+	"PreviewLowerCeiling",
+	"PreviewRaiseFloor",
+	"PreviewLowerFloor",
 }
+
 print("PreviewState reloaded")
 
-function Editor.PreviewState:Enter()
+function Editor.PreviewState:OnEnter(editor)
 	Game.ShowMouse(false)
-	Editor.State = self
 	print("entering preview state")
 
+	self.editor = editor
 
-	Editor.curMap = Game.OpenMap(Editor.curMapData)
+
+	editor.curMap = Game.OpenMap(editor.curMapData)
 
 	self.radius = .5
 	self.speed = 4
 	self.secID = 1
-	self.sector = Editor.curMap:GetSector(self.secID - 1)
-	Editor.curMapData:SetCentroids()
-	self.eye = Editor.curMapData.sectors[self.secID].centroid
-	self.eye.z = (Editor.curMapData.sectors[self.secID].floorHeight or 0) + 1.65
+	self.sector = editor.curMap:GetSector(self.secID - 1)
+	editor.curMapData:SetCentroids()
+	self.eye = editor.curMapData.sectors[self.secID].centroid
+	self.eye.z = (editor.curMapData.sectors[self.secID].floorHeight or 0) + 1.65
 	self.angle = 0
 end
 
 function Editor.PreviewState:CurSec()
-	return Editor.curMapData.sectors[self.secID]
+	local editor = self.editor
+	return editor.curMapData.sectors[self.secID]
 end
 
 function Editor.PreviewState:Update(dt)
+	local editor = self.editor
 	if Game.Controls.Quit.pressed then
-		Editor.DefaultState:Enter()
+		self:PopState()
 		Game.ShowMouse(true)
 	end
 
 	for _, v in ipairs(self.CommandList) do
 		local control = Game.Controls[v]
-		if type(control) == "table" and control.pressed and Editor.Commands[v] then
-			Editor.Commands[v](self)
+		if type(control) == "table" and control.pressed and editor.Commands[v] then
+			editor.Commands[v](self)
 		end
 	end
 
@@ -50,18 +55,21 @@ function Editor.PreviewState:Update(dt)
 		* Maths.Vector:new(Game.Controls.PreviewRight, Game.Controls.PreviewForward, 0)
 		* dt * self.speed
 
-	self.secID, self.eye = Editor.curMapData:SafeMove(self.secID, self.eye, targetPos)
+	self.secID, self.eye = editor.curMapData:SafeMove(self.secID, self.eye, targetPos)
 	self.secID, self.eye =
-		Editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
+		editor.curMapData:PopOutOfWalls(self.secID, self.eye, self.radius)
 	self.eye.z = math.max(
 		self:CurSec().floorHeight + 0.1,
 		math.min(self:CurSec().ceilHeight - 0.1, self.eye.z)
 	)
-	self.sector = Editor.curMap:GetSector(self.secID - 1)
+	self.sector = editor.curMap:GetSector(self.secID - 1)
+
+	return true
 end
 
 function Editor.PreviewState:Render()
+	local editor = self.editor
 	local view = {eye = self.eye, angle = math.rad(self.angle), sector = self.sector}
 	Draw.Map(view)
-	Draw.TopDownMap(Editor.curMap, view, {g = 255})
+	Draw.TopDownMap(editor.curMap, view, {g = 255})
 end

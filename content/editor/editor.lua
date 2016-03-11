@@ -1,17 +1,27 @@
-Editor = Editor or {
-	State = {},
-	view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 },
-	Selection = {verts = {}, walls = {}, sectors = {}},
-	Cursor = {},
-	History = {level = 0, snapshots = {}},
-}
+Editor = Editor or CreateNewClass("Editor")
+
+Game.LoadAndWatchFile("editor/Selection.lua")
+Game.LoadAndWatchFile("editor/History.lua")
+Game.LoadAndWatchFile("editor/Commands.lua")
+Game.LoadAndWatchFile("editor/DefaultState.lua")
+Game.LoadAndWatchFile("editor/TypingState.lua")
+Game.LoadAndWatchFile("editor/TypingGroupState.lua")
+Game.LoadAndWatchFile("editor/DragObjectState.lua")
+Game.LoadAndWatchFile("editor/DrawSectorState.lua")
+Game.LoadAndWatchFile("editor/TexturePickerState.lua")
+Game.LoadAndWatchFile("editor/CameraDragState.lua")
+Game.LoadAndWatchFile("editor/ScaleSelectionState.lua")
+Game.LoadAndWatchFile("editor/RotateSelectionState.lua")
+Game.LoadAndWatchFile("editor/EditDataState.lua")
+
 
 Editor.Colors = {
 	walls           = {r =   0, g = 128, b =   0},
 	step            = {r =  64, g =   0, b =   0},
 	obstacle        = {r = 255, g =   0, b =   0},
-	window          = {r =   0, g =  64, b =  64},
-	portal          = {r =   0, g = 192, b = 192},
+	window          = {r =   0, g = 255, b = 255},
+	portal          = {r =   0, g = 128, b = 128},
+	connector       = {r =   0, g =  32, b =  32},
 	weirdWall       = {r = 127, g = 127, b = 127},
 	weirdPortal     = {r = 127, g = 127, b = 127},
 
@@ -25,9 +35,28 @@ Editor.Colors = {
 
 	vertDrawing     = {r =   0, g = 255, b = 255},
 	selectedTexture = {r =   0, g = 255, b =   0},
+
+	object          = {r = 200, g = 200, b =  30},
+	objectSelected  = {r =  30, g = 200, b = 200},
 }
 
-function GetEmptyMap()
+Editor.Lookup = {
+	Sprite = { label = "Spr", color = {r = 200, g = 200, b = 30} },
+	Spawner = { label = "Spwn", color = {r = 75, g = 125, b = 60} },
+}
+
+function Editor:ctor()
+	self.Selection = Selection:new({owner = self})
+	self.view = { eye = Maths.Vector:new(0, 0, 0), scale = 10, angle = 0 }
+	self.Cursor = Maths.Vector:new(0,0,0)
+	self.selectionRange = 3
+	self.Clipboard = {}
+	self.History = History:new({owner = self})
+
+	self.StateMachine = StateMachine:new({owner = self})
+end
+
+function Editor.GetEmptyMap()
 	local ret =  {
 		sectors = {},
 		verts = {}
@@ -36,54 +65,53 @@ function GetEmptyMap()
 	return ret
 end
 
-function Game.Initialise()
+function Editor:Quit()
+	Game.quit = true
+end
+
+function Editor:OnEnter(map, extradata)
 	Textures = { text = Draw.GetTexture("resources/Mecha.png") }
 
-	Editor.Controls = dofile("editor/Controls.lua")
-	Game.LoadControls(Editor.Controls)
-	Game.LoadAndWatchFile("editor/Commands.lua")
-	Game.LoadAndWatchFile("editor/DefaultState.lua")
-	Game.LoadAndWatchFile("editor/TypingState.lua")
-	Game.LoadAndWatchFile("editor/PreviewState.lua")
-	Game.LoadAndWatchFile("editor/DragObjectState.lua")
-	Game.LoadAndWatchFile("editor/DrawSectorState.lua")
-	Game.LoadAndWatchFile("editor/TexturePickerState.lua")
-	Game.LoadAndWatchFile("editor/CameraDragState.lua")
-	Game.LoadAndWatchFile("luaclid/MapUtility.lua")
+	self.Controls = dofile("editor/Controls.lua")
+	self.extradata = extradata
+	Game.LoadControls(self.Controls)
 
 	MapUtility.__index = MapUtility
 
-	Editor.DefaultState:Enter()
-	Editor.curMapData = GetEmptyMap()
-	Editor.History:Clear()
+	self.StateMachine:EnterState(Editor.DefaultState)
+	if type(map) == "string" then
+		map = dofile(map)
+	end
+	self.curMapData = map or self.GetEmptyMap()
+	self.History:Clear()
 
 	Game.quit = false
 
-	print("initialised")
+	Draw.SetRenderScale(1)
+	Game.ShowMouse(true)
+
+	print("Editor initialised")
 end
 
-function Game.SaveState()
-end
-function Game.LoadState()
-end
-
-function Game.Quit()
-	Game.quit = true;
+function Editor:OnPopped()
+	Draw.SetRenderScale(1)
+	Game.LoadControls(self.Controls)
+	Game.ShowMouse(true)
 end
 
-function Game.Update(dt)
-	Game.FPS = Game.FPS or 1
-	local n = math.log(Game.FPS)
-	Game.FPS = (n * Game.FPS + 1/dt) / (n+1)
+function Editor:Update(dt)
+	self.FPS = self.FPS or 1
+	local n = math.log(self.FPS)
+	self.FPS = (n * self.FPS + 1/dt) / (n+1)
 
-	Editor.Cursor = Editor:WorldFromScreen(
+	self.Cursor = self:WorldFromScreen(
 		Maths.Vector:new(
 			Game.Controls.MouseX / Draw.GetScale(),
 			Game.Controls.MouseY / Draw.GetScale()
 		)
 	)
 
-	Editor.State:Update(dt)
+	self.StateMachine:Update(dt)
 
 	if false then
 		if #Game.Input > 0 and not Game.Input[1].keyRepeat then
@@ -94,15 +122,28 @@ function Game.Update(dt)
 	return not Game.quit
 end
 
-function Game.Render()
+function Editor:Render()
 	Draw.Rect({x = 0, y = 0, w = Draw.GetWidth(), h = Draw.GetHeight()}, {})
 
-	Editor.State:Render()
+	self.StateMachine:Render()
 
 	if Textures.text then
-		local s = tostring(math.floor(Game.FPS))
+		local s = tostring(math.floor(self.FPS))
 		Draw.Text({x = Draw.GetWidth() - s:len() * 8 - 4, y = 4}, Textures.text, s)
 	end
+end
+
+function Editor:EnterState(state, ...)
+	self.StateMachine:EnterState(state, ...)
+end
+
+function Editor:PushState(state, ...)
+	print("pushing state: " .. GetName(state))
+	self.StateMachine:PushState(state, ...)
+end
+
+function Editor:PopState(...)
+	self.StateMachine:PopState(...)
 end
 
 function Editor:OpenMap(filename)
@@ -113,7 +154,7 @@ function Editor:OpenMap(filename)
 
 	self.curMapData:FixAllSectorWindings()
 
-	self.curMap     = Game.OpenMap(Editor.curMapData)
+	self.curMap     = Game.OpenMap(self.curMapData)
 	self.History:Clear()
 	print("done")
 end
@@ -123,7 +164,7 @@ function Editor:SaveMap(filename)
 		self.curMapName = filename or self.curMapName
 	end
 	print("trying to save " .. filename)
-	local str = serialise(Editor.curMapData)
+	local str = serialise(self.curMapData)
 	local file = io.open(filename, "w")
 	io.output(file)
 	io.write(str)
@@ -158,6 +199,34 @@ function Editor:DrawTopDownMap(colors)
 	end
 
 	for i, sec in ipairs(self.curMapData.sectors) do
+		if sec.objects then
+			for j, obj in ipairs(sec.objects) do
+				local pos = self:ScreenFromWorld(
+					(obj.data.offset or Maths.Vector:new(0,0,0)) + sec.centroid
+				)
+				local radius = obj.data.radius or 0.5
+				pos.x = pos.x - radius * self.view.scale * 0.7
+				pos.y = pos.y - radius * self.view.scale * 0.7
+				pos.w = radius * 1.4 * self.view.scale
+				pos.h = radius * 1.4 * self.view.scale
+
+				local Lookup = self.Lookup[obj.Class] or {label = "?", color = colors.object}
+
+				local color = Lookup.color
+				if self.Selection:IsSelected("objects", i, j) then
+					color = colors.objectSelected
+				end
+				Draw.Rect(pos, color)
+				local label = Lookup.label
+				if pos.w > 8 * #obj.Class then
+					Draw.Text(pos, Game.Text, obj.Class)
+				elseif pos.w > 8 * #label then
+					Draw.Text(pos, Game.Text, label)
+				else
+					Draw.Text(pos, Game.Text, obj.Class:sub(1,1))
+				end
+			end
+		end
 		for j, wall in ipairs(sec.walls) do
 			local nWall = sec.walls[j % #sec.walls + 1]
 			local color
@@ -191,7 +260,13 @@ function Editor:DrawTopDownMap(colors)
 							else
 								local diff = math.abs(sec1.floorHeight - sec2.floorHeight)
 								if diff <= 0.05 then
-									color = colors.portal
+									if sec1.floorTex == nil or sec2.floorTex == nil then
+										color = colors.portal
+									elseif sec1.floorTex.tex == sec2.floorTex.tex then
+										color = colors.connector
+									else
+										color = colors.portal
+									end
 								elseif diff <= 0.5 then
 									color = colors.step
 								else
@@ -219,7 +294,7 @@ function Editor:DrawTopDownMap(colors)
 	for i, sec in ipairs(self.curMapData.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			local nWall = sec.walls[j % #sec.walls + 1]
-			if self.Selection:IsWallSelected(i, j) then
+			if self.Selection:IsSelected("walls", i, j) then
 				Draw.Line(
 					self:ScreenFromWorld(MakeVec(self.curMapData.verts[wall.start])),
 					self:ScreenFromWorld(MakeVec(self.curMapData.verts[nWall.start])),
@@ -242,7 +317,7 @@ function Editor:DrawTopDownMap(colors)
 				colors.sectorNonConvex
 			)
 		end
-		if self.Selection:IsSectorSelected(i) then
+		if self.Selection:IsSelected("sectors", i) then
 			Draw.Rect(
 				{
 					x = v.x - 1,
@@ -257,7 +332,7 @@ function Editor:DrawTopDownMap(colors)
 
 	for i, vert in ipairs(self.curMapData.verts) do
 		local color
-		if self.Selection:IsVertSelected(i) then
+		if self.Selection:IsSelected("verts", i) then
 			color = colors.vertSelection
 		else
 			color = colors.vert
@@ -333,22 +408,41 @@ function Editor:GetWallsWithEnds(vert1, vert2)
 	return ret
 end
 
+function Editor:GetObjects(vec)
+	local ret = {}
+	for i, sec in ipairs(self.curMapData.sectors) do
+		if sec.objects then
+			for j,object in ipairs(sec.objects) do
+				local rel = vec - (sec.centroid + (object.data.offset or Maths.Vector:new(0,0,0)))
+				rel.z = 0
+				if (rel):LengthSquared() < (object.radius or 0.5) ^ 2 then
+					table.insert(ret, {i, j})
+				end
+			end
+		end
+	end
+	return ret
+end
+
 function Editor:GetControlsKey(Name)
+	local ret = ""
 	for i, c in ipairs(self.Controls) do
 		if c.Name == Name then
 			if c.ShiftPressed then
-				return "shift+" .. c.Key
-			else
-				return c.Key
+				ret = "shift+"
 			end
+			if c.CtrlPressed then
+				ret = ret .. "ctrl+"
+			end
+			return ret .. c.Key
 		end
 	end
 end
 
 function Editor:GetSelectionString()
-	local verts = self.Selection:GetSelectedVerts()
+	local verts = self.Selection:GetSelected("verts")
 	local walls = self.Selection:GetSelectedWalls()
-	local sectors = self.Selection:GetSelectedSectors()
+	local sectors = self.Selection:GetSelected("sectors")
 
 
 	if #sectors > 0 and #verts == 0 and #walls == 0 then
@@ -361,6 +455,9 @@ function Editor:GetSelectionString()
 		local light = sec1.lightLevel or "multiple values"
 		local ceilTex = sec1.ceilTex ~= nil and sec1.ceilTex.tex or nil
 		local floorTex = sec1.floorTex ~= nil and sec1.floorTex.tex or nil
+		local group = sec1.group
+		local someGroupless = group == nil
+		local outdoors = sec1.outdoors
 		for i,s in ipairs(sectors) do
 			local sec = self.curMapData.sectors[s]
 			if sec.ceilHeight ~= ceilH then
@@ -378,6 +475,19 @@ function Editor:GetSelectionString()
 			if sec.floorTex == nil or sec.floorTex.tex ~= floorTex then
 				floorTex = nil
 			end
+			if not group then
+				group = sec.group
+			else
+				if sec.group and group ~= sec.group then
+					group = "multiple values"
+				end
+				if sec.group == nil then
+					someGroupless = true
+				end
+			end
+			if (sec.outdoors == true) ~= (outdoors == true) then
+				outdoors = "multiple values"
+			end
 		end
 
 		local workingString = ""
@@ -388,9 +498,9 @@ function Editor:GetSelectionString()
 		end
 
 		workingString = workingString
-			.. "ceil height: " .. ceilH .. "[" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n"
-			.. "floor height: " .. floorH .. "[" .. (self:GetControlsKey("SetFloorHeight") or "???") .. " ] to edit\n"
-			.. "light level: " .. light .. "[" .. (self:GetControlsKey("SetLightLevel") or "???") .. " ] to edit\n"
+			.. "ceil height: " .. ceilH .. " [" .. (self:GetControlsKey("SetCeilHeight") or "???") .. "] to edit\n"
+			.. "floor height: " .. floorH .. " [" .. (self:GetControlsKey("SetFloorHeight") or "???") .. "] to edit\n"
+			.. "light level: " .. light .. " [" .. (self:GetControlsKey("SetLightLevel") or "???") .. "] to edit\n"
 		local count = 4
 		local ret = {}
 
@@ -409,6 +519,17 @@ function Editor:GetSelectionString()
 			table.insert(ret, {pos = {x = 0, y = count * 16, w = 64, h = 64}, tex = floorTex})
 			count = count + 4
 		end
+
+		workingString = workingString .. "group: " .. (group or "<nil>")
+		if someGroupless then
+			workingString = workingString .. "*"
+		end
+		workingString = workingString .. " [" .. (self:GetControlsKey("SetGroup") or "???") .. "] to edit\n"
+		count = count + 1
+
+		workingString = workingString .. "outdoors: " .. tostring(outdoors) .. " [" .. (self:GetControlsKey("SetOutdoors") or "???")
+			.. "/" .. (self:GetControlsKey("SetIndoors") or "???") .. "] to change"
+		count = count + 1
 
 		return workingString, count, ret
 
@@ -512,113 +633,3 @@ function Editor:GetSelectionString()
 	return "", 0, {}
 end
 
-function Editor.Selection:Clear(callback)
-	self.verts = {}
-	self.walls = {}
-	self.sectors = {}
-	self.OnSelectionChange = callback or function() end
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:SelectVert(id)
-	self.verts[id] = true
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:DeselectVert(id)
-	self.verts[id] = nil
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:IsVertSelected(id)
-	return self.verts[id] or false
-end
-
-function Editor.Selection:GetSelectedVerts()
-	local ret = {}
-	for i in pairs(self.verts) do
-		table.insert(ret, i)
-	end
-	return ret
-end
-
-function Editor.Selection:SelectWall(secID, wallID)
-	self.walls[secID] = self.walls[secID] or {}
-	self.walls[secID][wallID] = true
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:DeselectWall(secID, wallID)
-	self.walls[secID][wallID] = nil
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:IsWallSelected(secID, wallID)
-	return (self.walls[secID] or false) and self.walls[secID][wallID] or false
-end
-
-function Editor.Selection:GetSelectedWalls()
-	local ret = {}
-	for i, s in pairs(self.walls) do
-		for j in pairs(s) do
-			table.insert(ret, {sec = i, wall = j})
-		end
-	end
-	return ret
-end
-
-function Editor.Selection:SelectSector(id)
-	self.sectors[id] = true
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:DeselectSector(id)
-	self.sectors[id] = nil
-	self.OnSelectionChange()
-end
-
-function Editor.Selection:IsSectorSelected(id)
-	return self.sectors[id] or false
-end
-
-function Editor.Selection:GetSelectedSectors()
-	local ret = {}
-	for i in pairs(self.sectors) do
-		table.insert(ret, i)
-	end
-	return ret
-end
-
-function Editor.History:RegisterSnapshot()
-	if self.level ~= 0 then
-		local startIdx = #self.snapshots - self.level + 1
-		print("Trimming history, " .. #self.snapshots .. " snapshots, trimming to level " .. self.level)
-		for i = startIdx, #self.snapshots do
-			self.snapshots[i] = nil
-		end
-	end
-	self.level = 0
-
-	Editor.curMapData = DeepCopy(Editor.curMapData)
-	table.insert(self.snapshots, Editor.curMapData)
-end
-
-function Editor.History:Undo()
-	self.level = self.level + 1
-	if self.level >= #self.snapshots then
-		self.level = self.level - 1
-	end
-	Editor.curMapData = self.snapshots[#self.snapshots - self.level]
-end
-
-function Editor.History:Redo()
-	self.level = self.level - 1
-	if self.level < 0 then self.level = 0 end
-	Editor.curMapData = self.snapshots[#self.snapshots - self.level]
-end
-
-function Editor.History:Clear()
-	self.level = 0
-	self.snapshots = {}
-	self:RegisterSnapshot()
-end

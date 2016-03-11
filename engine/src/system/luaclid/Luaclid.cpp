@@ -16,7 +16,12 @@ Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
 	ret.r = static_cast<int>(luaX_returnlocal<int>(lua, "r"));
 	ret.g = static_cast<int>(luaX_returnlocal<int>(lua, "g"));
 	ret.b = static_cast<int>(luaX_returnlocal<int>(lua, "b"));
-	ret.a = static_cast<int>(luaX_returnlocal<int>(lua, "a"));
+	luaX_getlocal(lua, "a");
+	if(lua_type(lua, -1) == LUA_TNIL) {
+		ret.a = 255;
+		lua_pop(lua, 1);
+	} else
+		ret.a = static_cast<int>(luaX_return<int>(lua));
 	lua_pop(lua, 1);
 	return ret;
 }
@@ -189,7 +194,7 @@ namespace System {
 				auto ret = luaX_dofile(lua, filename);
 				ASSERT(ret);
 			};
-			for(auto s : {"luaclid.lua", "luaclid/maths.lua"}) {
+			for(auto s : {"luaclid.lua"}) {
 				auto ret = luaX_dofile(lua, s);
 				CRITICAL_ASSERT(ret);
 				System::Events::RegisterFileToWatch(s, reloader);
@@ -202,10 +207,22 @@ namespace System {
 			RegisterTypes(lua);
 			RegisterFunctions(lua, &ctx, reloader);
 
-			auto startscript = cfg.GetValue<std::string>("startscript");
-			auto ret = luaX_dofile(lua, startscript.c_str());
-			CRITICAL_ASSERT(ret);
-			System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
+			if(luaX_dofile(lua, "luaclid-late.lua"))
+				System::Events::RegisterFileToWatch("luaclid-late.lua", reloader);
+
+			{
+				auto Gamelua = "Game.lua";
+				auto ret = luaX_dofile(lua, Gamelua);
+				CRITICAL_ASSERT(ret);
+				System::Events::RegisterFileToWatch(Gamelua, reloader);
+			}
+
+			{
+				auto startscript = cfg.GetValue<std::string>("startscript");
+				auto ret = luaX_dofile(lua, startscript.c_str());
+				CRITICAL_ASSERT(ret);
+				System::Events::RegisterFileToWatch(startscript.c_str(), reloader);
+			}
 		}
 
 		std::unique_ptr<World::Map> LoadMap(lua_State *lua, char const *filename) {
@@ -403,12 +420,18 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void GameInitialise(lua_State *lua) {
+		void GameInitialise(lua_State *lua, System::Config &cfg) {
 			auto x = lua_gettop(lua);
 			auto pushed = luaX_getglobal(lua, "Game", "Initialise");
 			lua_gettop(lua);
 			if(2 == pushed && lua_isfunction(lua, -1)) {
-				if(LUA_OK == luaX_pcall(lua, 0, 0) )
+				luaX_push(lua, cfg.IsValueSet("startstate") ? cfg.GetValue<std::string>("startstate") : "" );
+
+				// If 'extradata' was provided, this needs to be copied into a table for the last
+				// parameter. Copying between two lua instances is a bastard though!
+				cfg.PushExtraDataToLuaStack(lua);
+
+				if(LUA_OK == luaX_pcall(lua, 2, 0) )
 					--pushed;
 			}
 			lua_pop(lua, pushed);
@@ -451,22 +474,22 @@ namespace System {
 		void RegisterTypes(lua_State *lua) {
 			auto x = lua_gettop(lua);
 			// we need to pre-declare these classes, as there are some circular references within some of them
-			auto luaPosVec = luaX_registerClass<PositionVec2>(lua
+			auto luaPosVec = luaX_registerClass<PositionVec2>(lua, "PositionVec2"
 				, "x", &PositionVec2::x
 				, "y", &PositionVec2::y
 			);
-			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua
+			auto luaTexture = luaX_registerClass<Rendering::Texture>(lua, "Texture"
 				, "width", &Rendering::Texture::w
 				, "height", &Rendering::Texture::h
 			);
-			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua
+			auto luaTextureInfo = luaX_registerClass<Rendering::TextureInfo>(lua, "TextureInfo"
 				, "tex", &Rendering::TextureInfo::tex
 				, "uvStart", &Rendering::TextureInfo::uvStart
 			);
 
 			////////////////////////////////////
 			// Wall
-			auto luaWall = luaX_registerClass<World::Wall>(lua
+			auto luaWall = luaX_registerClass<World::Wall>(lua, "Wall"
 				, "portal", &World::Wall::portal
 				, "start" , &World::Wall::start);
 			luaWall.push();
@@ -482,7 +505,7 @@ namespace System {
 
 			////////////////////////////////////
 			// Sector
-			auto luaSector = luaX_registerClass<World::Sector>(lua
+			auto luaSector = luaX_registerClass<World::Sector>(lua, "Sector"
 					, "ceilHeight",        &World::Sector::ceilHeight
 					, "floorHeight",       &World::Sector::floorHeight
 					, "lightLevel",        &World::Sector::lightLevel
@@ -512,7 +535,7 @@ namespace System {
 
 			////////////////////////////////////
 			// Map
-			auto luaMap = luaX_registerClass<World::Map>(lua
+			auto luaMap = luaX_registerClass<World::Map>(lua, "Map"
 				, "GetNumSectors",       &World::Map::GetNumSectors
 				, "GetSectorID",         &World::Map::GetSectorID
 				, "AddNewSector",        &World::Map::AddNewSector
@@ -565,11 +588,11 @@ namespace System {
 
 			/////////////////////////////////
 			// Sprite
-			auto luaSprite = luaX_registerClass<World::Sprite>(lua
-				, "_Move",             &World::Sprite::Move
-				, "texture",          &World::Sprite::tex
+			auto luaSprite = luaX_registerClass<World::Sprite>(lua, "Sprite"
+				, "_Move",            &World::Sprite::Move
 				, "height",           &World::Sprite::height
 				, "position",         &World::Sprite::position
+				, "angle",            &World::Sprite::angle
 			);
 			luaSprite.push();
 			
@@ -584,6 +607,31 @@ namespace System {
 				}
 			);
 			lua_setfield(lua, -2, "Move");
+
+			//set_texture(self, texture)
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					auto tex = luaX_return<Rendering::Texture*>(s);
+					lua_getfield(s, 1, "_data");
+					auto spr = luaX_touserdata<World::Sprite>(s, -1);
+					spr->SetTexture(tex);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "set_texture");
+
+			//set_textureAngle(self, texture, angle)
+			lua_pushcfunction(lua,
+				[](lua_State *s) {
+					auto angle = luaX_return<btStorageType>(s);
+					auto tex = luaX_return<Rendering::Texture*>(s);
+					lua_getfield(s, 1, "_data");
+					auto spr = luaX_touserdata<World::Sprite>(s, -1);
+					spr->SetTextureAngle(tex, angle);
+					return 0;
+				}
+			);
+			lua_setfield(lua, -2, "set_textureAngle");
 
 			lua_pop(lua, 1);
 
@@ -601,6 +649,8 @@ namespace System {
 				//TODO: this cast is ugly but necessary in VS2015. what do?
 				static_cast<std::function<void(std::string)>>(
 					[lua, reloader](std::string filename) {
+						if(System::Events::IsFileBeingWatched(filename.c_str()))
+							return;
 						auto ret = luaX_dofile(lua, filename.c_str());
 						ASSERT(ret);
 						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
@@ -630,6 +680,16 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "Rect");
+
+				//Draw.RectAlpha
+				luaX_push(lua,
+					static_cast<std::function<void(Rendering::ScreenRect, Rendering::Color)>>(
+						[ctx](Rendering::ScreenRect rec, Rendering::Color c) {
+							ctx->DrawRect(rec, c, true);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "RectAlpha");
 
 				//Draw.RectTextured
 				luaX_push(lua,
@@ -773,6 +833,16 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "SetRenderScale");
 
+				//Draw.GetRenderScale
+				luaX_push(lua,
+					static_cast<std::function<int()>>(
+						[ctx]() {
+							return ctx->GetScale();
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetRenderScale");
+
 				lua_pop(lua, 1);
 			}
 
@@ -803,6 +873,9 @@ namespace System {
 
 				//Game.ShowMouse
 				luaX_setlocal(lua, "ShowMouse", System::Input::SetMouseShowing);
+
+				//Game.IsMouseShowing
+				luaX_setlocal(lua, "IsMouseShowing", System::Input::GetMouseShowing);
 
 				lua_pop(lua, 1);
 			}

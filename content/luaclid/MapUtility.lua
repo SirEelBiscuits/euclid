@@ -78,8 +78,8 @@ function MapUtility:SplitWall(secID, wallID)
 
 	local newVertPos = (self:GetVert(wall.start) + wallEnd) / 2
 	table.insert(self.verts, newVertPos)
-	local newWall = { 
-		start = #self.verts, 
+	local newWall = {
+		start = #self.verts,
 		topTex = DeepCopy(wall.topTex),
 		mainTex = DeepCopy(wall.mainTex),
 		bottomTex = DeepCopy(wall.bottonTex),
@@ -89,7 +89,7 @@ function MapUtility:SplitWall(secID, wallID)
 
 	-- now we have to check the wall on the far side of the portal if there is one
 	-- as it will need to be split also
-	
+
 	local otherSec = self.sectors[wall.portal]
 	if otherSec ~= nil then
 		for i, wall in ipairs(otherSec.walls) do
@@ -172,7 +172,7 @@ end
 
 function MapUtility:IsPointInSector(vec, secID)
 	local sec = self.sectors[secID]
-	for i, wall in ipairs(sec.walls) do 
+	for i, wall in ipairs(sec.walls) do
 		local start = self:GetVert(wall.start)
 		local nextWall = sec.walls[i % #sec.walls + 1]
 		local nextStart = self:GetVert(nextWall.start)
@@ -190,6 +190,7 @@ function MapUtility:SetSectorCentroid(sec)
 		acc = acc + self:GetVert(wall.start)
 	end
 	acc = acc / #sec.walls
+	acc.z = sec.floorHeight
 	sec.centroid = acc
 end
 
@@ -232,10 +233,10 @@ function MapUtility:SplitSector(SecID, wall1ID, wall2ID)
 	end
 
 	-- now we stitch any portals leading in
-	
+
 	self:SetSectorCentroid(newLeftSec)
 	self:SetSectorCentroid(newRightSec)
-	
+
 	for i, sec in ipairs(self.sectors) do
 		for j, wall in ipairs(sec.walls) do
 			if wall.portal == SecID then
@@ -250,7 +251,7 @@ function MapUtility:SplitSector(SecID, wall1ID, wall2ID)
 			end
 		end
 	end
-	
+
 
 	-- and add the new sectors to the list
 
@@ -390,20 +391,21 @@ function MapUtility:PopOutOfWallsInner(
 		local wallEnd = self:GetVert(nextWall.start)
 
 		local dist, norm = Maths.PointLineSegDistance(workingPosition, wallStart, wallEnd)
-		if WorkingSector == 3 and i == 4 then
-		end
 		if wall.portal == nil
-			or (TransitionCheck ~= nil and TransitionCheck(WorkingSector, wall.portal, i) == false) then
+			or (TransitionCheck ~= nil
+				and TransitionCheck(WorkingSector, wall.portal, i) == false)
+		then
 			if dist < radius then
 				norm = norm / math.sqrt(norm:LengthSquared())
 
 				local newPos = workingPosition + norm * (radius - dist)
-				Sector, workingPosition = self:SafeMove(Sector, workingPosition, newPos)
+				Sector, workingPosition = self:SafeMove(Sector, Position, newPos)
 			end
 		else
 			if Cross2D(wallEnd - wallStart, workingPosition - wallStart) > 0
-				and dist < radius then
-				Sector, workingPosition = self:PopOutOfWallsInner(Sector, workingPosition, wall.portal, radius)
+				and dist < radius
+			then
+				Sector, workingPosition = self:PopOutOfWallsInner(Sector, workingPosition, wall.portal, radius, TransitionCheck)
 			end
 		end
 	end

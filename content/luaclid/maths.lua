@@ -1,6 +1,6 @@
 Maths = Maths or {
-	Vector = CreateNewClass(),
-	Matrix = CreateNewClass(),
+	Vector = CreateNewClass("Vector"),
+	Matrix = CreateNewClass("Matrix"),
 
 	RotationMatrix = function(angle)
 		local c = math.cos(math.rad(angle))
@@ -40,6 +40,10 @@ end
 
 function Maths.Vector:LengthSquared()
 	return self.x * self.x + self.y * self.y + self.z * self.z
+end
+
+function Maths.Vector:As2D()
+	return Maths.Vector:new(self.x or 0, self.y or 0)
 end
 
 function Maths.Matrix:new(a, b, c, d)

@@ -14,6 +14,10 @@ namespace System {
 			SDL_SetRelativeMouseMode(show? SDL_FALSE : SDL_TRUE);
 		}
 
+		bool GetMouseShowing() {
+			return SDL_GetRelativeMouseMode() == SDL_FALSE;
+		}
+
 		bool ReturnOnKeyInput() {
 			SDL_Event e;
 			while(true) {

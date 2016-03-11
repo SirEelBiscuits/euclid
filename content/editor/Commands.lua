@@ -1,152 +1,189 @@
+Game.LoadAndWatchFile("editor/PreviewState.lua")
+
 Editor.Commands = Editor.Commands or {}
 
 function Editor.Commands.reinit()
 	Game.Initialise()
 end
 
-function Editor.Commands.Quit()
-	Game.quit = true
+function Editor.Commands.Quit(editor)
+	Game.StateMachine:PopState("edited", editor.curMapData)
 end
 
-function Editor.Commands.OpenMap()
-	Editor.TypingState:Enter("Enter filename or hit escape", "Bad filename, try again",
+function Editor.Commands.OpenMap(editor)
+	editor:PushState(Editor.TypingState, "Enter filename or hit escape", "Bad filename, try again",
 		function(filename)
-			Editor:OpenMap(filename)
-			Editor.DefaultState:Enter()
+			editor:OpenMap(filename)
+			editor:PopState()
 		end
 	)
 end
 
-function Editor.Commands.Preview()
-	Editor.PreviewState:Enter()
+function Editor.Commands.Preview(editor)
+	Draw.SetRenderScale(4)
+	if editor.extradata.previewfile then
+		Game.LoadAndWatchFile(editor.extradata.previewfile)
+	end
+	if editor.extradata.previewstate then
+		editor.machine:PushState(ClassFromName(editor.extradata.previewstate), editor.curMapData)
+	else
+		editor.machine:PushState(Editor.PreviewState, editor)
+	end
 end
 
-function Editor.Commands.Save()
+function Editor.Commands.Save(editor)
 	print("saving")
-	Editor.TypingState:Enter("Enter filename or hit escape", "Bad filename, try again",
+	editor:PushState(Editor.TypingState, "Enter filename or hit escape", "Bad filename, try again",
 		function (filename)
-			Editor:SaveMap(filename)
+			editor:SaveMap(filename)
 
-			Editor.DefaultState:Enter()
+			editor:PopState()
 		end
 	)
 end
 
-function Editor.Commands.Undo()
-	Editor.Selection:Clear(Editor.State.OnSelectionChanged)
-	Editor.History:Undo()
+function Editor.Commands.Undo(editor)
+	editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
+	editor.History:Undo()
 end
 
-function Editor.Commands.Redo()
-	Editor.Selection:Clear(Editor.State.OnSelectionChanged)
-	Editor.History:Redo()
+function Editor.Commands.Redo(editor)
+	editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
+	editor.History:Redo()
 end
 
-function Editor.Commands.AddSelect()
-	local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
-		1 / Editor.view.scale)
+local function GetClicked(editor)
+	local idx, dist = editor:GetClosestVertIdx(editor.Cursor,
+		editor.selectionRange / editor.view.scale)
 	if idx ~= nil then
-		if Editor.Selection:IsVertSelected(idx) then
-			Editor.Selection:DeselectVert(idx)
-		else
-			Editor.Selection:SelectVert(idx)
-		end
+		return "verts", 1, idx
 	else
-		local wallinfo = Editor:GetClosestWallIdx(Editor.Cursor,
-			1 / Editor.view.scale)
+		local wallinfo = editor:GetClosestWallIdx(editor.Cursor,
+			editor.selectionRange / editor.view.scale)
 		if #wallinfo > 0 then
-			for i, info in ipairs(wallinfo) do
-				if Editor.Selection:IsWallSelected(info.sec, info.wall) then
-					Editor.Selection:DeselectWall(info.sec, info.wall)
-				else
-					Editor.Selection:SelectWall(info.sec, info.wall)
-				end
-			end
+			return "walls", #wallinfo, wallinfo
 		else
-			local SecUpdateList = {}
-			local anyDeselected = false
-			for i, sec in ipairs(Editor.curMapData.sectors) do
-				if Editor.curMapData:IsPointInSector(Editor.Cursor, i) then
-					table.insert(SecUpdateList, i)
-					anyDeselected = anyDeselected or not Editor.Selection:IsSectorSelected(i)
-				end
-			end
-			if anyDeselected then
-				for i, v in ipairs(SecUpdateList) do
-					Editor.Selection:SelectSector(v)
-				end
+			local objects = editor:GetObjects(editor.Cursor)
+			if #objects > 0 then
+				return "objects", #objects, objects
 			else
-				for i, v in ipairs(SecUpdateList) do
-					Editor.Selection:DeselectSector(v)
+				local secs = {}
+				for i, sec in ipairs(editor.curMapData.sectors) do
+					if editor.curMapData:IsPointInSector(editor.Cursor, i) then
+						table.insert(secs, i)
+					end
 				end
+				return "sectors", #secs, secs
 			end
 		end
 	end
 end
 
-function Editor.Commands.ExclusiveSelect()
-	Editor.Selection:Clear(Editor.State.OnSelectionChanged)
 
-	local idx, dist = Editor:GetClosestVertIdx(Editor.Cursor,
-		1 / Editor.view.scale)
-	if idx ~= nil then
-		Editor.Selection:SelectVert(idx)
-	else
-		local wallinfo = Editor:GetClosestWallIdx(Editor.Cursor,
-			1 / Editor.view.scale)
-		if #wallinfo > 0 then
-			for i, info in ipairs(wallinfo) do
-				Editor.Selection:SelectWall(info.sec, info.wall)
+function Editor.Commands.AddSelect(editor)
+	local kind, num, val = GetClicked(editor)
+	if kind == "walls" then
+		for i, info in ipairs(val) do
+			editor.Selection:ToggleSelect("walls", info.sec, info.wall)
+		end
+	elseif kind == "objects" then
+		for i, spr in ipairs(val) do
+			editor.Selection:ToggleSelect("objects", spr[1], spr[2])
+		end
+	elseif kind == "verts" then
+		editor.Selection:ToggleSelect("verts", val)
+	elseif kind == "sectors" then
+		local anyDeselected = false
+		for i, sec in ipairs(val) do
+			if not editor.Selection:IsSelected("sectors", sec) then
+				anyDeselected = true
+				break
+			end
+		end
+
+		if anyDeselected then
+			for i, sec in ipairs(val) do
+				editor.Selection:Select("sectors", sec)
 			end
 		else
-			for i, sec in ipairs(Editor.curMapData.sectors) do
-				if Editor.curMapData:IsPointInSector(Editor.Cursor, i) then
-					Editor.Selection:SelectSector(i)
-				end
+			for i, sec in ipairs(val) do
+				editor.Selection:Deselect("sectors", sec)
 			end
 		end
 	end
 end
 
-function Editor.Commands.DeleteObject()
-	if #Editor.Selection.verts > 0 or #Editor.Selection.sectors > 0 then
-		Editor.History:RegisterSnapshot()
-	end
-	for i = #Editor.curMapData.sectors, 1, -1 do
-		if Editor.Selection:IsSectorSelected(i) then
-			Editor.curMapData:DeleteSector(i)
-		end
-	end
-	for i = #Editor.curMapData.verts, 1, -1 do
-		if Editor.Selection:IsVertSelected(i) then
-			Editor.curMapData:DeleteVert(i)
-		end
-	end
-	Editor.curMapData:DeleteUnreferencedVerts()
+function Editor.Commands.ExclusiveSelect(editor)
+	editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
 
-	Editor.Selection:Clear(Editor.State.OnSelectionChanged)
+	local kind, num, val = GetClicked(editor)
+	if kind == "verts" then
+		editor.Selection:Select("verts", val)
+	elseif kind == "objects" then
+		for i, spr in ipairs(val) do
+			editor.Selection:ToggleSelect("objects", spr[1], spr[2])
+		end
+	elseif kind == "walls" then
+		for i, info in ipairs(val) do
+			editor.Selection:Select("walls", info.sec, info.wall)
+		end
+	elseif kind == "sectors" then
+		for i, sec in ipairs(val) do
+			editor.Selection:Select("sectors", sec)
+		end
+	end
 end
 
-function Editor.Commands.SplitWall()
-	local walls = Editor.Selection:GetSelectedWalls()
-	if #walls > 0 and #Editor.Selection:GetSelectedVerts() == 0 and #Editor.Selection:GetSelectedSectors() == 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.Selection:Clear(Editor.State.OnSelectionChanged)
+function Editor.Commands.DeleteObject(editor)
+	if #editor.Selection.verts > 0 or #editor.Selection.sectors > 0
+		or (editor.Selection.objects and #editor.Selection.objects > 0)
+	then
+		editor.History:RegisterSnapshot()
+	end
+	for i = #editor.curMapData.sectors, 1, -1 do
+		if editor.Selection:IsSelected("sectors", i) then
+			editor.curMapData:DeleteSector(i)
+		else
+			local sec = editor.curMapData.sectors[i]
+			if sec.objects then
+				for j = #sec.objects, 1, -1 do
+					if editor.Selection:IsSelected("objects", i, j) then
+						table.remove(sec.objects, j)
+					end
+				end
+			end
+		end
+	end
+	for i = #editor.curMapData.verts, 1, -1 do
+		if editor.Selection:IsSelected("verts", i) then
+			editor.curMapData:DeleteVert(i)
+		end
+	end
+	editor.curMapData:DeleteUnreferencedVerts()
+
+	editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
+end
+
+function Editor.Commands.SplitWall(editor)
+	local walls = editor.Selection:GetSelectedWalls()
+	if #walls > 0 and #editor.Selection:GetSelected("verts") == 0 and #editor.Selection:GetSelected("sectors") == 0 then
+		editor.History:RegisterSnapshot()
+		editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
 		table.sort(walls, function(a, b) return a.sec < b.sec or (a.sec == b.sec and a.wall < b.wall) end )
 		for i = #walls, 1, -1 do
-			local v = Editor.curMapData:SplitWall(walls[i].sec, walls[i].wall)
-			Editor.Selection:SelectVert(v)
+			local v = editor.curMapData:SplitWall(walls[i].sec, walls[i].wall)
+			editor.Selection:Select("verts", v)
 		end
 	end
 end
 
-function Editor.Commands.JoinSectors()
-	local verts = Editor.Selection:GetSelectedVerts()
-	local walls = Editor.Selection:GetSelectedWalls()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.JoinSectors(editor)
+	local verts = editor.Selection:GetSelected("verts")
+	local walls = editor.Selection:GetSelectedWalls()
+	local sects = editor.Selection:GetSelected("sectors")
 	if #verts == 2 and #walls == 0 and #sects == 0 then
 		local UpdateList = {}
-		for i, sec in ipairs(Editor.curMapData.sectors) do
+		for i, sec in ipairs(editor.curMapData.sectors) do
 			local vert1found = -1
 			local vert2found = -1
 			for j, wall in ipairs(sec.walls) do
@@ -164,203 +201,481 @@ function Editor.Commands.JoinSectors()
 			end
 		end
 		if #UpdateList > 0 then
-			Editor.History:RegisterSnapshot()
+			editor.History:RegisterSnapshot()
 		end
 		for i = #UpdateList, 1, -1 do
-			Editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
+			editor.curMapData:SplitSector(UpdateList[i].sec, UpdateList[i].vert1, UpdateList[i].vert2)
 		end
-		Editor.Selection:Clear(Editor.State.OnSelectionChanged)
+		editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
 	elseif #verts == 0 and #walls == 0 and #sects == 2 then
-		Editor.History:RegisterSnapshot()
-		Editor.Selection:Clear(Editor.State.OnSelectionChanged)
-		local idx = Editor.curMapData:JoinSectors(sects[1], sects[2])
+		editor.History:RegisterSnapshot()
+		editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
+		local idx = editor.curMapData:JoinSectors(sects[1], sects[2])
 		if idx ~= nil then
-			Editor.Selection:SelectSector(idx)
+			editor.Selection:Select("sectors", idx)
 		end
 	end
 end
 
-function Editor.Commands.EnterDrawSectorMode()
-	Editor.History:RegisterSnapshot()
-	Editor.DrawSectorState:Enter()
+function Editor.Commands.EnterDrawSectorMode(editor)
+	editor.History:RegisterSnapshot()
+	editor:PushState(Editor.DrawSectorState)
 end
 
-function Editor.Commands.SetCeilHeight()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.SetCeilHeight(editor)
+	local sects = editor.Selection:GetSelected("sectors")
 
 	if #sects > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TypingState:Enter("Enter new ceiling height", "bad number entered",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TypingState, "Enter new ceiling height", "bad number entered",
 			function(string)
-				local secs = Editor.Selection:GetSelectedSectors()
+				local secs = editor.Selection:GetSelected("sectors")
 				for i, s in ipairs(secs) do
-					local sec = Editor.curMapData.sectors[s]
+					local sec = editor.curMapData.sectors[s]
 					sec.ceilHeight = tonumber(string)
 				end
 
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.SetFloorHeight()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.SetGroup(editor)
+	local options = {}
+	for k,v in ipairs(editor.curMapData.sectors) do
+		if v.group then
+			options[v.group] = true
+		end
+	end
+	editor:PushState(Editor.TypingGroupState, "Enter group name", options, "?",
+		function(groupName)
+			local secs = editor.Selection:GetSelected("sectors")
+			for i, s in ipairs(secs) do
+				local sec = editor.curMapData.sectors[s]
+				sec.group = groupName
+			end
+
+			editor:PopState()
+		end
+	)
+end
+
+function Editor.Commands.SelectGroup(editor)
+	local groups = {}
+	local secs = editor.Selection:GetSelected("sectors")
+	for _, s in pairs(secs) do
+		local sec = editor.curMapData.sectors[s]
+		if sec.group then
+			groups[sec.group] = true
+		end
+	end
+	for k, v in ipairs(editor.curMapData.sectors) do
+		if groups[v.group] then
+			editor.Selection:Select("sectors", k)
+		end
+	end
+end
+
+function Editor.Commands.AdjustCeilHeight(editor)
+	local sects = editor.Selection:GetSelected("sectors")
 
 	if #sects > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TypingState:Enter("Enter new floor height", "bad number entered",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TypingState, "Enter ceiling height adjustment", "bad number entered",
 			function(string)
-				local secs = Editor.Selection:GetSelectedSectors()
+				local secs = editor.Selection:GetSelected("sectors")
 				for i, s in ipairs(secs) do
-					local sec = Editor.curMapData.sectors[s]
+					local sec = editor.curMapData.sectors[s]
+					sec.ceilHeight = sec.ceilHeight + tonumber(string)
+				end
+
+				editor:PopState()
+			end
+		)
+	end
+end
+
+function Editor.Commands.SetFloorHeight(editor)
+	local sects = editor.Selection:GetSelected("sectors")
+
+	if #sects > 0 then
+		editor.History:RegisterSnapshot()
+		editor:PushState(editor.TypingState, "Enter new floor height", "bad number entered",
+			function(string)
+				local secs = editor.Selection:GetSelected("sectors")
+				for i, s in ipairs(secs) do
+					local sec = editor.curMapData.sectors[s]
 					sec.floorHeight = tonumber(string)
 				end
 
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 		end
 		)
 	end
 end
 
-function Editor.Commands.SetLightLevel()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.AdjustFloorHeight(editor)
+	local sects = editor.Selection:GetSelected("sectors")
 
 	if #sects > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TypingState:Enter("Enter new light level", "bad light level entered",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TypingState, "Enter floor height adjustment", "bad number entered",
+			function(string)
+				local secs = editor.Selection:GetSelected("sectors")
+				for i, s in ipairs(secs) do
+					local sec = editor.curMapData.sectors[s]
+					sec.floorHeight = sec.floorHeight + tonumber(string)
+				end
+
+				editor:PopState()
+		end
+		)
+	end
+end
+
+function Editor.Commands.SetLightLevel(editor)
+	local sects = editor.Selection:GetSelected("sectors")
+
+	if #sects > 0 then
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TypingState, "Enter new light level", "bad light level entered",
 		function(string)
 			local ll = tonumber(string)
 			if ll < 0 or ll > 1 then
 				error("Light level must be in 0-1 range")
 			end
 			for i, s in ipairs(sects) do
-				local sec = Editor.curMapData.sectors[s]
+				local sec = editor.curMapData.sectors[s]
 				sec.lightLevel = ll
 			end
 
-			Editor.DefaultState:Enter(true)
+			editor:PopState()
 		end
 		)
 	end
 end
 
-function Editor.Commands.SetCeilTexture()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.SetCeilTexture(editor)
+	local sects = editor.Selection:GetSelected("sectors")
 	if #sects > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Ceiling Texture",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TexturePickerState, "Pick Ceiling Texture",
 			function(string)
 				if type(string) == "string" then
 					for i, s in ipairs(sects) do
-						local sec = Editor.curMapData.sectors[s]
+						local sec = editor.curMapData.sectors[s]
 						sec.ceilTex = sec.ceilTex or {}
 						sec.ceilTex.tex = string
 					end
 				end
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.SetFloorTexture()
-	local sects = Editor.Selection:GetSelectedSectors()
+function Editor.Commands.SetFloorTexture(editor)
+	local sects = editor.Selection:GetSelected("sectors")
 	if #sects > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Floor Texture",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TexturePickerState, "Pick Floor Texture",
 			function(string)
 				if type(string) == "string" then
 					for i, s in ipairs(sects) do
-						local sec = Editor.curMapData.sectors[s]
+						local sec = editor.curMapData.sectors[s]
 						sec.floorTex = sec.floorTex or {}
 						sec.floorTex.tex = string
 					end
 				end
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.SetTopTexture()
-	local walls = Editor.Selection:GetSelectedWalls()
+function Editor.Commands.SetTopTexture(editor)
+	local walls = editor.Selection:GetSelectedWalls()
 	if #walls > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Top Texture",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TexturePickerState, "Pick Top Texture",
 			function(string)
 				if type(string) == "string" then
 					for i, wall in ipairs(walls) do
-						local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+						local wall = editor.curMapData.sectors[wall.sec].walls[wall.wall]
 						wall.topTex = wall.topTex or {}
 						wall.topTex.tex = string
 					end
 				end
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.SetMainTexture()
-	local walls = Editor.Selection:GetSelectedWalls()
+function Editor.Commands.SetMainTexture(editor)
+	local walls = editor.Selection:GetSelectedWalls()
 	if #walls > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Main Texture",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TexturePickerState, "Pick Main Texture",
 			function(string)
 				if type(string) == "string" then
 					for i, wall in ipairs(walls) do
-						local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+						local wall = editor.curMapData.sectors[wall.sec].walls[wall.wall]
 						wall.mainTex = wall.mainTex or {}
 						wall.mainTex.tex = string
 					end
 				end
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.SetBottomTexture()
-	local walls = Editor.Selection:GetSelectedWalls()
+function Editor.Commands.SetBottomTexture(editor)
+	local walls = editor.Selection:GetSelectedWalls()
 	if #walls > 0 then
-		Editor.History:RegisterSnapshot()
-		Editor.TexturePickerState:Enter("Pick Bottom Texture",
+		editor.History:RegisterSnapshot()
+		editor:PushState(Editor.TexturePickerState, "Pick Bottom Texture",
 			function(string)
 				if type(string) == "string" then
 					for i, wall in ipairs(walls) do
-						local wall = Editor.curMapData.sectors[wall.sec].walls[wall.wall]
+						local wall = editor.curMapData.sectors[wall.sec].walls[wall.wall]
 						wall.bottomTex = wall.bottomTex or {}
 						wall.bottomTex.tex = string
 					end
 				end
-				Editor.DefaultState:Enter(true)
+				editor:PopState()
 			end
 		)
 	end
 end
 
-function Editor.Commands.PreviewRaiseCeiling(self)
-	local ceilHeight = self.sector:get_ceilHeight() + 0.1
-	self.sector:set_ceilHeight(ceilHeight)
-	Editor.curMapData.sectors[self.secID].ceilHeight = ceilHeight
+-- this is screen pixels per world meter
+Editor.Commands.ZoomLevels = {
+	0.1,
+	1,
+	10,
+	50,
+	200
+}
+Editor.Commands.ZoomLevelID = Editor.Commands.ZoomLevelID or 3
+
+local function ReZoom(editor)
+	Editor.Commands.ZoomLevelID = math.min(#Editor.Commands.ZoomLevels, math.max(1, Editor.Commands.ZoomLevelID))
+	editor.view.scale = Editor.Commands.ZoomLevels[Editor.Commands.ZoomLevelID]
 end
 
-function Editor.Commands.PreviewLowerCeiling(self)
-	local ceilHeight = self.sector:get_ceilHeight() - 0.1
-	self.sector:set_ceilHeight(ceilHeight)
-	Editor.curMapData.sectors[self.secID].ceilHeight = ceilHeight
+function Editor.Commands.ZoomIn(editor)
+	Editor.Commands.ZoomLevelID = Editor.Commands.ZoomLevelID + 1
+	ReZoom(editor)
 end
 
-function Editor.Commands.PreviewRaiseFloor(self)
-	local floorHeight = self.sector:get_floorHeight() + 0.1
-	self.sector:set_floorHeight(floorHeight)
-	Editor.curMapData.sectors[self.secID].floorHeight = floorHeight
+function Editor.Commands.ZoomOut(editor)
+	Editor.Commands.ZoomLevelID = Editor.Commands.ZoomLevelID - 1
+	ReZoom(editor)
 end
 
-function Editor.Commands.PreviewLowerFloor(self)
-	local floorHeight = self.sector:get_floorHeight() - 0.1
-	self.sector:set_floorHeight(floorHeight)
-	Editor.curMapData.sectors[self.secID].floorHeight = floorHeight
+function Editor.Commands.SetStartSector(editor)
+	local secs = editor.Selection:GetSelected("sectors")
+	if #secs == 1 then
+		editor.History:RegisterSnapshot()
+		editor.curMapData.defaultSector = secs[1]
+		print("Start sector set")
+	end
 end
 
+function Editor.Commands.Copy(editor)
+	local copy = {
+		verts = {},
+		sectors = {},
+	}
+	copy.basePos = editor.view.eye
+
+	-- METHOD
+	-- we need to copy all verts, walls, sectors listed, and any objects they
+	-- refer to.
+	--
+	-- This copy must be simple to paste new copies from so:
+	-- verts should contain their x/y
+	-- walls shouldn't be copied (they aren't true objects)
+	-- sectors should cause any verts they use to be copied, but should refer to
+	--  the vert in the copied verts list, not the global list!
+
+	for i, v in ipairs(editor.Selection:GetSelected("verts")) do
+		copy.verts[v] = DeepCopy(editor.curMapData.verts[v])
+	end
+
+	for i, s in pairs(editor.Selection:GetSelected("sectors")) do
+		local sec = editor.curMapData.sectors[s]
+		for j, w in ipairs(sec.walls) do
+			if not copy.verts[w.start] then
+				copy.verts[w.start] = DeepCopy(editor.curMapData.verts[w.start])
+			end
+		end
+		copy.sectors[s] = DeepCopy(editor.curMapData.sectors[s])
+
+		-- deal with portals here
+	end
+
+	editor.Clipboard.general = copy
+end
+
+function Editor.Commands.Paste(editor)
+	local verthookup = {}
+	local sechookup  = {}
+	for i, v in pairs(editor.Clipboard.general.verts) do
+		table.insert(
+			editor.curMapData.verts,
+			DeepCopy(v) - editor.Clipboard.general.basePos + editor.view.eye
+		)
+		verthookup[i] = #editor.curMapData.verts
+	end
+
+	for i, s in pairs(editor.Clipboard.general.sectors) do
+		table.insert(editor.curMapData.sectors, DeepCopy(s))
+		sechookup[i] = #editor.curMapData.sectors
+		for j, w in ipairs(editor.curMapData.sectors[sechookup[i]].walls) do
+			w.start = verthookup[w.start]
+		end
+		editor.curMapData:SetSectorCentroid(editor.curMapData.sectors[sechookup[i]])
+	end
+
+	for source, dest in pairs(sechookup) do
+		for i, wall in ipairs(editor.curMapData.sectors[dest].walls) do
+			if wall.portal then
+				if sechookup[wall.portal] then
+					wall.portal = sechookup[wall.portal]
+				else
+					wall.portal = nil
+				end
+			end
+		end
+	end
+
+	editor.Selection:Clear()
+	for _, s in pairs(sechookup) do
+		editor.Selection:Select("sectors", s)
+	end
+	for _, v in pairs(verthookup) do
+		editor.Selection:Select("verts", v)
+	end
+end
+
+function Editor.Commands.CopyProperties(editor)
+	local copy = {}
+	local secs = editor.Selection:GetSelected("sectors")
+	if #secs == 1 then
+		copy.sectors = DeepCopy(editor.curMapData.sectors[secs[1]])
+		copy.sectors.walls = nil
+		copy.sectors.centroid = nil
+	end
+	local walls = editor.Selection:GetSelectedWalls()
+	if #walls == 1 then
+		copy.walls = DeepCopy(
+			editor.curMapData.sectors[walls[1].sec].walls[walls[1].wall]
+		)
+		copy.walls.start = nil
+		copy.walls.portal = nil
+	end
+	editor.Clipboard.properties = copy
+end
+
+function Editor.Commands.PasteProperties(editor)
+	local copy = editor.Clipboard.properties
+	if copy.sectors then
+		local secs = editor.Selection:GetSelected("sectors")
+		for _, s in ipairs(secs) do
+			local sec = editor.curMapData.sectors[s]
+			for k, v in pairs(copy.sectors) do
+				sec[k] = v
+			end
+		end
+	end
+	if copy.walls then
+		local walls = editor.Selection:GetSelectedWalls()
+		for _, w in ipairs(walls) do
+			local wall = editor.curMapData.sectors[w.sec].walls[w.wall]
+			for k, v in pairs(copy.walls) do
+				wall[k] = v
+			end
+		end
+	end
+end
+
+function Editor.Commands.SetOutdoors(editor)
+	local secs = editor.Selection:GetSelected("sectors")
+	for _, v in ipairs(secs) do
+		editor.curMapData.sectors[v].outdoors = true
+	end
+	editor.Selection.OnSelectionChange()
+end
+
+function Editor.Commands.SetIndoors(editor)
+	local secs = editor.Selection:GetSelected("sectors")
+	for _, v in ipairs(secs) do
+		editor.curMapData.sectors[v].outdoors = false
+	end
+	editor.Selection.OnSelectionChange()
+end
+
+function Editor.Commands.SetOutdoorLevel(editor)
+	editor:PushState(Editor.TypingState, "Enter value for 'fully lit by outdoor light'", "what?",
+		function(value)
+			local secs = editor.Selection:GetSelected("sectors")
+			for _, s in ipairs(secs) do
+				editor.curMapData.sectors[s].outdoors = tonumber(value)
+			end
+
+			editor:PopState()
+		end
+	)
+end
+
+function Editor.Commands.CreateSprite(editor)
+	local secs = editor.Selection:GetSelected("sectors")
+	if #secs ~= 1 then return end
+	local sec = editor.curMapData.sectors[secs[1]]
+	editor:PushState(Editor.TexturePickerState, "Pick sprite",
+		function(sprite)
+			sec.objects = sec.objects or {}
+			table.insert(sec.objects, {
+				Class = "Sprite",
+				data = {
+					sprite = { Class = "Texture", data = { name = sprite} },
+					offset = Maths.Vector:new(0, 0, 0),
+					radius = 1
+				}
+			})
+			editor:PopState()
+		end
+	)
+end
+
+function Editor.Commands.EditThing(editor)
+	print("edit thing")
+	local objs = editor.Selection:GetSelected("objects")
+	if #objs == 1 then
+		local spr = editor.curMapData.sectors[objs[1][1]].objects[objs[1][2]]
+		editor:PushState(Editor.EditDataState, spr)
+	elseif #objs > 1 then
+			local set = {}
+			for i, v in ipairs(objs) do
+				table.insert(set, editor.curMapData.sectors[v[1]].objects[v[2]])
+			end
+			editor:PushState(Editor.EditDataState, set, true)
+	else
+		local secs = editor.Selection:GetSelected("sectors")
+		if #secs == 1 then
+			editor:PushState(Editor.EditDataState, editor.curMapData.sectors[secs[1]])
+		elseif #secs > 1 then
+			local set = {}
+			for i, v in ipairs(secs) do
+				table.insert(set, editor.curMapData.sectors[v])
+			end
+			editor:PushState(Editor.EditDataState, set, true)
+		end
+	end
+end
+
+print("Commands reloaded")
