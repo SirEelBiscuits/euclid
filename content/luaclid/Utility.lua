@@ -99,11 +99,11 @@ local function serializeInner (o, indent)
   elseif type(o) == "table" then
 		local isArr = isArray(o)
     ret = ret .. ("{\n")
-    for k,v in pairs(o) do
-			if type(k) == "string" then
-				ret = ret .. indent .. k .. " = "
-			elseif isArr then
+    for k,v in sortedpairs(o) do
+			if isArr then
 				ret = ret .. indent
+			elseif type(k) == "string" then
+				ret = ret .. indent .. k .. " = "
 			else
 	      ret = ret .. indent .. "[" .. serializeInner(k) .. "]" .. " = "
 			end
@@ -175,4 +175,64 @@ end
 
 function Explore(o)
 	Game.StateMachine:PushState(Editor.EditDataState, o)
+end
+
+function CreateQuickSubClass(baseClass, name, defaults, components)
+	local Class = CreateNewClass(baseClass, name)
+	if defaults then
+		for k,v in pairs(defaults) do
+			Class[k] = v
+		end
+	end
+	if components then
+		Class.ctor = function(self)
+			baseClass.ctor(self)
+			for k, v in pairs(components) do
+				local c = self:GetComponent(v.component)
+				if c then
+					for j, d in pairs(v.defaults) do
+						c[j] = d
+					end
+				else
+					self:AddNewComponent(v.component, v.defaults)
+				end
+			end
+		end
+	end
+	return Class
+end
+
+function ClassFromName(name)
+	local ClassCur = _G
+	for word in name:gmatch('[^.]*') do
+		if word ~= "" then
+			ClassCur = ClassCur[word]
+			if ClassCur == nil then
+				return nil
+			end
+		end
+	end
+	return ClassCur
+end
+
+function ObjectsFromData(Object, skipCopy)
+	local t = type(Object)
+	if t == "table" then
+		if Object.Class and Object.data then
+			local o = Object.data
+			if not skipCopy then
+				o = DeepCopy(Object.data)
+			end
+			for k,v in pairs(o) do
+				o[k] = ObjectsFromData(v)
+			end
+			local Class = ClassFromName(Object.Class)
+			if Class and Class.new then
+				return ClassFromName(Object.Class):new(o)
+			else
+				return nil
+			end
+		end
+	end
+	return Object
 end

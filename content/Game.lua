@@ -3,7 +3,9 @@ Game.LoadAndWatchFile("editor/Editor.lua")
 StateList = StateList or {}
 Game.data = Game.data or {
 	UpdateList = NewWeakTable(),
-	KeepAliveList = {}
+	UpdateWhenPausedList = NewWeakTable(),
+	KeepAliveList = {},
+	DeletionList = NewWeakTable(),
 }
 
 StateList.QuitState = StateList.QuitState or CreateNewClass("QuitState")
@@ -16,6 +18,7 @@ end
 NameObject(StateList, "State List")
 NameObject(Game.data, "Game.data")
 NameObject(Game.data.UpdateList, "Update List")
+NameObject(Game.data.UpdateWhenPausedList, "Update when paused List")
 NameObject(Game.data.KeepAliveList, "Keepalive List")
 
 function Game.Initialise(startstate)
@@ -32,6 +35,44 @@ end
 
 function Game.RegisterObjectForUpdate(o)
 	table.insert(Game.data.UpdateList, o)
+end
+
+function Game.UnregisterObjectForUpdate(o)
+	local idx = 0
+	for i, v in ipairs(Game.data.UpdateList) do
+		if v == o then
+			idx = i
+			break
+		end
+	end
+	if idx > 0 then
+		table.remove(Game.data.UpdateList, idx)
+	end
+end
+
+function Game.RegisterObjectForUpdateWhenPaused(o)
+	table.insert(Game.data.UpdateWhenPausedList, o)
+end
+
+function Game.UnregisterObjectForUpdateWhenPaused(o)
+	local idx = 0
+	for i, v in ipairs(Game.data.UpdateWhenPausedList) do
+		if v == o then
+			idx = i
+			break
+		end
+	end
+	if idx > 0 then
+		table.remove(Game.data.UpdateWhenPausedList, idx)
+	end
+end
+
+function Game.GetUpdateList(paused)
+	if paused then
+		return Game.data.UpdateWhenPausedList
+	else
+		return Game.data.UpdateList
+	end
 end
 
 function Game.RegisterObjectForKeepAlive(o)

@@ -1,13 +1,90 @@
 Editor.EditDataState = Editor.EditDataState or
 	CreateNewClass("EditDataState")
 
-function Editor.EditDataState:OnEnter(tableToEdit)
+function Editor.EditDataState:OnEnter(tableToEdit, isMultiTable, path)
 	Game.LoadControls(dofile("editor/Controls.lua"))
+	self.isMultiTable = isMultiTable
 	self.tableToEdit = tableToEdit
 	self.cursor = 1
 	self.scrolledTo = 1
-	self.screenLines = math.floor((Draw.GetHeight() / Draw.GetRenderScale()- 8 ) / 20)
+	self.screenLines = math.floor((Draw.GetHeight() / Draw.GetRenderScale()- 8 ) / 20) - 1
 	self:RecalcTableSize()
+	self.path = path or GetName(tableToEdit)
+end
+
+function Editor.EditDataState:GetKeyList()
+	if self.isMultiTable then
+		local keys = {}
+		for _, v in pairs(self.tableToEdit) do
+			for k in pairs(v) do
+				keys[k] = true
+			end
+		end
+		local keylist = {}
+		for k in pairs(keys) do
+			table.insert(keylist, k)
+		end
+		table.sort(keylist)
+		return keylist
+	else
+		return sortedkeys(self.tableToEdit)
+	end
+end
+
+function Editor.EditDataState:GetValue(keyname)
+	if self.isMultiTable then
+		local ret = nil
+		local someNil = false
+		local multipleValues = false
+		for _, tbl in pairs(self.tableToEdit) do
+			local v = tbl[keyname]
+			if v == nil then
+				someNil = true
+			else
+				if ret == nil then
+					ret = v
+				elseif ret ~= v then
+					multipleValues = true
+				end
+			end
+		end
+		return multipleValues, ret, someNil
+	else
+		return false, self.tableToEdit[keyname]
+	end
+end
+
+function Editor.EditDataState:SetValue(keyname, newValue)
+	if self.isMultiTable then
+		for _, tbl in pairs(self.tableToEdit) do
+			tbl[keyname] = newValue
+		end
+	else
+		self.tableToEdit[keyname] = newValue
+	end
+end
+
+function Editor.EditDataState:GetType(keyname)
+	if self.isMultiTable then
+		local ret = nil
+		local someNil = false
+		for _, tbl in pairs(self.tableToEdit) do
+			local t = type(tbl[keyname])
+			if t == "nil" then
+				someNil = true
+			else
+				if not ret then
+					ret = t
+				end
+				if ret ~= nil and ret ~= t then
+					ret = "multiple"
+				end
+			end
+		end
+		return ret, someNil
+	else
+		return type(self.tableToEdit[keyname]), false
+	end
 end
 
 -- plan - show a list of all data members of the provided table
@@ -47,18 +124,26 @@ function Editor.EditDataState:Update(dt)
 		self.scrolledTo = self.cursor
 	end
 
-	local keys = sortedkeys(self.tableToEdit)
+	local keys = self:GetKeyList()
 	local key = keys[self.cursor]
 	if Game.Controls.DataEdit.pressed then
-		local value = self.tableToEdit[key]
-		local t = type(value)
+		local t = self:GetType(key)
 		if t == "table" then
-			self:PushState(Editor.EditDataState, self.tableToEdit[key])
+			if self.isMultiTable then
+				local tableList = {}
+				for _, tbl in pairs(self.tableToEdit) do
+					tbl[key] = tbl[key] or {}
+					table.insert(tableList, tbl[key])
+				end
+				self:PushState(Editor.EditDataState, tableList, true, self.path .. "." .. tostring(key))
+			else
+				self:PushState(Editor.EditDataState, self.tableToEdit[key], false, self.path .. "." .. tostring(key))
+			end
 		elseif t == "number" then
 			self:PushState(Editor.TypingState, "Enter number for " .. tostring(key),
 				"???",
 				function(val)
-					self.tableToEdit[key] = tonumber(val)
+					self:SetValue(key, tonumber(val))
 					self:PopState()
 				end
 			)
@@ -66,19 +151,35 @@ function Editor.EditDataState:Update(dt)
 			self:PushState(Editor.TypingState, "Enter string for " .. tostring(key),
 				"???",
 				function(string)
-					self.tableToEdit[key] = string
+					self:SetValue(key, string)
 					self:PopState()
 				end
 			)
 		elseif t == "boolean" then
-			self.tableToEdit[key] = not value
+			local multi, value, somenil = self:GetValue(key)
+			if multi then
+				self:SetValue(key, true)
+			else
+				if somenil then
+					self:SetValue(key, value)
+				else
+					self:SetValue(key, not value)
+				end
+			end
+		elseif t == "multiple" then
 		end
 	end
 
 	if Game.Controls.DataNewTable.pressed then
 		self:PushState(Editor.TypingState, "Enter table name", "???",
 			function(name)
-				self.tableToEdit[name] = {}
+				if self.isMultiTable then
+					for k, v in pairs(self.tableToEdit) do
+						v[name] = {}
+					end
+				else
+					self.tableToEdit[name] = {}
+				end
 				self:RecalcTableSize()
 				self:PopState()
 			end
@@ -87,7 +188,13 @@ function Editor.EditDataState:Update(dt)
 	if Game.Controls.DataNewNumber.pressed then
 		self:PushState(Editor.TypingState, "Enter number name", "???",
 			function(name)
-				self.tableToEdit[name] = 0
+				if self.isMultiTable then
+					for k, v in pairs(self.tableToEdit) do
+						v[name] = 0
+					end
+				else
+					self.tableToEdit[name] = 0
+				end
 				self:RecalcTableSize()
 				self:PopState()
 			end
@@ -96,7 +203,13 @@ function Editor.EditDataState:Update(dt)
 	if Game.Controls.DataNewString.pressed then
 		self:PushState(Editor.TypingState, "Enter string name", "???",
 			function(name)
-				self.tableToEdit[name] = ""
+				if self.isMultiTable then
+					for k, v in pairs(self.tableToEdit) do
+						v[name] = ""
+					end
+				else
+					self.tableToEdit[name] = ""
+				end
 				self:RecalcTableSize()
 				self:PopState()
 			end
@@ -105,15 +218,68 @@ function Editor.EditDataState:Update(dt)
 	if Game.Controls.DataNewBool.pressed then
 		self:PushState(Editor.TypingState, "Enter bool name", "???",
 			function(name)
-				self.tableToEdit[name] = false
+				if self.isMultiTable then
+					for k, v in pairs(self.tableToEdit) do
+						v[name] = false
+					end
+				else
+					self.tableToEdit[name] = false
+				end
 				self:RecalcTableSize()
 				self:PopState()
 			end
 		)
 	end
 
+	if Game.Controls.DataInsertTable.pressed then
+		if self.isMultiTable then
+			for k, v in pairs(self.tableToEdit) do
+				table.insert(v, {})
+			end
+		else
+			table.insert(self.tableToEdit, {})
+		end
+		self:RecalcTableSize()
+	end
+	if Game.Controls.DataInsertNumber.pressed then
+		if self.isMultiTable then
+			for k, v in pairs(self.tableToEdit) do
+				table.insert(v, 0)
+			end
+		else
+			table.insert(self.tableToEdit, {})
+		end
+		self:RecalcTableSize()
+	end
+	if Game.Controls.DataInsertString.pressed then
+		if self.isMultiTable then
+			for k, v in pairs(self.tableToEdit) do
+				table.insert(v, "")
+			end
+		else
+			table.insert(self.tableToEdit, {})
+		end
+		self:RecalcTableSize()
+	end
+	if Game.Controls.DataInsertBool.pressed then
+		if self.isMultiTable then
+			for k, v in pairs(self.tableToEdit) do
+				table.insert(v, false)
+			end
+		else
+			table.insert(self.tableToEdit, {})
+		end
+		self:RecalcTableSize()
+	end
+
 	if Game.Controls.DataDelete.pressed then
-		self.tableToEdit[key] = nil
+		if self.isMultiTable then
+			for _, tbl in pairs(self.tableToEdit) do
+				tbl[key] = nil
+			end
+		else
+			self.tableToEdit[key] = nil
+		end
 		self:RecalcTableSize()
 	end
 
@@ -122,14 +288,20 @@ end
 
 function Editor.EditDataState:Render()
 	Draw.Rect({x = 0, y = 0, w = Draw.GetWidth(), h = Draw.GetHeight()}, {})
+
 	local pos = Maths.Vector:new(4,4)
+
+	Draw.Text(pos, Game.Text, self.path)
+
+	pos.y = pos.y + 20
+
 	local curLine = self.scrolledTo
-	for k, v in sortedpairs(self.tableToEdit, self.scrolledTo) do
+	for i, k in ipairs(self:GetKeyList()) do
 		if curLine == self.cursor then
-			Draw.Text(pos, Textures.text, ">")
+			Draw.Text(pos, Game.Text, ">")
 		end
 		pos.x = pos.x + 20
-		Draw.Text(pos, Textures.text, self:Describe(k, v))
+		Draw.Text(pos, Game.Text, self:Describe(k))
 
 		pos.x = 4
 		pos.y = pos.y + 20
@@ -140,13 +312,23 @@ function Editor.EditDataState:Render()
 	end
 end
 
-function Editor.EditDataState:Describe(k, v)
-	return k .. " [" .. type(v) .. "] -> " .. tostring(v)
+function Editor.EditDataState:Describe(k)
+	local multi, value, someNil = self:GetValue(k)
+	if multi then
+		value = "multiple values"
+	else
+		value = GetName(value)
+	end
+	if someNil then
+		value = value .. "*"
+	end
+	local Type, someNilType = self:GetType(k)
+	if someNilType then
+		Type = Type .. "*"
+	end
+	return tostring(k) .. " [" .. Type .. "] -> " .. value
 end
 
 function Editor.EditDataState:RecalcTableSize()
-	self.tableSize = 0
-	for _ in pairs(self.tableToEdit) do
-		self.tableSize = self.tableSize + 1
-	end
+	self.tableSize = #self:GetKeyList()
 end

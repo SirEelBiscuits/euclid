@@ -230,19 +230,44 @@ local DataEditControls = {
 	{
 		Name = "DataNewTable",
 		Key = "t",
+		CtrlPressed = false,
 	},
 	{
 		Name = "DataNewNumber",
 		Key = "n",
+		CtrlPressed = false,
 	},
 	{
 		Name = "DataNewString",
 		Key = "s",
 		ShiftPressed = true,
+		CtrlPressed = false,
 	},
 	{
 		Name = "DataNewBool",
 		Key = "b",
+		CtrlPressed = false,
+	},
+	{
+		Name = "DataInsertTable",
+		Key = "t",
+		CtrlPressed = true,
+	},
+	{
+		Name = "DataInsertNumber",
+		Key = "n",
+		CtrlPressed = true,
+	},
+	{
+		Name = "DataInsertString",
+		Key = "s",
+		ShiftPressed = true,
+		CtrlPressed = true,
+	},
+	{
+		Name = "DataInsertBool",
+		Key = "b",
+		CtrlPressed = true,
 	},
 	{
 		Name = "DataBack",

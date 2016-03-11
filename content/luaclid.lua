@@ -41,10 +41,11 @@ ClassType = {}
 NameObject(ClassType, "Class")
 
 function CreateNewClass(baseClass, name)
-	if type(baseClass) == "string" and name == nil then
+	if type(baseClass) == "string" then
 		baseClass, name = name, baseClass
 	end
 	local Class = {Super = baseClass}
+	Class.Class = Class
 	setmetatable(Class, ClassType)
 	NameObject(Class, name)
 	Class.__index = Class

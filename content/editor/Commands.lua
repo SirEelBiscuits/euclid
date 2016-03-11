@@ -56,9 +56,9 @@ local function GetClicked(editor)
 		if #wallinfo > 0 then
 			return "walls", #wallinfo, wallinfo
 		else
-			local sprites = editor:GetSprites(editor.Cursor)
-			if #sprites > 0 then
-				return "sprites", #sprites, sprites
+			local objects = editor:GetObjects(editor.Cursor)
+			if #objects > 0 then
+				return "objects", #objects, objects
 			else
 				local secs = {}
 				for i, sec in ipairs(editor.curMapData.sectors) do
@@ -79,9 +79,9 @@ function Editor.Commands.AddSelect(editor)
 		for i, info in ipairs(val) do
 			editor.Selection:ToggleSelect("walls", info.sec, info.wall)
 		end
-	elseif kind == "sprites" then
+	elseif kind == "objects" then
 		for i, spr in ipairs(val) do
-			editor.Selection:ToggleSelect("sprites", spr[1], spr[2])
+			editor.Selection:ToggleSelect("objects", spr[1], spr[2])
 		end
 	elseif kind == "verts" then
 		editor.Selection:ToggleSelect("verts", val)
@@ -112,9 +112,9 @@ function Editor.Commands.ExclusiveSelect(editor)
 	local kind, num, val = GetClicked(editor)
 	if kind == "verts" then
 		editor.Selection:Select("verts", val)
-	elseif kind == "sprites" then
+	elseif kind == "objects" then
 		for i, spr in ipairs(val) do
-			editor.Selection:ToggleSelect("sprites", spr[1], spr[2])
+			editor.Selection:ToggleSelect("objects", spr[1], spr[2])
 		end
 	elseif kind == "walls" then
 		for i, info in ipairs(val) do
@@ -129,7 +129,7 @@ end
 
 function Editor.Commands.DeleteObject(editor)
 	if #editor.Selection.verts > 0 or #editor.Selection.sectors > 0
-		or (editor.Selection.sprites and #editor.Selection.sprites > 0)
+		or (editor.Selection.objects and #editor.Selection.objects > 0)
 	then
 		editor.History:RegisterSnapshot()
 	end
@@ -138,10 +138,10 @@ function Editor.Commands.DeleteObject(editor)
 			editor.curMapData:DeleteSector(i)
 		else
 			local sec = editor.curMapData.sectors[i]
-			if sec.sprites then
-				for j = #sec.sprites, 1, -1 do
-					if editor.Selection:IsSelected("sprites", i, j) then
-						table.remove(sec.sprites, j)
+			if sec.objects then
+				for j = #sec.objects, 1, -1 do
+					if editor.Selection:IsSelected("objects", i, j) then
+						table.remove(sec.objects, j)
 					end
 				end
 			end
@@ -631,11 +631,14 @@ function Editor.Commands.CreateSprite(editor)
 	local sec = editor.curMapData.sectors[secs[1]]
 	editor:PushState(Editor.TexturePickerState, "Pick sprite",
 		function(sprite)
-			sec.sprites = sec.sprites or {}
-			table.insert(sec.sprites, {
-				sprite = sprite,
-				offset = Maths.Vector:new(0, 0, 0),
-				radius = 1
+			sec.objects = sec.objects or {}
+			table.insert(sec.objects, {
+				Class = "Sprite",
+				data = {
+					sprite = { Class = "Texture", data = { name = sprite} },
+					offset = Maths.Vector:new(0, 0, 0),
+					radius = 1
+				}
 			})
 			editor:PopState()
 		end
@@ -644,14 +647,26 @@ end
 
 function Editor.Commands.EditThing(editor)
 	print("edit thing")
-	local sprs = editor.Selection:GetSelected("sprites")
-	if #sprs == 1 then
-		local spr = editor.curMapData.sectors[sprs[1][1]].sprites[sprs[1][2]]
+	local objs = editor.Selection:GetSelected("objects")
+	if #objs == 1 then
+		local spr = editor.curMapData.sectors[objs[1][1]].objects[objs[1][2]]
 		editor:PushState(Editor.EditDataState, spr)
+	elseif #objs > 1 then
+			local set = {}
+			for i, v in ipairs(objs) do
+				table.insert(set, editor.curMapData.sectors[v[1]].objects[v[2]])
+			end
+			editor:PushState(Editor.EditDataState, set, true)
 	else
 		local secs = editor.Selection:GetSelected("sectors")
 		if #secs == 1 then
 			editor:PushState(Editor.EditDataState, editor.curMapData.sectors[secs[1]])
+		elseif #secs > 1 then
+			local set = {}
+			for i, v in ipairs(secs) do
+				table.insert(set, editor.curMapData.sectors[v])
+			end
+			editor:PushState(Editor.EditDataState, set, true)
 		end
 	end
 end

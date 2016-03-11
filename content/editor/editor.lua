@@ -36,8 +36,13 @@ Editor.Colors = {
 	vertDrawing     = {r =   0, g = 255, b = 255},
 	selectedTexture = {r =   0, g = 255, b =   0},
 
-	sprite          = {r = 200, g = 200, b =  30},
-	spriteSelected  = {r =  30, g = 200, b = 200},
+	object          = {r = 200, g = 200, b =  30},
+	objectSelected  = {r =  30, g = 200, b = 200},
+}
+
+Editor.Lookup = {
+	Sprite = { label = "Spr", color = {r = 200, g = 200, b = 30} },
+	Spawner = { label = "Spwn", color = {r = 75, g = 125, b = 60} },
 }
 
 function Editor:ctor()
@@ -193,19 +198,32 @@ function Editor:DrawTopDownMap(colors)
 	end
 
 	for i, sec in ipairs(self.curMapData.sectors) do
-		if sec.sprites then
-			for j, spr in ipairs(sec.sprites) do
-				local pos = self:ScreenFromWorld(spr.offset + sec.centroid)
-				pos.x = pos.x - spr.radius * self.view.scale * 0.7
-				pos.y = pos.y - spr.radius * self.view.scale * 0.7
-				pos.w = spr.radius * 1.4 * self.view.scale
-				pos.h = spr.radius * 1.4 * self.view.scale
+		if sec.objects then
+			for j, obj in ipairs(sec.objects) do
+				local pos = self:ScreenFromWorld(
+					(obj.data.offset or Maths.Vector:new(0,0,0)) + sec.centroid
+				)
+				local radius = obj.data.radius or 0.5
+				pos.x = pos.x - radius * self.view.scale * 0.7
+				pos.y = pos.y - radius * self.view.scale * 0.7
+				pos.w = radius * 1.4 * self.view.scale
+				pos.h = radius * 1.4 * self.view.scale
 
-				local color = colors.sprite
-				if self.Selection:IsSelected("sprites", i, j) then
-					color = colors.spriteSelected
+				local Lookup = self.Lookup[obj.Class] or {label = "?", color = colors.object}
+
+				local color = Lookup.color
+				if self.Selection:IsSelected("objects", i, j) then
+					color = colors.objectSelected
 				end
 				Draw.Rect(pos, color)
+				local label = Lookup.label
+				if pos.w > 8 * #obj.Class then
+					Draw.Text(pos, Game.Text, obj.Class)
+				elseif pos.w > 8 * #label then
+					Draw.Text(pos, Game.Text, label)
+				else
+					Draw.Text(pos, Game.Text, obj.Class:sub(1,1))
+				end
 			end
 		end
 		for j, wall in ipairs(sec.walls) do
@@ -389,14 +407,14 @@ function Editor:GetWallsWithEnds(vert1, vert2)
 	return ret
 end
 
-function Editor:GetSprites(vec)
+function Editor:GetObjects(vec)
 	local ret = {}
 	for i, sec in ipairs(self.curMapData.sectors) do
-		if sec.sprites then
-			for j,sprite in ipairs(sec.sprites) do
-				local rel = vec - (sec.centroid + sprite.offset)
+		if sec.objects then
+			for j,object in ipairs(sec.objects) do
+				local rel = vec - (sec.centroid + (object.data.offset or Maths.Vector:new(0,0,0)))
 				rel.z = 0
-				if (rel):LengthSquared() < sprite.radius * sprite.radius then
+				if (rel):LengthSquared() < (object.radius or 0.5) ^ 2 then
 					table.insert(ret, {i, j})
 				end
 			end

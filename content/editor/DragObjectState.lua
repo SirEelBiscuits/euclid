@@ -51,14 +51,15 @@ function Editor.DragObjectState:DoMove(x, y)
 		sec.centroid.y = sec.centroid.y + ymov
 	end
 
-	if editor.Selection.sprites then
-		for i, sec in pairs(editor.Selection.sprites) do
+	if editor.Selection.objects then
+		for i, sec in pairs(editor.Selection.objects) do
 			local sector = editor.curMapData.sectors[i]
 			if not editor.Selection:IsSelected("sectors", i) then
 				for j, spr in pairs(sec) do
-					local sprite = sector.sprites[j]
-					sprite.offset.x = sprite.offset.x + xmov
-					sprite.offset.y = sprite.offset.y + ymov
+					local object = sector.objects[j]
+					object.data.offset = object.data.offset or Maths.Vector:new(0,0,0)
+					object.data.offset.x = object.data.offset.x + xmov
+					object.data.offset.y = object.data.offset.y + ymov
 				end
 			end
 		end
@@ -73,13 +74,13 @@ function Editor.DragObjectState:WasMoveBad()
 		end
 	end
 
-	if editor.Selection.sprites then
-		for i, sec in pairs(editor.Selection.sprites) do
+	if editor.Selection.objects then
+		for i, sec in pairs(editor.Selection.objects) do
 			local sector = editor.curMapData.sectors[i]
 			for j, spr in pairs(sec) do
-				local sprite = sector.sprites[j]
+				local object = sector.objects[j]
 				if not editor.curMapData:IsPointInSector(
-						sector.centroid + sprite.offset, i
+						sector.centroid + object.data.offset, i
 					)
 				then
 					return true
