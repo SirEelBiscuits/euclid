@@ -405,6 +405,8 @@ namespace Rendering
 #else
 				Color c = tex->pixel((unsigned)ax, (unsigned)ay);
 #endif
+				if(c.a == 0)
+					continue;
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
