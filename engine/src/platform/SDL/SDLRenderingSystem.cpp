@@ -111,7 +111,7 @@ namespace Rendering {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);
 		}
-		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
 
@@ -129,7 +129,7 @@ namespace Rendering {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);
 		}
-		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
 

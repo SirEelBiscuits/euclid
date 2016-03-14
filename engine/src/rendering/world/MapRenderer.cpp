@@ -351,8 +351,8 @@ namespace Rendering {
 				sec.floor.tex,
 				sec.ceiling.tex,
 				sec.lightLevel
-				,Rendering::Color{0, 0, 128, 255}
-				,Rendering::Color{0, 0,  64, 255}
+				,Rendering::Color{128, 0, 0, 255}
+				,Rendering::Color{ 64, 0, 0, 255}
 			);
 			auto numSprites = sec.barrow.GetNumSprites();
 			for(auto &dl : deferList) {

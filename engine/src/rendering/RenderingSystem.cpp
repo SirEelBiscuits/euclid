@@ -293,10 +293,12 @@ namespace Rendering
 				uvCur.y
 			) * colorMult;
 #else
-			ScreenPixel(x, y) = tex->pixel(
+			auto texPix = tex->pixel(
 				(unsigned)uvCur.x,
 				(unsigned)uvCur.y
-			) * colorMult;
+			);
+			texPix = texPix * colorMult;
+			ScreenPixel(x, y) = texPix;
 #endif
 			DepthPixel(x, y) = depth;
 			uvCur += deltaUV;
