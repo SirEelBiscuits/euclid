@@ -401,7 +401,6 @@ namespace Rendering
 
 			for(; y < yTarget && static_cast<unsigned>(y) < GetHeight(); y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
-				Color dst = ScreenPixel(x, y);
 #ifdef BILINEAR_FILTERING
 				Color c = tex->pixel_bilinear(ax, ay);
 #else
@@ -409,6 +408,7 @@ namespace Rendering
 #endif
 				if(c.a == 0)
 					continue;
+				Color dst = ScreenPixel(x, y);
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
