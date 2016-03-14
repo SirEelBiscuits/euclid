@@ -445,12 +445,12 @@ namespace Rendering {
 			//for(auto x = minX; x <= maxX; ++x) {
 				for(auto y = 0; y < ScreenHeight; ++y) {
 					if(distances[y] == 0_m) {
-						auto p = y - ScreenHeight / 2.f;
-						auto pp = -p / (ScreenHeight * vfovm);
-						if(p < 0)
-							distances[y] = ceilHeight/pp;
+						auto p = ScreenHeight / 2.f - y;
+						auto pp = (ScreenHeight * vfovm) / p;
+						if(p > 0)
+							distances[y] = ceilHeight * pp;
 						else
-							distances[y] = floorHeight/pp;
+							distances[y] = floorHeight * pp;
 					}
 				}
 
