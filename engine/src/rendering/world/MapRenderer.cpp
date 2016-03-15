@@ -440,20 +440,6 @@ namespace Rendering {
 				distances[y] = 0_m;
 
 			auto vfovm = ctx.GetVFOVMult();
-
-			//todo: is it really worth doing this double loop?
-			//for(auto x = minX; x <= maxX; ++x) {
-				for(auto y = 0; y < ScreenHeight; ++y) {
-					if(distances[y] == 0_m) {
-						auto p = ScreenHeight / 2.f - y;
-						auto pp = (ScreenHeight * vfovm) / p;
-						if(p > 0)
-							distances[y] = ceilHeight * pp;
-						else
-							distances[y] = floorHeight * pp;
-					}
-				}
-
 		
 			auto reverseT = view.forward.Inverse();
 			auto f = [
@@ -476,6 +462,9 @@ namespace Rendering {
 			auto y = 0;
 			if(ceilTex) {
 				for(; y < ScreenHeight/2; ++y) {
+					auto p = ScreenHeight / 2.f - y;
+					auto pp = (ScreenHeight * vfovm) / p;
+					distances[y] = ceilHeight * pp;
 					auto stripStarted = 0u;
 					auto stripActive = false;
 					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
@@ -523,6 +512,9 @@ namespace Rendering {
 			}
 			if(floorTex) {
 				for(; y < ScreenHeight; ++y) {
+					auto p = ScreenHeight / 2.f - y;
+					auto pp = (ScreenHeight * vfovm) / p;
+					distances[y] = floorHeight * pp;
 					auto stripStarted = 0u;
 					auto stripActive = false;
 					auto depthMult = DepthMultFromDistance(distances[y], lightlevel);
