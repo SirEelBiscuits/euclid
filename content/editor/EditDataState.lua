@@ -297,17 +297,19 @@ function Editor.EditDataState:Render()
 
 	local curLine = self.scrolledTo
 	for i, k in ipairs(self:GetKeyList()) do
-		if curLine == self.cursor then
-			Draw.Text(pos, Game.Text, ">")
-		end
-		pos.x = pos.x + 20
-		Draw.Text(pos, Game.Text, self:Describe(k))
+		if i >= curLine then
+			if curLine == self.cursor then
+				Draw.Text(pos, Game.Text, ">")
+			end
+			pos.x = pos.x + 20
+			Draw.Text(pos, Game.Text, self:Describe(k))
 
-		pos.x = 4
-		pos.y = pos.y + 20
-		curLine = curLine + 1
-		if pos.y + 16 > Draw.GetHeight() - 4 then
-			break
+			pos.x = 4
+			pos.y = pos.y + 20
+			curLine = curLine + 1
+			if pos.y + 16 > Draw.GetHeight() - 4 then
+				break
+			end
 		end
 	end
 end
