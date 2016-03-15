@@ -284,24 +284,25 @@ namespace Rendering
 	) {
 		auto xLen = static_cast<Fix16>(xRight - xLeft);
 		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
+		auto colMulF16 = Fix16(colorMult);
 	
 		auto uvCur = start;
-		for(auto x = xLeft; x <= xRight; ++x) {
+		auto idx = y * Width + xLeft;
+		for(auto x = xLeft; x <= xRight; ++x, uvCur += deltaUV, idx++) {
 #ifdef BILINEAR_FILTERING
 			ScreenPixel(x, y) = tex->pixel_bilinear(
 				uvCur.x,
 				uvCur.y
-			) * colorMult;
+			) * colMulF16;
 #else
 			auto texPix = tex->pixel(
 				(unsigned)uvCur.x,
 				(unsigned)uvCur.y
 			);
-			texPix = texPix * colorMult;
-			ScreenPixel(x, y) = texPix;
+			texPix = texPix * colMulF16;
+			screen[idx] = texPix;
 #endif
-			DepthPixel(x, y) = depth;
-			uvCur += deltaUV;
+			this->depth[idx] = depth;
 		}
 
 		DEBUG_RENDERING();
