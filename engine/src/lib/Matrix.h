@@ -302,22 +302,22 @@ constexpr Matrix<BaseType, t_w, t_h, DownCastType> operator-(
 }
 
 //scalar
-template<
-	typename ScalarType,
-	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
-	typename BaseType,
-	unsigned T_w,
-	unsigned T_h,
-	typename DownCastType
-> auto operator*( //should be constexpr, fucking VS
-	Matrix<BaseType, T_w, T_h, DownCastType> left,
-	ScalarType const &right
-) {
-	for(auto y = 0u; y < T_h; ++y)
-		for(auto x = 0u; x < T_w; ++x)
-			left(x, y) *= right;
-	return left;
-}
+//template<
+//	typename ScalarType,
+//	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
+//	typename BaseType,
+//	unsigned T_w,
+//	unsigned T_h,
+//	typename DownCastType
+//> auto operator*( //should be constexpr, fucking VS
+//	Matrix<BaseType, T_w, T_h, DownCastType> left,
+//	ScalarType const &right
+//) {
+//	for(auto y = 0u; y < T_h; ++y)
+//		for(auto x = 0u; x < T_w; ++x)
+//			left(x, y) *= right;
+//	return left;
+//}
 
 template<
 	typename ScalarType,
@@ -333,39 +333,69 @@ template<
 	return left;
 }
 
-template<
-	typename ScalarType,
-	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
-	typename BaseType,
-	unsigned T_w,
-	unsigned T_h,
-	typename DownCastType
-> auto operator*( //should be constexpr, fucking VS
-	ScalarType const &left,
-	Matrix<BaseType, T_w, T_h, DownCastType> const &right
-) {
-	Matrix<std::remove_const_t<decltype(left * right(0u, 0u))>, T_w, T_h, DownCastType> ret;
-	for(auto y = 0u; y < T_h; ++y)
-		for(auto x = 0u; x < T_w; ++x)
-			ret(x, y) = left * right(x, y);
-	return ret;
-}
+//template<
+//	typename ScalarType,
+//	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
+//	typename BaseType,
+//	unsigned T_w,
+//	unsigned T_h,
+//	typename DownCastType
+//> auto operator*( //should be constexpr, fucking VS
+//	ScalarType const &left,
+//	Matrix<BaseType, T_w, T_h, DownCastType> const &right
+//) {
+//	Matrix<std::remove_const_t<decltype(left * right(0u, 0u))>, T_w, T_h, DownCastType> ret;
+//	for(auto y = 0u; y < T_h; ++y)
+//		for(auto x = 0u; x < T_w; ++x)
+//			ret(x, y) = left * right(x, y);
+//	return ret;
+//}
 
 template<
 	typename ScalarType,
 	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
 	typename BaseType,
-	unsigned T_w,
-	unsigned T_h,
+	typename DownCastType
+> auto operator*( //should be constexpr, fucking VS
+	ScalarType const &left,
+	Matrix<BaseType, 1, 2, DownCastType> const &right
+) {
+	Matrix<std::remove_const_t<decltype(left * right(0u, 0u))>, 1, 2, DownCastType> ret;
+	ret.x = (DownCastType)left * right.x;
+	ret.y = (DownCastType)left * right.y;
+	return ret;
+}
+
+//template<
+//	typename ScalarType,
+//	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
+//	typename BaseType,
+//	unsigned T_w,
+//	unsigned T_h,
+//	typename DownCastType
+//> auto operator/( //should be constexpr, fucking VS
+//	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
+//	ScalarType const &right
+//) {
+//	Matrix<std::remove_const_t<decltype(left(0u, 0u) / right)>, T_w, T_h, DownCastType> ret;
+//	for(auto y = 0u; y < T_h; ++y)
+//		for(auto x = 0u; x < T_w; ++x)
+//			ret(x, y) = left(x, y) / right;
+//	return ret;
+//}
+
+template<
+	typename ScalarType,
+	typename = std::enable_if_t<!is_matrix<ScalarType>::value, ScalarType>,
+	typename BaseType,
 	typename DownCastType
 > auto operator/( //should be constexpr, fucking VS
-	Matrix<BaseType, T_w, T_h, DownCastType> const &left,
+	Matrix<BaseType, 1, 2, DownCastType> const &left,
 	ScalarType const &right
 ) {
-	Matrix<std::remove_const_t<decltype(left(0u, 0u) / right)>, T_w, T_h, DownCastType> ret;
-	for(auto y = 0u; y < T_h; ++y)
-		for(auto x = 0u; x < T_w; ++x)
-			ret(x, y) = left(x, y) / right;
+	Matrix<std::remove_const_t<decltype(left(0u, 0u) / right)>, 1, 2, DownCastType> ret;
+	ret.x = left.x / right;
+	ret.y = left.y / right;
 	return ret;
 }
 

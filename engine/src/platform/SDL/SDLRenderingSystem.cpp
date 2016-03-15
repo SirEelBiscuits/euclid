@@ -88,17 +88,18 @@ namespace Rendering {
 	}
 
 	void SDLContext::Clear(Color c) {
-		for(auto y = 0u; y < GetHeight(); ++y)
-			for(auto x = 0u; x < GetWidth(); ++x) {
-				ScreenPixel(x, y) = c;
-				DepthPixel(x, y) = BTST_MAX;
-			}
+		auto size = Context::Height * Context::Width;
+		for(auto idx = 0u; idx < size; ++idx) {
+			screen[idx] = c;
+			depth[idx] = BTST_MAX;
+		}
 	}
 
 	void SDLContext::ClearDepth() {
-		for(auto y = 0u; y < GetHeight(); ++y)
-			for(auto x = 0ul; x < GetWidth(); ++x)
-				DepthPixel(x, y) = BTST_MAX;
+		auto size = Context::Height * Context::Width;
+		for(auto idx = 0u; idx < size; ++idx) {
+			depth[idx] = BTST_MAX;
+		}
 	}
 
 	void SDLContext::SetResolution(unsigned Width, unsigned Height)
@@ -111,7 +112,7 @@ namespace Rendering {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);
 		}
-		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
 
@@ -129,7 +130,7 @@ namespace Rendering {
 			SDL_UnlockTexture(t);
 			SDL_DestroyTexture(t);
 		}
-		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
+		t = SDL_CreateTexture(ren.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GetWidth(), GetHeight());
 		int pitch;
 		SDL_LockTexture(t, nullptr, (void**)&screen, &pitch);
 

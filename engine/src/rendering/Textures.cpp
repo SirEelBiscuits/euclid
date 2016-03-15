@@ -14,9 +14,9 @@ namespace Rendering {
 
 	Color interp(Color s, Color e, Fix16 alpha) {
 		auto ret = Color{
-			static_cast<uint8_t>(s.r + static_cast<uint8_t>(static_cast<Fix16>(e.r - s.r) * alpha)),
-			static_cast<uint8_t>(s.g + static_cast<uint8_t>(static_cast<Fix16>(e.g - s.g) * alpha)),
 			static_cast<uint8_t>(s.b + static_cast<uint8_t>(static_cast<Fix16>(e.b - s.b) * alpha)),
+			static_cast<uint8_t>(s.g + static_cast<uint8_t>(static_cast<Fix16>(e.g - s.g) * alpha)),
+			static_cast<uint8_t>(s.r + static_cast<uint8_t>(static_cast<Fix16>(e.r - s.r) * alpha)),
 			static_cast<uint8_t>(s.a + static_cast<uint8_t>(static_cast<Fix16>(e.a - s.a) * alpha))
 		};
 		ASSERT(

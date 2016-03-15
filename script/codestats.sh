@@ -1,4 +1,4 @@
-#1/bin/bash
+#!/bin/bash
 
 result=`find . -regex ".*\.\(cpp\|h\|lua\)"`
 

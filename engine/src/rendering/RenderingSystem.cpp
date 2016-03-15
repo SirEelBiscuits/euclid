@@ -284,22 +284,25 @@ namespace Rendering
 	) {
 		auto xLen = static_cast<Fix16>(xRight - xLeft);
 		auto deltaUV = (xLen == 0_fp ? UVVec2(0_fp,0_fp) : (end - start) / xLen);
+		auto colMulF16 = Fix16(colorMult);
 	
 		auto uvCur = start;
-		for(auto x = xLeft; x <= xRight; ++x) {
+		auto idx = y * Width + xLeft;
+		for(auto x = xLeft; x <= xRight; ++x, uvCur += deltaUV, idx++) {
 #ifdef BILINEAR_FILTERING
 			ScreenPixel(x, y) = tex->pixel_bilinear(
 				uvCur.x,
 				uvCur.y
-			) * colorMult;
+			) * colMulF16;
 #else
-			ScreenPixel(x, y) = tex->pixel(
+			auto texPix = tex->pixel(
 				(unsigned)uvCur.x,
 				(unsigned)uvCur.y
-			) * colorMult;
+			);
+			texPix = texPix * colMulF16;
+			screen[idx] = texPix;
 #endif
-			DepthPixel(x, y) = depth;
-			uvCur += deltaUV;
+			this->depth[idx] = depth;
 		}
 
 		DEBUG_RENDERING();
@@ -399,7 +402,6 @@ namespace Rendering
 
 			for(; y < yTarget && static_cast<unsigned>(y) < GetHeight(); y += 1, ay += dy) {
 				//todo - get rid of the floating point maths
-				Color dst = ScreenPixel(x, y);
 #ifdef BILINEAR_FILTERING
 				Color c = tex->pixel_bilinear(ax, ay);
 #else
@@ -407,6 +409,7 @@ namespace Rendering
 #endif
 				if(c.a == 0)
 					continue;
+				Color dst = ScreenPixel(x, y);
 				auto interpolant = Maths::reverseInterp(0.0f, 255, c.a);
 				c.r = ((uint8_t)Maths::interp(dst.r, c.r, interpolant) * m) >> bitShift;
 				c.g = ((uint8_t)Maths::interp(dst.g, c.g, interpolant) * m) >> bitShift;
