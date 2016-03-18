@@ -25,7 +25,7 @@ function Editor.Commands.Preview(editor)
 		Game.LoadAndWatchFile(editor.extradata.previewfile)
 	end
 	if editor.extradata.previewstate then
-		editor.machine:PushState(ClassFromName(editor.extradata.previewstate), editor.curMapData)
+		editor.machine:PushState(ClassFromName(editor.extradata.previewstate), DeepCopy(editor.curMapData))
 	else
 		editor.machine:PushState(Editor.PreviewState, editor)
 	end
@@ -170,8 +170,31 @@ function Editor.Commands.SplitWall(editor)
 		editor.History:RegisterSnapshot()
 		editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
 		table.sort(walls, function(a, b) return a.sec < b.sec or (a.sec == b.sec and a.wall < b.wall) end )
-		for i = #walls, 1, -1 do
-			local v = editor.curMapData:SplitWall(walls[i].sec, walls[i].wall)
+		local walls2 = {}
+		for i, v in ipairs(walls) do
+			local secOuter = editor.curMapData.sectors[walls[i].sec]
+			local wallCount = #secOuter.walls
+			local startOuter = secOuter.walls[walls[i].wall].start
+			local endOuter   = secOuter.walls[walls[i].wall % wallCount + 1].start
+			local found = false
+			for j, w in ipairs(walls2) do
+				local secInner = editor.curMapData.sectors[walls2[j].sec]
+				local wallCount = #secInner.walls
+				local startInner = secInner.walls[walls2[j].wall].start
+				local endInner   = secInner.walls[walls2[j].wall % wallCount + 1].start
+
+				if (startOuter == startInner and endOuter == endInner)
+					or (startOuter == endInner and endOuter == startInner)
+				then
+					found = true
+				end
+			end
+			if not found then
+				table.insert(walls2, v)
+			end
+		end
+		for i = #walls2, 1, -1 do
+			local v = editor.curMapData:SplitWall(walls2[i].sec, walls2[i].wall)
 			editor.Selection:Select("verts", v)
 		end
 	end
@@ -675,6 +698,46 @@ function Editor.Commands.EditThing(editor)
 			end
 			editor:PushState(Editor.EditDataState, set, true)
 		end
+	end
+end
+
+function Editor.Commands.CreateDragObject(editor)
+	local walls = editor.Selection:GetSelected("walls")
+	if #walls == 1 then
+		local sec = editor.curMapData.sectors[walls[1][1]]
+		local wallCount = #sec.walls
+		local mainTex = sec.walls[walls[1][2]].mainTex
+		sec.walls[walls[1][2]].mainTex = nil
+		local vert1Idx = sec.walls[walls[1][2]].start
+		local vert1 = editor.curMapData.verts[vert1Idx]
+		local vert2Idx = sec.walls[walls[1][2] % wallCount + 1].start
+		local vert2 = editor.curMapData.verts[vert2Idx]
+		local newSector = DeepCopy(sec)
+		local dir = { x = vert2.x - vert1.x, y = vert2.y - vert1.y }
+		local norm = Maths.Vector:new(dir.y, -dir.x)
+		newSector.walls = {}
+		table.insert(newSector.walls, {start = vert1Idx, portal = walls[1][1]})
+		table.insert(newSector.walls, {start = vert2Idx, mainTex = DeepCopy(mainTex)})
+		local vert3 = DeepCopy(vert1)
+		vert3 = vert3 + norm * 0.01
+		local vert4 = DeepCopy(vert2)
+		vert4 = vert4 + norm * 0.01
+		table.insert(editor.curMapData.verts, vert3)
+		vert3 = #editor.curMapData.verts
+		table.insert(editor.curMapData.verts, vert4)
+		vert4 = #editor.curMapData.verts
+		table.insert(newSector.walls, {start = vert4, mainTex = DeepCopy(mainTex)})
+		table.insert(newSector.walls, {start = vert3, mainTex = DeepCopy(mainTex)})
+
+		editor.curMapData:SetSectorCentroid(newSector)
+		table.insert(editor.curMapData.sectors, newSector)
+		editor.curMapData:FixAllSectorWindings()
+
+
+		sec.walls[walls[1][2]].portal = #editor.curMapData.sectors
+
+		editor.Selection:Clear(editor.StateMachine.State.OnSelectionChanged)
+		editor.Selection:Select("walls", #editor.curMapData.sectors, 2)
 	end
 end
 

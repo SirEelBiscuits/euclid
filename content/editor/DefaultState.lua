@@ -116,6 +116,13 @@ function Editor.DefaultState:Update(dt)
 		return
 	end
 
+	if Game.Controls.CreateDragObject.isDown then
+		self.machine.owner.History:RegisterSnapshot()
+		Editor.Commands.CreateDragObject(self.machine.owner)
+		editor:PushState(Editor.DragObjectState)
+		return
+	end
+
 	for _, v in ipairs(self.CommandList) do
 		local control = Game.Controls[v]
 		if type(control) == "table" and control.pressed and Editor.Commands[v] then

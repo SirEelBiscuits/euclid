@@ -81,6 +81,13 @@ local BasicManipulationControls = {
 	{
 		Name = "DragObject",
 		MouseButton = "Middle",
+		ShiftPressed = false,
+		CtrlPressed = false,
+	},
+	{
+		Name = "CreateDragObject",
+		MouseButton = "Middle",
+		ShiftPressed = true,
 		CtrlPressed = false,
 	},
 	{

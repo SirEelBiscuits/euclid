@@ -93,7 +93,8 @@ function Editor.DragObjectState:WasMoveBad()
 end
 
 function Editor.DragObjectState:Update(dt)
-	if not Game.Controls.DragObject.isDown then
+	if not Game.Controls.DragObject.isDown and
+		not Game.Controls.CreateDragObject.isDown then
 		self.machine.owner.curMapData:SetCentroids()
 		self:PopState()
 		return

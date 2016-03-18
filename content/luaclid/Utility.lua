@@ -236,3 +236,44 @@ function ObjectsFromData(Object, skipCopy)
 	end
 	return Object
 end
+
+local profileData = {}
+local timeStamp = 0
+function StartProfile()
+	debug.sethook(function (event)
+		local f = debug.getinfo(2, 'f').func
+		local e = profileData[f]
+		if e == nil then
+			local x = debug.getinfo(2, 'nS')
+			e = {name = x.name, line = x.linedefined, source = x.source,
+									 time = 0, count = 0}
+			profileData[f] = e
+		end
+		if event == 'call' then
+			e.time = e.time - os.clock()
+			e.count = e.count + 1
+		else
+			e.time = e.time + os.clock()
+		end
+	end, "cr")
+	timeStamp = timeStamp + os.clock()
+end
+
+function PauseProfile()
+	timeStamp = timeStamp - os.clock()
+	debug.sethook()
+end
+
+function DumpProfile()
+	debug.sethook()
+	local S = {}
+	for k,v in pairs(profileData) do
+		table.insert(S, v)
+	end
+	table.sort(S, function(a, b) return a.time < b.time end)
+	for k,v in ipairs(S) do
+		print(v.name, v.line, v.source, v.count, v.time)
+	end
+	print("total time: ", os.clock() - timeStamp)
+	profileData = {}
+end
