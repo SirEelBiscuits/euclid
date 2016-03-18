@@ -142,8 +142,13 @@
       <AdditionalDependencies>winmm.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake />
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -199,8 +204,13 @@
     <Link>
       <AdditionalDependencies>winmm.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake />
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Shipping|Win32'">
     <Midl>
@@ -229,6 +239,10 @@
       <AdditionalLibraryDirectories>$(SolutionDir)extern\SDL2\VisualC\SDL\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake />
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(SolutionDir)extern\libs\$(Configuration)\"
+xcopy /Y "$(ProjectDir)external\lib\$(PlatformTarget)\*.*" "$(SolutionDir)extern\libs\$(Configuration)\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
