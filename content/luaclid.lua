@@ -98,6 +98,7 @@ InputEventType = MakeEnum({
 
 Game       = NameObject({}, "Game")
 Draw       = NameObject({}, "Draw")
+Audio      = NameObject({}, "Audio")
 Game.Input = NameObject({}, "Game.Input")
 Input      = NameObject({}, "Input")
 
