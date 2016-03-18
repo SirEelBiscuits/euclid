@@ -10,11 +10,13 @@ POST_STD_LIB
 #include "CommandLine.h"
 #include "lib/gargamel.h"
 #include "rendering/RenderingSystem.h"
+#include "audio/AudioSystem.h"
 #include "system/Config.h"
 #include "system/RunnableMode.h"
 #include "modes/game/Game.h"
 
-std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg);
+std::unique_ptr<Rendering::Context> InitialiseGraphics(System::Config &cfg);
+std::unique_ptr<Audio::Context> InitialiseAudio(System::Config &cfg);
 void OverrideConfigWithCommandLineArguments(System::Config &cfg);
 std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg);
 
@@ -34,7 +36,8 @@ int Main(int argc, char* argv[]) {
 	System::Config cfg(configName.c_str());
 	OverrideConfigWithCommandLineArguments(cfg);
 
-	auto ctx = Initialise(cfg);
+	auto ctx = InitialiseGraphics(cfg);
+	auto audio = InitialiseAudio(cfg);
 	auto mode = GetMode(*ctx, cfg);
 
 
@@ -45,7 +48,7 @@ int Main(int argc, char* argv[]) {
 	return EXIT_SUCCESS;
 }
 
-std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg) {
+std::unique_ptr<Rendering::Context> InitialiseGraphics(System::Config &cfg) {
 	if (Gargamel::ArgumentValues[(int)CLArgs::Help].isArgumentPresent) {
 		Gargamel::ShowUsage();
 		exit(EXIT_SUCCESS);
@@ -68,6 +71,10 @@ std::unique_ptr<Rendering::Context> Initialise(System::Config &cfg) {
 	ctx->SethFov(hFOV);
 
 	return ctx;
+}
+
+std::unique_ptr<Audio::Context> InitialiseAudio(System::Config &cfg) {
+	return Audio::GetContext();
 }
 
 void OverrideConfigWithCommandLineArguments(System::Config &cfg) {
