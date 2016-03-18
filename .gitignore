@@ -8,6 +8,8 @@ extern/SDL2/VisualC/SDL/Win32/*
 extern/SDL2/VisualC/SDLmain/Win32/*
 extern/SDL2_image/VisualC/Win32/*
 extern/SDL2_mixer/VisualC/Win32/*
+extern/SDL2_mixer/VisualC/native_midi/Win32
+extern/SDL2_mixer/VisualC/timidity/Win32
 
 *.suo
 *.user
