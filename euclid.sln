@@ -108,8 +108,8 @@ Global
 		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Release|x86.Build.0 = Release|Win32
 		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x64.ActiveCfg = Release|x64
 		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x64.Build.0 = Release|x64
-		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x86.ActiveCfg = Release|Win32
-		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x86.Build.0 = Release|Win32
+		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x86.ActiveCfg = Shipping|Win32
+		{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}.Shipping|x86.Build.0 = Shipping|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
