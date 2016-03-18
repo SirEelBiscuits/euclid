@@ -115,13 +115,13 @@
       <SDLCheck>
       </SDLCheck>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_mixer;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_mixer\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_mixer.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <AdditionalOptions>/OPT:NOLBR  /LTCG:OFF %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -148,15 +148,15 @@
       <SDLCheck>
       </SDLCheck>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_mixer;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_mixer\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_mixer.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
@@ -172,7 +172,7 @@
       <SDLCheck>
       </SDLCheck>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\lua\src;$(SolutionDir)extern\SDL2\include;$(SolutionDir)extern\SDL2_mixer;$(SolutionDir)extern\SDL2_image;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <ExceptionHandling>false</ExceptionHandling>
@@ -181,8 +181,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extern\lua\bin\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDL\Win32\$(Configuration);$(SolutionDir)\extern\SDL2\VisualC\SDLmain\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_image\VisualC\Win32\$(Configuration);$(SolutionDir)\extern\SDL2_mixer\VisualC\Win32\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_mixer.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
@@ -218,11 +218,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\audio\Sample.cpp" />
     <ClCompile Include="src\lib\BasicTypes.cpp" />
     <ClCompile Include="src\lib\FixedPoint.cpp" />
     <ClCompile Include="src\lib\Maths.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\modes\game\Game.cpp" />
+    <ClCompile Include="src\platform\audio\SDL\SDLSample.cpp" />
     <ClCompile Include="src\platform\SDLAndWindows\Files.cpp" />
     <ClCompile Include="src\platform\SDL\SDLEntryPoint.cpp" />
     <ClCompile Include="src\platform\SDL\SDLEvents.cpp" />
@@ -259,7 +261,12 @@
     <ClCompile Include="src\world\Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\audio\Sample.h" />
+    <ClInclude Include="src\audio\AudioSystem.h" />
     <ClInclude Include="src\lib\FixedPoint.h" />
+    <ClInclude Include="src\platform\audio\SDL\SDLAudioSystem.h" />
+    <ClCompile Include="src\platform\audio\SDL\SDLAudioSystem.cpp" />
+    <ClInclude Include="src\platform\audio\SDL\SDLSample.h" />
     <ClInclude Include="src\rendering\RenderingPrimitives.h" />
     <ClInclude Include="src\world\Sprite.h" />
     <ClInclude Include="src\rendering\Textures.h" />
@@ -288,6 +295,9 @@
     <ClInclude Include="src\system\RunnableMode.h" />
     <ClInclude Include="src\world\Map.h" />
     <ClInclude Include="src\lib\TypeMagic.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

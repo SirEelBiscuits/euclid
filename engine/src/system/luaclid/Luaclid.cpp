@@ -9,6 +9,9 @@
 #include "rendering/world/MapRenderer.h"
 #include "rendering/world/TopDownMapRenderer.h"
 
+#include "audio/AudioSystem.h"
+#include "audio/Sample.h"
+
 template<>
 Rendering::Color luaX_return<Rendering::Color>(lua_State *lua) {
 	Rendering::Color ret;
@@ -486,6 +489,9 @@ namespace System {
 				, "tex", &Rendering::TextureInfo::tex
 				, "uvStart", &Rendering::TextureInfo::uvStart
 			);
+			auto luaSample = luaX_registerClass<Audio::Sample>(lua, "Sample"
+				, "Play", &Audio::Sample::Play
+			);
 
 			////////////////////////////////////
 			// Wall
@@ -785,9 +791,9 @@ namespace System {
 
 				//Draw.GetTexture
 				luaX_push(lua,
-					static_cast<std::function<Rendering::Texture*(std::string)>>(
+					static_cast<std::function<Rendering::TextureStore::TextureRef(std::string)>>(
 						[](std::string filename){
-							return Rendering::TextureStore::GetTexture(filename.c_str()).get();
+							return Rendering::TextureStore::GetTexture(filename.c_str());
 						}
 					)
 				);
@@ -843,6 +849,23 @@ namespace System {
 				);
 				lua_setfield(lua, -2, "GetRenderScale");
 
+				lua_pop(lua, 1);
+			}
+
+			{
+				luaX_getglobal(lua, "Audio");
+
+				//Audio.GetSample
+				luaX_push(lua,
+					static_cast<std::function<Audio::SampleStore::SampleRef(std::string)>>(
+						[](std::string filename){
+							return Audio::SampleStore::GetSample(filename.c_str());
+						}
+					)
+				);
+				lua_setfield(lua, -2, "GetSample");
+
+				
 				lua_pop(lua, 1);
 			}
 
