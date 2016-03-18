@@ -22,13 +22,16 @@
     <ProjectName>SDL2_mixer</ProjectName>
     <ProjectGuid>{F7E944B3-0815-40CD-B3E4-90B2A15B0E33}</ProjectGuid>
     <RootNamespace>SDL_mixer</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -92,7 +95,7 @@
     <ClCompile>
       <AdditionalOptions>/D OGG_DYNAMIC=\"libvorbisfile-3.dll\" %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\timidity;..\native_midi;external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\timidity;..\native_midi;external\include;..\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;WAV_MUSIC;MODPLUG_MUSIC;MODPLUG_DYNAMIC="libmodplug-1.dll";OGG_MUSIC;OGG_DYNAMIC="libvorbisfile-3.dll";FLAC_MUSIC;FLAC_DYNAMIC="libFLAC-8.dll";MP3_MUSIC;MP3_DYNAMIC="smpeg2.dll";MID_MUSIC;USE_TIMIDITY_MIDI;USE_NATIVE_MIDI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
@@ -151,7 +154,7 @@
     </Midl>
     <ClCompile>
       <AdditionalOptions>/D OGG_DYNAMIC=\"libvorbisfile-3.dll\" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>..\timidity;..\native_midi;external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\timidity;..\native_midi;external\include;..\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;WAV_MUSIC;MODPLUG_MUSIC;MODPLUG_DYNAMIC="libmodplug-1.dll";OGG_MUSIC;OGG_DYNAMIC="libvorbisfile-3.dll";FLAC_MUSIC;FLAC_DYNAMIC="libFLAC-8.dll";MP3_MUSIC;MP3_DYNAMIC="smpeg2.dll";MID_MUSIC;USE_TIMIDITY_MIDI;USE_NATIVE_MIDI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
