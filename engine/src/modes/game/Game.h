@@ -20,7 +20,7 @@ namespace World { class Map; }
 namespace Modes {
 	class Game : public System::RunnableMode {
 	public:
-		Game(Rendering::Context &ctx, System::Config &cfg);
+		Game(Rendering::Context &ctx, Audio::Context &audioCtx, System::Config &cfg);
 		virtual ~Game();
 
 		virtual void Run() override;
@@ -61,5 +61,7 @@ namespace Modes {
 		//controls configs
 		std::unique_ptr<System::Controls::Config> controls          {nullptr};
 		std::unique_ptr<System::Controls::Config> controlsSaveState {nullptr};
+
+		Audio::Context *audio;
 	};
 }

@@ -18,7 +18,7 @@ POST_STD_LIB
 std::unique_ptr<Rendering::Context> InitialiseGraphics(System::Config &cfg);
 std::unique_ptr<Audio::Context> InitialiseAudio(System::Config &cfg);
 void OverrideConfigWithCommandLineArguments(System::Config &cfg);
-std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg);
+std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, Audio::Context &audioCtx, System::Config &cfg);
 
 int Main(int argc, char* argv[]) {
 	std::string configName = "";
@@ -38,7 +38,7 @@ int Main(int argc, char* argv[]) {
 
 	auto ctx = InitialiseGraphics(cfg);
 	auto audio = InitialiseAudio(cfg);
-	auto mode = GetMode(*ctx, cfg);
+	auto mode = GetMode(*ctx, *audio, cfg);
 
 
 	mode->Run();
@@ -101,6 +101,6 @@ void OverrideConfigWithCommandLineArguments(System::Config &cfg) {
 }
 
 //TODO delete this shit?
-std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, System::Config &cfg) {
-	return std::make_unique<Modes::Game>(ctx, cfg);
+std::unique_ptr<System::RunnableMode> GetMode(Rendering::Context &ctx, Audio::Context &audioCtx, System::Config &cfg) {
+	return std::make_unique<Modes::Game>(ctx, audioCtx, cfg);
 }
