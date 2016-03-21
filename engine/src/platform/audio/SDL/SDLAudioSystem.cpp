@@ -29,17 +29,23 @@ namespace Audio {
 		Mix_CloseAudio();
 	}
 
+	void SDLContext::UpdateSoundChannel(int idx) {
+		auto relPos = SDLContext::channelPositions[idx] - Context::ListenerPosition;
+		auto rot = RotationMatrix(Context::angle * M_PI / 180);
+		relPos = rot * relPos;
+		auto dist = relPos.Length();
+		// 360 - because the winding is wrong in audio land, and it bugs out when given
+		// angles below zero, but is fine with ones above 360!
+		auto angle = 360 - std::atan2(- relPos.x.val, relPos.y.val) * 180 / M_PI;
+		Mix_SetPosition(idx, angle, dist.val);
+	}
+
 	void SDLContext::Update() {
 		auto numChannels = Mix_AllocateChannels(-1); //best API ever
 		for(int i = 0; i < numChannels; ++i) {
 			if(!Mix_Playing(i))
 				continue;
-			auto relPos = SDLContext::channelPositions[i] - ListenerPosition;
-			auto dist = relPos.Length();
-			// 360 - because the winding is wrong in audio land, and it bugs out when given
-			// angles below zero, but is fine with ones above 360!
-			auto angle = 360 - std::atan2(- relPos.x.val, relPos.y.val) * 180 / M_PI;
-			Mix_SetPosition(i, angle, dist.val);
+			UpdateSoundChannel(i);
 		}
 	}
 }

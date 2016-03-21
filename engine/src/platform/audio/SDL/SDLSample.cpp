@@ -16,7 +16,9 @@ namespace Audio {
 	}
 
 	void SDLSample::PlayAtLocation(PositionVec2 pos) {
-		SDLContext::channelPositions[Mix_PlayChannel(-1, chunk, 0)] = pos;
+		auto channel = Mix_PlayChannel(-1, chunk, 0);
+		SDLContext::channelPositions[channel] = pos;
+		SDLContext::UpdateSoundChannel(channel);
 	}
 
 	namespace SampleStore {

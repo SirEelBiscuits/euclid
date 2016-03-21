@@ -868,9 +868,9 @@ namespace System {
 
 				//Audio.SetListenerPosition
 				luaX_push(lua,
-					static_cast<std::function<void(PositionVec2)>>(
-						[audioCtx](PositionVec2 pos){
-							audioCtx->SetListenerPosition(pos);
+					static_cast<std::function<void(PositionVec2, btStorageType)>>(
+						[audioCtx](PositionVec2 pos, btStorageType angle){
+							audioCtx->SetListenerPosition(pos, angle);
 						}
 					)
 				);

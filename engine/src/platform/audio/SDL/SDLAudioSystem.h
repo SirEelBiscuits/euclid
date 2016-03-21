@@ -16,6 +16,7 @@ namespace Audio {
 		virtual ~SDLContext() override;
 
 		virtual void Update() override;
+		static void UpdateSoundChannel(int idx);
 
 		static std::map<int, PositionVec2> channelPositions;
 	};

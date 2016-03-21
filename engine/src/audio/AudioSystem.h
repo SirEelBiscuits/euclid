@@ -18,9 +18,10 @@ namespace Audio {
 		virtual ~Context() {}
 
 		virtual void Update() = 0;
-		virtual void SetListenerPosition(PositionVec2 newPos) { ListenerPosition = newPos; }
+		virtual void SetListenerPosition(PositionVec2 newPos, btStorageType newAngle);
 
 	protected:
-		PositionVec2 ListenerPosition;
+		static PositionVec2 ListenerPosition;
+		static btStorageType angle;
 	};
 }
