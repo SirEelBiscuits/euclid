@@ -34,12 +34,11 @@ namespace Audio {
 		for(int i = 0; i < numChannels; ++i) {
 			if(!Mix_Playing(i))
 				continue;
-			auto relPos = SDLContext::channelPositions[i] - ListenerLocation;
+			auto relPos = SDLContext::channelPositions[i] - ListenerPosition;
 			auto dist = relPos.Length();
 			// 360 - because the winding is wrong in audio land, and it bugs out when given
 			// angles below zero, but is fine with ones above 360!
 			auto angle = 360 - std::atan2(- relPos.x.val, relPos.y.val) * 180 / M_PI;
-			printf("%f\n", angle);
 			Mix_SetPosition(i, angle, dist.val);
 		}
 	}
