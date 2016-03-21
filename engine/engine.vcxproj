@@ -218,6 +218,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\audio\AudioSystem.cpp" />
     <ClCompile Include="src\audio\Sample.cpp" />
     <ClCompile Include="src\lib\BasicTypes.cpp" />
     <ClCompile Include="src\lib\FixedPoint.cpp" />

@@ -190,9 +190,9 @@ namespace System {
 		using reloaderType = std::function<void(char const *)>;
 
 		void RegisterTypes(lua_State *lua);
-		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader);
+		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, Audio::Context *audioCtx, reloaderType reloader);
 
-		void SetUp(lua_State *lua, Rendering::Context &ctx, System::Config const &cfg) {
+		void SetUp(lua_State *lua, Rendering::Context &ctx, Audio::Context &audioCtx, System::Config const &cfg) {
 			auto reloader = [lua](char const* filename) {
 				auto ret = luaX_dofile(lua, filename);
 				ASSERT(ret);
@@ -208,7 +208,7 @@ namespace System {
 			*(ExtraSpace**)es = new ExtraSpace(ctx);
 
 			RegisterTypes(lua);
-			RegisterFunctions(lua, &ctx, reloader);
+			RegisterFunctions(lua, &ctx, &audioCtx, reloader);
 
 			if(luaX_dofile(lua, "luaclid-late.lua"))
 				System::Events::RegisterFileToWatch("luaclid-late.lua", reloader);
@@ -491,6 +491,7 @@ namespace System {
 			);
 			auto luaSample = luaX_registerClass<Audio::Sample>(lua, "Sample"
 				, "Play", &Audio::Sample::Play
+				, "PlayAtLocation", &Audio::Sample::PlayAtLocation
 			);
 
 			////////////////////////////////////
@@ -644,7 +645,7 @@ namespace System {
 			ASSERT(lua_gettop(lua) == x);
 		}
 
-		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, reloaderType reloader) {
+		void RegisterFunctions(lua_State *lua, Rendering::Context *ctx, Audio::Context *audioCtx, reloaderType reloader) {
 			ASSERT(lua);
 			ASSERT(ctx);
 
@@ -864,6 +865,16 @@ namespace System {
 					)
 				);
 				lua_setfield(lua, -2, "GetSample");
+
+				//Audio.SetListenerPosition
+				luaX_push(lua,
+					static_cast<std::function<void(PositionVec2, btStorageType)>>(
+						[audioCtx](PositionVec2 pos, btStorageType angle){
+							audioCtx->SetListenerPosition(pos, angle);
+						}
+					)
+				);
+				lua_setfield(lua, -2, "SetListenerPosition");
 
 				
 				lua_pop(lua, 1);

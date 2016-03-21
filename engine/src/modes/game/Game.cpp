@@ -2,6 +2,8 @@
 
 #include "rendering/RenderingSystem.h"
 
+#include "audio/AudioSystem.h"
+
 #include "system/Config.h"
 #include "system/Files.h"
 #include "system/Events.h"
@@ -11,13 +13,14 @@
 
 namespace Modes {
 
-	Game::Game(Rendering::Context &ctx, System::Config &cfg)
+	Game::Game(Rendering::Context &ctx, Audio::Context &audioCtx, System::Config &cfg)
 		: RunnableMode(ctx, cfg)
 		, oldTimePoint(std::chrono::high_resolution_clock::now())
 		, mapRenderer(ctx)
 		, controls(new System::Controls::Config())
+		, audio(&audioCtx)
 	{
-		System::Luaclid::SetUp(lua, ctx, cfg);
+		System::Luaclid::SetUp(lua, ctx, audioCtx, cfg);
 		System::Input::Initialise();
 		SetUpAdditionalLuaStuff();
 	}
@@ -41,6 +44,8 @@ namespace Modes {
 		auto ret = GameLogic();
 		HandleInput();
 		RenderLogic();
+
+		audio->Update();
 
 		return ret;
 	}
@@ -108,7 +113,7 @@ namespace Modes {
 		return System::Luaclid::GameUpdate(lua, dt);
 	}
 
-	static Rendering::Color clearColour{100, 149, 237, 255};
+	static Rendering::Color clearColour{0, 0, 0, 255};
 	void Game::RenderLogic() {
 		ctx.Clear(clearColour);
 		System::Luaclid::GameRender(lua);

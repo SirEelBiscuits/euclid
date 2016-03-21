@@ -7,12 +7,15 @@ PRE_STD_LIB
 #include <string>
 POST_STD_LIB
 
+#include "lib/BasicTypes.h"
+
 namespace Audio {
 
 	struct Sample{
 		virtual ~Sample(){}
 
 		virtual void Play() = 0;
+		virtual void PlayAtLocation(PositionVec2 pos) = 0;
 	};
 
 	namespace SampleStore {
