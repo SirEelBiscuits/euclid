@@ -11,7 +11,13 @@ POST_STD_LIB
 namespace World {
 
 	void Sprite::Move(Map *toMap, IDType toSector) {
-		sector->barrow.MoveSprite(*this, *toMap, toSector);
+		if(sector)
+			sector->barrow.MoveSprite(*this, *toMap, toSector);
+		else {
+			sector = toMap->GetSector(toSector);
+			sector->barrow.AddSprite(*this);
+			
+		}
 	}
 
 	void Sprite::Deleter::operator()(Sprite * s) {
