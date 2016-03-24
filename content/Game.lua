@@ -21,10 +21,8 @@ NameObject(Game.data.UpdateList, "Update List")
 NameObject(Game.data.UpdateWhenPausedList, "Update when paused List")
 NameObject(Game.data.KeepAliveList, "Keepalive List")
 
+
 function Game.Initialise(startstate, extradata)
-	print("extra data: ", type(extradata))
-	Describe(extradata)
-	print("end")
 	Game.StateMachine = StateMachine:new()
 	Game.StateMachine:EnterState(StateList.QuitState)
 
@@ -119,6 +117,9 @@ function Game.Update(dt)
 		Game.ToState = nil
 		Game.StateMachine:PushState(s)
 	end
+	if not ret then
+		DumpProfile()
+	end
 	return ret
 end
 
@@ -127,3 +128,4 @@ function Game.Render()
 end
 
 print("game reloaded")
+

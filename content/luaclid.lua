@@ -70,6 +70,18 @@ function CreateNewClass(baseClass, name)
 	return Class
 end
 
+function IsObjectChildOf(obj, someClass)
+	local checking = obj.Class
+	while true do
+		if checking == nil then
+			return false
+		end
+		if checking == someClass then
+			return true
+		end checking = checking.Super
+	end
+end
+
 NativeClassType = {}
 NameObject(NativeClassType, "Native class?")
 
