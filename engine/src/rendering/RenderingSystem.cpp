@@ -275,7 +275,8 @@ namespace Rendering
 	}
 
 	void Context::DrawHLine(
-		unsigned xLeft, unsigned xRight,
+		unsigned xLeft,
+		unsigned xRight,
 		unsigned y,
 		Texture const *tex,
 		UVVec2 start, UVVec2 end,
