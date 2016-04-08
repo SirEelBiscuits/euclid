@@ -6,6 +6,8 @@ lua:
 
 SDL2:
 	cd SDL2; mkdir bin 2> /dev/null; cd bin; cmake ..
+	#Apparently the below might be needed?
+	#./configure --host=armv71-raspberry-linux-gnueabihf --disable-video-opengl
 	make -C SDL2/bin
 
 SDL2_image:
