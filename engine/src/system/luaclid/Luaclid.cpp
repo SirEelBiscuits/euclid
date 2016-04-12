@@ -595,7 +595,7 @@ namespace System {
 				, "angle",            &World::Sprite::angle
 			);
 			luaSprite.push();
-			
+
 			//Move needs wrapping to transform the array index :(
 			lua_pushcfunction(lua,
 				[](lua_State *s) {
@@ -651,9 +651,9 @@ namespace System {
 					[lua, reloader](std::string filename) {
 						if(System::Events::IsFileBeingWatched(filename.c_str()))
 							return;
+						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
 						auto ret = luaX_dofile(lua, filename.c_str());
 						ASSERT(ret);
-						System::Events::RegisterFileToWatch(filename.c_str(), reloader);
 					}
 				)
 			));
