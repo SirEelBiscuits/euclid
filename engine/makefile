@@ -13,7 +13,7 @@ LIB_DIRS+=../extern/lua/bin
 C_FLAGS+= -std=c++14 -fpermissive -w -pthread -static-libstdc++ -O3
 C_FLAGS+= $(patsubst %, -I%, $(INC_DIRS))
 C_FLAGS+= $(shell sdl2-config --cflags)
-LD_FLAGS+= -llua -lSDL2 -lSDL2main -lSDL2_image -ldl
+LD_FLAGS+= -llua -lSDL2 -lSDL2main -lSDL2_image -ldl -lSDL2_mixer
 LD_FLAGS+= $(patsubst %, -L%, $(LIB_DIRS))
 LD_FLAGS+= $(shell sdl2-config --libs)
 
