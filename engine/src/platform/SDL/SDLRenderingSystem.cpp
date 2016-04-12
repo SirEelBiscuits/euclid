@@ -26,13 +26,13 @@ namespace Rendering {
 	void sdlDeleter<SDL_Renderer>::operator()(SDL_Renderer* p) {
 		SDL_DestroyRenderer(p);
 	}
-	
+
 	static std::shared_ptr<SDLSystem> sysCanonical;
 
 	SDLSystem::SDLSystem()
 	{
 		if(SDL_Init(SDL_INIT_VIDEO) != 0) {
-			printf("%s", SDL_GetError());
+			printf("%s\n", SDL_GetError());
 			exit(EXIT_FAILURE);
 		}
 	}

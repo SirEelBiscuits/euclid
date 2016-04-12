@@ -1,6 +1,6 @@
 #include "rendering/Textures.h"
 
-#include "SDL_image.h"
+#include <SDL_image.h>
 
 namespace Rendering {
 	namespace TextureStore {

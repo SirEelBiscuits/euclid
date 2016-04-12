@@ -15,6 +15,12 @@ Requirements
 
 Also uses SDL2 and Lua 5.3, but those are included and built for you
 
+Tentative linux support requires:
+
+- g++ 4.9
+- libSDL2
+- libSDL2_image
+
 Usage
 -----
 
