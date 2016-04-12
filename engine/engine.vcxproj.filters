@@ -70,9 +70,11 @@
     <ClCompile Include="src\platform\audio\SDL\SDLSample.cpp">
       <Filter>src\platform\audio\SDL</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\audio\SDL\SDLAudioSystem.cpp" />
     <ClCompile Include="src\audio\AudioSystem.cpp">
       <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\audio\SDL\SDLAudioSystem.cpp">
+      <Filter>src\platform\audio\SDL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
