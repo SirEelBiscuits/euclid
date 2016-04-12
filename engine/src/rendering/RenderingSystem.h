@@ -57,7 +57,7 @@ namespace Rendering {
 		/////////////////
 		//colours
 
-		/** 
+		/**
 			Draw Vertical line.
 
 			x, yTop, yBottom are inclusive screen co-ordinates
@@ -85,7 +85,7 @@ namespace Rendering {
 
 		/**
 			Draw a filled rectangle
-			
+
 			topLeft and bottomRight are inclusive screen co-ordinates
 		*/
 		void DrawRect(ScreenVec2 topLeft, ScreenVec2 bottomRight, Color c);
@@ -104,15 +104,15 @@ namespace Rendering {
 			Draw horizontal line.
 		*/
 		void DrawHLine(
-			unsigned xLeft,           // \ 
+			unsigned xLeft,           // >
 			unsigned xRight,          //  > Inclusive screen co-ordinates
-			unsigned y,               // /
+			unsigned y,               // >
 			Texture const *tex,       // texture to draw
 			UVVec2 start, UVVec2 end, // inclusive texture co-ordinates
 			btStorageType colorMult,  // will scale the color from the texture
 			btStorageType stencil     // depth
 		);
-		
+
 		/**
 			Draw texture to screen rectangle
 		 */
@@ -135,7 +135,7 @@ namespace Rendering {
 			btStorageType colorMult, // will scale the color from the texture
 			btStorageType depth      // depth
 		);
-		
+
 		/**
 			Draw a texture to screen rectangle, respecting the texture alpha, minx and maxx values,
 			and only drawing over pixels whose stencil value is equal or greater than the listed value
@@ -161,7 +161,7 @@ namespace Rendering {
 		//////////
 		// DATA //
 		//////////
-	
+
 	protected:
 		Color         *screen{nullptr};
 		btStorageType *depth {nullptr};
